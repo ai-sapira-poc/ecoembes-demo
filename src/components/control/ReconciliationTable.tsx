@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronDown, ChevronRight, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
@@ -118,9 +118,8 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
             const isExpanded = expandedId === record.id;
 
             return (
-              <>
+              <Fragment key={record.id}>
                 <TR
-                  key={record.id}
                   className={cn(
                     "cursor-pointer",
                     isDiscrepancy && "bg-danger/5 hover:bg-danger/10"
@@ -164,7 +163,7 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
                   </TD>
                 </TR>
                 {isExpanded && (
-                  <tr key={`${record.id}-detail`} className={cn(isDiscrepancy && "bg-danger/5")}>
+                  <tr className={cn(isDiscrepancy && "bg-danger/5")}>
                     <td colSpan={7} className="px-6 py-3">
                       <div className="flex items-start gap-3 text-sm">
                         <span className="text-xs font-semibold text-muted uppercase tracking-wide whitespace-nowrap">
@@ -177,7 +176,7 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </TBody>
