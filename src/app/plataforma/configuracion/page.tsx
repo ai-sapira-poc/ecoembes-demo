@@ -44,7 +44,7 @@ export default function ConfiguracionPage() {
   const [formato, setFormato] = useState("PDF");
 
   return (
-    <Reveal className="max-w-5xl space-y-5">
+    <Reveal className="space-y-5">
       <RevealItem>
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted mb-1">

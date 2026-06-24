@@ -524,6 +524,31 @@ const formatos009: Formato[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────
+// Reconcile declared cuota with the detailed Formatos breakdown.
+// The "Total Punto Verde declarado" of the formatos table is the
+// source of truth for the declared amount; cuotaCalculada keeps the
+// same delta (the hallazgo impact, with its original sign) over it.
+// ─────────────────────────────────────────────────────────────
+const formatoTotal = (fs: Formato[]) =>
+  Math.round(fs.reduce((a, f) => a + f.componentes.reduce((s, c) => s + c.puntoVerdeDef, 0), 0));
+
+const declared001 = formatoTotal(formatos001);
+const declared002 = formatoTotal(formatos002);
+const declared003 = formatoTotal(formatos003);
+const declared004 = formatoTotal(formatos004);
+const declared005 = formatoTotal(formatos005);
+const declared006 = formatoTotal(formatos006);
+const declared007 = formatoTotal(formatos007);
+const declared008 = formatoTotal(formatos008);
+const declared009 = formatoTotal(formatos009);
+
+const calc004 = declared004 + (cuota004Calculada - cuota004Declarada);
+const calc005 = declared005 + (cuota005Calculada - cuota005Declarada);
+const calc006 = declared006 + (cuota006Calculada - cuota006Declarada);
+const calc007 = declared007 + (cuota007Calculada - cuota007Declarada);
+const calc009 = declared009 + (cuota009Calculada - cuota009Declarada);
+
+// ─────────────────────────────────────────────────────────────
 // Final export
 // ─────────────────────────────────────────────────────────────
 export const declaraciones: Declaracion[] = [
@@ -535,8 +560,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-03-12",
     sigLines: lines001,
-    cuotaDeclaradaEur: cuota001,
-    cuotaCalculadaEur: cuota001,
+    cuotaDeclaradaEur: declared001,
+    cuotaCalculadaEur: declared001,
     hallazgos: [],
     estado: "verificada",
     confianza: 0.98,
@@ -544,7 +569,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración conforme. Todas las líneas SIG presentan coherencia interna con las fichas técnicas de envase y el volumen de ventas registrado. No se detectan anomalías.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota001,
+    importeDaeEur: declared001,
     formatos: formatos001,
     estadoAgente: "apto",
     correspondencia: [],
@@ -559,8 +584,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-03-18",
     sigLines: lines002,
-    cuotaDeclaradaEur: cuota002,
-    cuotaCalculadaEur: cuota002,
+    cuotaDeclaradaEur: declared002,
+    cuotaCalculadaEur: declared002,
     hallazgos: [],
     estado: "verificada",
     confianza: 0.97,
@@ -568,7 +593,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración verificada sin incidencias. Los materiales declarados (PEAD, Papel/Cartón, Aluminio, Film plástico, Brik) se ajustan al mix de envase de la gama láctea. Tarifa correcta en todas las líneas.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota002,
+    importeDaeEur: declared002,
     formatos: formatos002,
     estadoAgente: "apto",
     correspondencia: [],
@@ -583,8 +608,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-03-25",
     sigLines: lines003,
-    cuotaDeclaradaEur: cuota003,
-    cuotaCalculadaEur: cuota003,
+    cuotaDeclaradaEur: declared003,
+    cuotaCalculadaEur: declared003,
     hallazgos: [],
     estado: "verificada",
     confianza: 0.99,
@@ -592,7 +617,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración conforme. Relación PET/tapones coherente con la producción de botella 500 ml. Etiquetado e importe SIG calculados correctamente.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota003,
+    importeDaeEur: declared003,
     formatos: formatos003,
     estadoAgente: "apto",
     correspondencia: [],
@@ -607,8 +632,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-04-02",
     sigLines: lines004,
-    cuotaDeclaradaEur: cuota004Declarada,
-    cuotaCalculadaEur: cuota004Calculada,
+    cuotaDeclaradaEur: declared004,
+    cuotaCalculadaEur: calc004,
     hallazgos: hallazgos004,
     estado: "con_hallazgos",
     confianza: 0.91,
@@ -616,7 +641,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración con hallazgo de alta severidad. Las unidades de envase PET declaradas son significativamente inferiores a las que se derivan del volumen de ventas auditado. Se requiere corrección y aportación de evidencia documental del sistema de compras de envases.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota004Declarada,
+    importeDaeEur: declared004,
     formatos: formatos004,
     estadoAgente: "consulta_enviada",
     correspondencia: correspondencia004,
@@ -631,8 +656,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-04-08",
     sigLines: lines005,
-    cuotaDeclaradaEur: cuota005Declarada,
-    cuotaCalculadaEur: cuota005Calculada,
+    cuotaDeclaradaEur: declared005,
+    cuotaCalculadaEur: calc005,
     hallazgos: hallazgos005,
     estado: "con_hallazgos",
     confianza: 0.88,
@@ -640,7 +665,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración con error de tarifa en la línea de envase gel ducha (PEAD). Se ha aplicado la tarifa de Madera (0,049 €/kg) en lugar de la tarifa PEAD vigente (0,389 €/kg). La cuota resultante está infra-calculada. Se requiere corrección inmediata.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota005Declarada,
+    importeDaeEur: declared005,
     formatos: formatos005,
     estadoAgente: "no_apto",
     correspondencia: correspondencia005,
@@ -655,8 +680,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-04-15",
     sigLines: lines006,
-    cuotaDeclaradaEur: cuota006Declarada,
-    cuotaCalculadaEur: cuota006Calculada,
+    cuotaDeclaradaEur: declared006,
+    cuotaCalculadaEur: calc006,
     hallazgos: hallazgos006,
     estado: "con_hallazgos",
     confianza: 0.84,
@@ -664,7 +689,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración incompleta: el material Film plástico (blister de sellado) no ha sido declarado. El cruce con la ficha técnica del producto lo identifica como material de envasado sujeto a cuota. Severidad media; pendiente de regularización.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota006Declarada,
+    importeDaeEur: declared006,
     formatos: formatos006,
     estadoAgente: "respuesta_recibida",
     correspondencia: correspondencia006,
@@ -679,8 +704,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-04-22",
     sigLines: lines007,
-    cuotaDeclaradaEur: cuota007Declarada,
-    cuotaCalculadaEur: cuota007Calculada,
+    cuotaDeclaradaEur: declared007,
+    cuotaCalculadaEur: calc007,
     hallazgos: hallazgos007,
     estado: "con_hallazgos",
     confianza: 0.79,
@@ -688,7 +713,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración con anomalía en la línea de tapones PEAD: el peso unitario declarado (185 g) excede en un orden de magnitud el benchmark sectorial para este tipo de envase. Probable error de captura (desplazamiento decimal). Cuota sobredeclarada de forma material.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota007Declarada,
+    importeDaeEur: declared007,
     formatos: formatos007,
     estadoAgente: "en_analisis",
     correspondencia: [],
@@ -703,8 +728,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-05-05",
     sigLines: lines008,
-    cuotaDeclaradaEur: cuota008,
-    cuotaCalculadaEur: cuota008,
+    cuotaDeclaradaEur: declared008,
+    cuotaCalculadaEur: declared008,
     hallazgos: hallazgos008,
     estado: "en_revision",
     confianza: 0.67,
@@ -712,7 +737,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración en revisión. Se detecta una caída del 43% en unidades de Brik respecto al ejercicio anterior sin justificación en el sistema de ventas. La confianza del agente es insuficiente para emitir dictamen definitivo. Se remite a revisión humana para contraste con el equipo comercial.",
     periodo: 56,
     canal: "PLATAFORMA 2.0",
-    importeDaeEur: cuota008,
+    importeDaeEur: declared008,
     formatos: formatos008,
     estadoAgente: "consulta_enviada",
     correspondencia: correspondencia008,
@@ -727,8 +752,8 @@ export const declaraciones: Declaracion[] = [
     ejercicio: 2025,
     fechaRecepcion: "2025-05-12",
     sigLines: lines009,
-    cuotaDeclaradaEur: cuota009Declarada,
-    cuotaCalculadaEur: cuota009Calculada,
+    cuotaDeclaradaEur: declared009,
+    cuotaCalculadaEur: calc009,
     hallazgos: hallazgos009,
     estado: "en_revision",
     confianza: 0.62,
@@ -736,7 +761,7 @@ export const declaraciones: Declaracion[] = [
       "Declaración incompleta con elementos de baja confianza. Se detecta omisión de flejes PVC y posibles discrepancias en el volumen de unidades de Papel/Cartón respecto al sistema logístico. Se remite a revisión humana por la complejidad del perfil de distribuidor multicliente.",
     periodo: 54,
     canal: "Ficticias Tipo Carta",
-    importeDaeEur: cuota009Declarada,
+    importeDaeEur: declared009,
     formatos: formatos009,
     estadoAgente: "en_revision",
     correspondencia: [],
