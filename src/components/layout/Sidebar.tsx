@@ -2,126 +2,54 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { motion } from "framer-motion";
 import { Logo } from "@/components/layout/Logo";
 import { navItems, isNavActive } from "@/components/layout/nav-items";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside
-      className={cn(
-        "hidden md:flex flex-col h-full bg-brand-dark text-white shrink-0 shadow-[2px_0_12px_-4px_rgba(10,32,20,0.22)] transition-[width] duration-200",
-        collapsed ? "w-16" : "w-56"
-      )}
-    >
-      {/* Logo chip */}
-      <div
-        className={cn(
-          "flex items-center pt-7 pb-6",
-          collapsed ? "justify-center px-2" : "px-5"
-        )}
-      >
-        <div
-          className={cn(
-            "bg-white rounded-xl shadow-[0_2px_8px_-2px_rgba(10,32,20,0.20)]",
-            collapsed ? "px-1.5 py-1.5" : "px-3 py-2.5"
-          )}
-        >
-          {collapsed ? (
-            <Logo variant="mark" className="h-7 w-auto" />
-          ) : (
-            <Logo variant="horizontal" className="h-8 w-auto" />
-          )}
+    <TooltipProvider delayDuration={0}>
+      <aside className="relative z-10 hidden md:flex h-full w-16 flex-shrink-0 flex-col items-center border-r border-line bg-white py-4 shadow-[2px_0_8px_-2px_rgba(0,0,0,0.1)]">
+        <div className="mb-8 rounded-xl bg-brand-soft px-2 py-2">
+          <Logo variant="mark" className="h-8 w-auto" />
         </div>
-      </div>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-white/10 mb-2" />
+        <nav className="flex flex-1 flex-col items-center gap-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isNavActive(pathname, item);
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-0.5 px-3 flex-1 overflow-y-auto py-2">
-        {navItems.map((item) => {
-          const { label, href, icon: Icon } = item;
-          const active = isNavActive(pathname, item);
-          return (
-            <Link
-              key={href}
-              href={href}
-              title={collapsed ? label : undefined}
-              className={cn(
-                "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                collapsed ? "justify-center gap-0" : "gap-3",
-                active
-                  ? "bg-white/12 text-white"
-                  : "text-white/65 hover:bg-white/8 hover:text-white/90"
-              )}
-            >
-              {/* Active accent — left pill */}
-              {active && (
-                <motion.span
-                  layoutId="sidebar-active-accent"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-brand"
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                />
-              )}
-
-              {/* Icon */}
-              <Icon
-                size={17}
-                strokeWidth={active ? 2.2 : 1.8}
-                className={cn(
-                  "shrink-0 transition-colors duration-150",
-                  active ? "text-white" : "text-white/55 group-hover:text-white/80"
-                )}
-              />
-
-              {/* Label — hidden when collapsed */}
-              {!collapsed && (
-                <span
-                  className={cn(
-                    "transition-colors duration-150",
-                    active ? "font-semibold" : "font-medium"
-                  )}
-                >
-                  {label}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Footer — collapse toggle is anchored here in BOTH states so it never jumps */}
-      <div
-        className={cn(
-          "py-4 border-t border-white/10",
-          collapsed ? "px-2 flex justify-center" : "px-4 flex items-center justify-between gap-2"
-        )}
-      >
-        {!collapsed && (
-          <p className="text-[9px] text-white/35 tracking-[0.18em] uppercase font-medium">
-            Powered by Sapira
-          </p>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-          aria-expanded={!collapsed}
-          className="text-white/50 hover:text-white/90 transition-colors duration-150 p-1.5 rounded-md hover:bg-white/8 shrink-0"
-        >
-          {collapsed ? (
-            <PanelLeftOpen size={16} strokeWidth={1.8} />
-          ) : (
-            <PanelLeftClose size={16} strokeWidth={1.8} />
-          )}
-        </button>
-      </div>
-    </aside>
+            return (
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors",
+                      active
+                        ? "bg-brand text-white"
+                        : "text-muted hover:bg-brand-soft hover:text-brand-dark"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </nav>
+      </aside>
+    </TooltipProvider>
   );
 }

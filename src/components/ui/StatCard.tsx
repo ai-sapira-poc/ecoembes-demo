@@ -10,10 +10,34 @@ interface StatCardProps {
   trend?: "up" | "down";
   /** Optional trend label shown next to the arrow (e.g. "+12%") */
   trendLabel?: string;
+  valueTone?: "neutral" | "ok" | "danger" | "warning";
   className?: string;
 }
 
-export function StatCard({ label, value, sub, icon: Icon, trend, trendLabel, className }: StatCardProps) {
+const valueToneClass = {
+  neutral: "text-ink",
+  ok: "text-ok",
+  danger: "text-danger",
+  warning: "text-warning",
+} as const;
+
+const iconToneClass = {
+  neutral: "bg-brand-soft text-brand-dark",
+  ok: "bg-ok-soft text-ok",
+  danger: "bg-danger-soft text-danger",
+  warning: "bg-warning-soft text-warning",
+} as const;
+
+export function StatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  trend,
+  trendLabel,
+  valueTone = "neutral",
+  className,
+}: StatCardProps) {
   return (
     <div
       className={cn(
@@ -27,15 +51,25 @@ export function StatCard({ label, value, sub, icon: Icon, trend, trendLabel, cla
           {label}
         </span>
         {Icon && (
-          <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-soft flex items-center justify-center">
-            <Icon className="text-brand-dark" size={16} />
+          <span
+            className={cn(
+              "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
+              iconToneClass[valueTone]
+            )}
+          >
+            <Icon className="currentColor" size={16} />
           </span>
         )}
       </div>
 
       {/* Value row */}
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-semibold text-ink tabular-nums leading-none">
+        <span
+          className={cn(
+            "text-2xl font-semibold tabular-nums leading-none",
+            valueToneClass[valueTone]
+          )}
+        >
           {value}
         </span>
         {trend && (

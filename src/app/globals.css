@@ -35,6 +35,22 @@
   --color-info: #2f6f99;
   --color-info-soft: #e8f1f8;
 
+  /* shadcn primitives — calendar / popover use Ecoembes brand green */
+  --color-background: #ffffff;
+  --color-foreground: #14201a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #14201a;
+  --color-primary: #00a13a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f5f8f5;
+  --color-secondary-foreground: #14201a;
+  --color-accent: #e6f7ec;
+  --color-accent-foreground: #008532;
+  --color-muted-foreground: #5d6b64;
+  --color-input: #e6ece8;
+  --color-ring: #00a13a;
+  --color-destructive: #d6453d;
+
   /* Motion */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 
