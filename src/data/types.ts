@@ -53,6 +53,14 @@ export interface Declaracion {
   estado: EstadoAuditoria;
   confianza: number;
   dictamen: string;
+  periodo?: number;
+  canal?: string;
+  importeDaeEur?: number;
+  formatos?: Formato[];
+  estadoAgente?: EstadoAgente;
+  correspondencia?: EmailMensaje[];
+  consultasAbiertas?: number;
+  veredicto?: Veredicto;
 }
 
 export type EstadoConciliacion =
@@ -71,6 +79,9 @@ export interface ConciliacionRecord {
   muestreada: boolean;
   estado: EstadoConciliacion;
   detalle: string;
+  canal?: string;
+  periodo?: number;
+  fechaRecepcion?: string;
 }
 
 export interface BpoMes {
@@ -102,6 +113,10 @@ export interface DashboardKpis {
   coberturaControlPct: number;
   coberturaManualPct: number;
   importeEnRiesgoEur: number;
+  declaracionesAptas?: number;
+  declaracionesNoAptas?: number;
+  consultasAbiertas?: number;
+  enDialogo?: number;
 }
 
 export interface TrendPoint {
@@ -109,4 +124,40 @@ export interface TrendPoint {
   declaraciones: number;
   importeEur: number;
   coberturaPct: number;
+}
+
+export type EstadoAgente = "recibida" | "en_analisis" | "consulta_enviada" | "respuesta_recibida" | "apto" | "no_apto" | "en_revision";
+export type Veredicto = "apto" | "no_apto" | null;
+export type Destino = "Doméstico" | "Comercial" | "Industrial";
+
+export interface ComponenteEnvase {
+  id: string;
+  envase: string;
+  material: string;
+  color: string;
+  rigidez: "Rígido" | "Flexible";
+  grEnvase: number;
+  unidades: number;
+  unidadesTotales: number;
+  costeUnitDef: number;
+  puntoVerdeDef: number;
+}
+
+export interface Formato {
+  id: number;
+  nombre: string;
+  producto: string;
+  ventas: number;
+  destino: Destino;
+  componentes: ComponenteEnvase[];
+}
+
+export interface EmailMensaje {
+  id: string;
+  de: "agente" | "cliente";
+  remitente: string;
+  asunto: string;
+  cuerpo: string;
+  fecha: string;
+  adjuntos?: string[];
 }

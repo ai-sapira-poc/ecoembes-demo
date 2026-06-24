@@ -1,4 +1,4 @@
-import type { Declaracion, Material, SigLine, Hallazgo } from "@/data/types";
+import type { Declaracion, Material, SigLine, Hallazgo, Formato, EmailMensaje } from "@/data/types";
 
 export const tarifas: Record<Material, number> = {
   "PET":           0.471,
@@ -272,6 +272,258 @@ const lines009Real: SigLine[] = [
 const cuota009Calculada = sum(lines009Real);
 
 // ─────────────────────────────────────────────────────────────
+// Formatos y correspondencia para el pipeline de agente
+// ─────────────────────────────────────────────────────────────
+
+const formatos001: Formato[] = [
+  {
+    id: 1, nombre: "Tarro Cristal 500g Conserva", producto: "conservas", ventas: 2_400_000, destino: "Doméstico",
+    componentes: [
+      { id: "001-F1-C1", envase: "Botella/Garrafa", material: "Vidrio", color: "Transparente o Light Blue", rigidez: "Rígido", grEnvase: 380, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00551, puntoVerdeDef: 13224 },
+      { id: "001-F1-C2", envase: "Tapones, tapas", material: "Acero", color: "Color", rigidez: "Rígido", grEnvase: 45, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.003285, puntoVerdeDef: 7884 },
+      { id: "001-F1-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 18, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00198, puntoVerdeDef: 4752 },
+    ],
+  },
+  {
+    id: 2, nombre: "Tarro Cristal 280g Conserva", producto: "conservas", ventas: 2_400_000, destino: "Doméstico",
+    componentes: [
+      { id: "001-F2-C1", envase: "Botella/Garrafa", material: "Vidrio", color: "Transparente o Light Blue", rigidez: "Rígido", grEnvase: 320, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00464, puntoVerdeDef: 11136 },
+      { id: "001-F2-C2", envase: "Tapones, tapas", material: "Acero", color: "Color", rigidez: "Rígido", grEnvase: 45, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.003285, puntoVerdeDef: 7884 },
+      { id: "001-F2-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 18, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00198, puntoVerdeDef: 4752 },
+    ],
+  },
+];
+
+const formatos002: Formato[] = [
+  {
+    id: 1, nombre: "Botella Leche PEAD 1L", producto: "lácteos", ventas: 3_600_000, destino: "Doméstico",
+    componentes: [
+      { id: "002-F1-C1", envase: "Botella/Garrafa", material: "HDPE", color: "Sin Color", rigidez: "Rígido", grEnvase: 38, unidades: 1, unidadesTotales: 3_600_000, costeUnitDef: 0.014782, puntoVerdeDef: 53215.2 },
+      { id: "002-F1-C2", envase: "Tapones, tapas", material: "Aluminio", color: "Color", rigidez: "Rígido", grEnvase: 4, unidades: 1, unidadesTotales: 3_600_000, costeUnitDef: 0.000456, puntoVerdeDef: 1641.6 },
+      { id: "002-F1-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 22, unidades: 1, unidadesTotales: 3_600_000, costeUnitDef: 0.00242, puntoVerdeDef: 8712 },
+    ],
+  },
+  {
+    id: 2, nombre: "Brik Nata Cocinar 200ml", producto: "lácteos", ventas: 1_200_000, destino: "Doméstico",
+    componentes: [
+      { id: "002-F2-C1", envase: "Botella/Garrafa", material: "Brik", color: "Color", rigidez: "Rígido", grEnvase: 32, unidades: 1, unidadesTotales: 1_200_000, costeUnitDef: 0.013536, puntoVerdeDef: 16243.2 },
+      { id: "002-F2-C2", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 9, unidades: 1, unidadesTotales: 180_000, costeUnitDef: 0.004572, puntoVerdeDef: 822.96 },
+    ],
+  },
+];
+
+const formatos003: Formato[] = [
+  {
+    id: 1, nombre: "Botella PET Agua 500ml", producto: "agua mineral", ventas: 8_400_000, destino: "Doméstico",
+    componentes: [
+      { id: "003-F1-C1", envase: "Botella/Garrafa", material: "PET", color: "Transparente o Light Blue", rigidez: "Rígido", grEnvase: 28, unidades: 1, unidadesTotales: 8_400_000, costeUnitDef: 0.013188, puntoVerdeDef: 110779.2 },
+      { id: "003-F1-C2", envase: "Tapones, tapas", material: "HDPE", color: "Sin Color", rigidez: "Rígido", grEnvase: 12, unidades: 1, unidadesTotales: 8_400_000, costeUnitDef: 0.004668, puntoVerdeDef: 39211.2 },
+      { id: "003-F1-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 14, unidades: 1, unidadesTotales: 8_400_000, costeUnitDef: 0.00154, puntoVerdeDef: 12936 },
+      { id: "003-F1-C4", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 18, unidades: 1, unidadesTotales: 700_000, costeUnitDef: 0.009144, puntoVerdeDef: 6400.8 },
+    ],
+  },
+  {
+    id: 2, nombre: "Botella PET Agua 1,5L", producto: "agua mineral", ventas: 1_200_000, destino: "Doméstico",
+    componentes: [
+      { id: "003-F2-C1", envase: "Botella/Garrafa", material: "PET", color: "Transparente o Light Blue", rigidez: "Rígido", grEnvase: 42, unidades: 1, unidadesTotales: 1_200_000, costeUnitDef: 0.019782, puntoVerdeDef: 23738.4 },
+      { id: "003-F2-C2", envase: "Tapones, tapas", material: "HDPE", color: "Sin Color", rigidez: "Rígido", grEnvase: 12, unidades: 1, unidadesTotales: 1_200_000, costeUnitDef: 0.004668, puntoVerdeDef: 5601.6 },
+      { id: "003-F2-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 14, unidades: 1, unidadesTotales: 1_200_000, costeUnitDef: 0.00154, puntoVerdeDef: 1848 },
+    ],
+  },
+];
+
+const formatos004: Formato[] = [
+  {
+    id: 1, nombre: "Botella Vino Tinto 75cl Vidrio", producto: "vinos", ventas: 2_400_000, destino: "Doméstico",
+    componentes: [
+      { id: "004-F1-C1", envase: "Botella/Garrafa", material: "Vidrio", color: "Color", rigidez: "Rígido", grEnvase: 560, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00812, puntoVerdeDef: 19488 },
+      { id: "004-F1-C2", envase: "Tapones, tapas", material: "Acero", color: "Color", rigidez: "Rígido", grEnvase: 8, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.000584, puntoVerdeDef: 1401.6 },
+      { id: "004-F1-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 24, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.00264, puntoVerdeDef: 6336 },
+    ],
+  },
+  {
+    id: 2, nombre: "Cápsula PET Protección Botella", producto: "vinos", ventas: 2_400_000, destino: "Comercial",
+    componentes: [
+      { id: "004-F2-C1", envase: "Elementos para la seguridad y uso del producto (asa, aplicador, dosificador, precinto, cápsula..)", material: "PET", color: "Color", rigidez: "Rígido", grEnvase: 35, unidades: 1, unidadesTotales: 420_000, costeUnitDef: 0.016485, puntoVerdeDef: 6923.7 },
+    ],
+  },
+];
+
+const correspondencia004: EmailMensaje[] = [
+  {
+    id: "004-M1",
+    de: "agente",
+    remitente: "Agente Auditor · Ecoembes",
+    asunto: "Declaración Período 56 — Revisión componentes PET Cápsula (Formato 2)",
+    fecha: "2025-04-28",
+    cuerpo: "Estimados Sres. de Bodegas Marqués de Tordella S.L.,\n\nEn el marco del análisis monográfico de su declaración correspondiente al período 56, se ha detectado una posible inconsistencia en el Formato 2 (Cápsula PET Protección Botella).\n\nSe ha detectado que el Formato 2 (Cápsula PET Protección Botella) declara 420.000 unidades de un elemento de seguridad fabricado en material PET. Sin embargo, el volumen de ventas registrado en el sistema asciende a 2.400.000 unidades de botella, lo que implica un consumo equivalente de cápsulas. La diferencia (1.980.000 unidades no declaradas) puede suponer una infra-declaración de material PET significativa.\n\nSe solicita que aporten documentación que justifique el número de unidades de cápsulas efectivamente puestas en el mercado durante el período 56, incluyendo albaranes de compra o fichas de consumo de envases.\n\nAtentamente,\nAgente Auditor · Ecoembes",
+    adjuntos: [],
+  },
+  {
+    id: "004-M2",
+    de: "cliente",
+    remitente: "María González · Bodegas Marqués de Tordella S.L.",
+    asunto: "RE: Declaración Período 56 — Revisión componentes PET Cápsula (Formato 2)",
+    fecha: "2025-05-06",
+    cuerpo: "Estimado equipo de Ecoembes,\n\nRecibimos su comunicación y comprendemos la discrepancia detectada. La razón de la diferencia es que durante el período 56 se realizó un cambio de proveedor de cápsulas y se redujo el uso de cápsulas PET en favor del corchotaponado para el 75% de la producción.\n\nAdjuntamos la ficha técnica del nuevo tapón de corcho, así como los albaranes de compra de cápsulas PET del período que confirman las 420.000 unidades declaradas. Quedamos a disposición para cualquier aclaración adicional.\n\nAtentamente,\nMaría González\nResponsable de Medioambiente · Bodegas Marqués de Tordella S.L.",
+    adjuntos: ["albaranes_capsulas_PET_periodo56.pdf", "ficha_tecnica_tapon_corcho.pdf"],
+  },
+];
+
+const formatos005: Formato[] = [
+  {
+    id: 1, nombre: "Bote Champú PEAD 500ml", producto: "higiene personal", ventas: 1_800_000, destino: "Doméstico",
+    componentes: [
+      { id: "005-F1-C1", envase: "Botella/Garrafa", material: "HDPE", color: "Color", rigidez: "Rígido", grEnvase: 52, unidades: 1, unidadesTotales: 1_800_000, costeUnitDef: 0.020228, puntoVerdeDef: 36410.4 },
+      { id: "005-F1-C2", envase: "Tapones, tapas", material: "HDPE", color: "Sin Color", rigidez: "Rígido", grEnvase: 18, unidades: 1, unidadesTotales: 900_000, costeUnitDef: 0.007002, puntoVerdeDef: 6301.8 },
+      { id: "005-F1-C3", envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", grEnvase: 16, unidades: 1, unidadesTotales: 1_800_000, costeUnitDef: 0.00176, puntoVerdeDef: 3168 },
+    ],
+  },
+  {
+    id: 2, nombre: "Envase Gel Ducha PEAD 400ml", producto: "higiene personal", ventas: 360_000, destino: "Doméstico",
+    componentes: [
+      { id: "005-F2-C1", envase: "Botella/Garrafa", material: "HDPE", color: "Color", rigidez: "Rígido", grEnvase: 70, unidades: 1, unidadesTotales: 360_000, costeUnitDef: 0.027230, puntoVerdeDef: 9802.8 },
+      { id: "005-F2-C2", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 14, unidades: 1, unidadesTotales: 180_000, costeUnitDef: 0.007112, puntoVerdeDef: 1280.16 },
+    ],
+  },
+];
+
+const correspondencia005: EmailMensaje[] = [
+  {
+    id: "005-M1",
+    de: "agente",
+    remitente: "Agente Auditor · Ecoembes",
+    asunto: "Declaración Período 56 — Error tarifa línea Gel Ducha PEAD",
+    fecha: "2025-04-14",
+    cuerpo: "Estimados Sres. de Higiene Natura Iberia S.A.,\n\nDurante el análisis monográfico de la declaración correspondiente al período 56, se ha detectado que la línea de envase principal del formato Gel Ducha PEAD 400ml (referencia 005-L4) aplica una tarifa de 0,049 €/kg, correspondiente al material Madera, en lugar de la tarifa vigente para PEAD (0,389 €/kg). Esta diferencia de 0,340 €/kg aplicada sobre 25.200 kg resulta en una cuota infra-calculada.\n\nSe solicita que confirmen si se trata de un error de captura o si existe alguna justificación para la tarifa aplicada.\n\nAtentamente,\nAgente Auditor · Ecoembes",
+    adjuntos: [],
+  },
+  {
+    id: "005-M2",
+    de: "cliente",
+    remitente: "Carlos Ruiz · Higiene Natura Iberia S.A.",
+    asunto: "RE: Declaración Período 56 — Error tarifa línea Gel Ducha PEAD",
+    fecha: "2025-04-22",
+    cuerpo: "Estimado equipo de Ecoembes,\n\nRevisada la declaración internamente, confirmamos que se trató de un error de selección en la plataforma al asignar el material. El envase gel ducha es efectivamente PEAD y la tarifa correcta es 0,389 €/kg.\n\nPresentaremos una declaración complementaria con la corrección.\n\nAtentamente,\nCarlos Ruiz\nDpto. Sostenibilidad · Higiene Natura Iberia S.A.",
+    adjuntos: ["confirmacion_material_PEAD.pdf"],
+  },
+  {
+    id: "005-M3",
+    de: "agente",
+    remitente: "Agente Auditor · Ecoembes",
+    asunto: "RE: Declaración Período 56 — Resolución hallazgo tarifa",
+    fecha: "2025-05-02",
+    cuerpo: "Estimados Sres. de Higiene Natura Iberia S.A.,\n\nAcusamos recibo de la confirmación y de la documentación aportada. Dado que el error de tarifa ha sido reconocido por la empresa y la corrección está en curso mediante declaración complementaria, se procede a marcar la declaración original como NO APTA.\n\nLa declaración complementaria corregida deberá ser presentada antes del 30 de junio de 2025.\n\nAtentamente,\nAgente Auditor · Ecoembes",
+    adjuntos: [],
+  },
+];
+
+const formatos006: Formato[] = [
+  {
+    id: 1, nombre: "Bote Crema PET 200ml", producto: "cosmética", ventas: 2_160_000, destino: "Doméstico",
+    componentes: [
+      { id: "006-F1-C1", envase: "Botella/Garrafa", material: "PET", color: "Color", rigidez: "Rígido", grEnvase: 42, unidades: 1, unidadesTotales: 2_160_000, costeUnitDef: 0.019782, puntoVerdeDef: 42729.12 },
+      { id: "006-F1-C2", envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", grEnvase: 20, unidades: 1, unidadesTotales: 2_160_000, costeUnitDef: 0.0022, puntoVerdeDef: 4752 },
+    ],
+  },
+  {
+    id: 2, nombre: "Tubo Aluminio Crema 75ml", producto: "cosmética", ventas: 540_000, destino: "Doméstico",
+    componentes: [
+      { id: "006-F2-C1", envase: "Botella/Garrafa", material: "Aluminio", color: "Color", rigidez: "Rígido", grEnvase: 6, unidades: 1, unidadesTotales: 540_000, costeUnitDef: 0.000684, puntoVerdeDef: 369.36 },
+      { id: "006-F2-C2", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 8, unidades: 1, unidadesTotales: 2_160_000, costeUnitDef: 0.004064, puntoVerdeDef: 8778.24 },
+    ],
+  },
+];
+
+const correspondencia006: EmailMensaje[] = [
+  {
+    id: "006-M1",
+    de: "agente",
+    remitente: "Agente Auditor · Ecoembes",
+    asunto: "Declaración Período 56 — Posible omisión Film plástico (blister sellado)",
+    fecha: "2025-04-18",
+    cuerpo: "Estimados Sres. de Cosmética Piel Viva S.L.,\n\nEn el análisis del Formato 1 (Bote Crema PET 200ml), la declaración no incluye ningún componente de film plástico o blister de sellado. De acuerdo con la ficha técnica del producto disponible en el catálogo público de la empresa, este formato incorpora un blister de film LDPE de sellado (peso aproximado 8 g/ud.) en el 100% de las unidades vendidas.\n\nSe solicita que confirmen si dicho componente fue declarado bajo otra referencia o, en caso contrario, aporten documentación que justifique su no inclusión en la declaración SIG.\n\nAtentamente,\nAgente Auditor · Ecoembes",
+    adjuntos: [],
+  },
+  {
+    id: "006-M2",
+    de: "cliente",
+    remitente: "Ana Martínez · Cosmética Piel Viva S.L.",
+    asunto: "RE: Declaración Período 56 — Posible omisión Film plástico (blister sellado)",
+    fecha: "2025-04-30",
+    cuerpo: "Estimado equipo de Ecoembes,\n\nGracias por su comunicación. Tras revisar internamente la declaración, confirmamos que el film LDPE del blister de sellado del Formato Bote Crema PET 200ml no fue incluido en la declaración original por un error en el proceso de volcado de datos. El componente existe y está documentado.\n\nAdjuntamos la ficha técnica del film utilizado (8,2 g/ud.) y confirmaremos la cifra exacta con nuestro proveedor antes de proceder a la corrección.\n\nAtentamente,\nAna Martínez\nDpto. Cumplimiento Medioambiental · Cosmética Piel Viva S.L.",
+    adjuntos: ["ficha_tecnica_film_ldpe_blister.pdf"],
+  },
+];
+
+const formatos007: Formato[] = [
+  {
+    id: 1, nombre: "Caja Cartón Galletas 500g", producto: "galletas", ventas: 3_000_000, destino: "Doméstico",
+    componentes: [
+      { id: "007-F1-C1", envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", grEnvase: 65, unidades: 1, unidadesTotales: 3_000_000, costeUnitDef: 0.00715, puntoVerdeDef: 21450 },
+      { id: "007-F1-C2", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 11, unidades: 1, unidadesTotales: 3_000_000, costeUnitDef: 0.005588, puntoVerdeDef: 16764 },
+      { id: "007-F1-C3", envase: "Tapones, tapas", material: "HDPE", color: "Sin Color", rigidez: "Rígido", grEnvase: 185, unidades: 1, unidadesTotales: 600_000, costeUnitDef: 0.071965, puntoVerdeDef: 43179 },
+    ],
+  },
+  {
+    id: 2, nombre: "Display Cartón 12 uds", producto: "galletas", ventas: 300_000, destino: "Comercial",
+    componentes: [
+      { id: "007-F2-C1", envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", grEnvase: 30, unidades: 1, unidadesTotales: 300_000, costeUnitDef: 0.0033, puntoVerdeDef: 990 },
+    ],
+  },
+];
+
+const formatos008: Formato[] = [
+  {
+    id: 1, nombre: "Brik Zumo 1L", producto: "zumos", ventas: 1_440_000, destino: "Doméstico",
+    componentes: [
+      { id: "008-F1-C1", envase: "Botella/Garrafa", material: "Brik", color: "Color", rigidez: "Rígido", grEnvase: 38, unidades: 1, unidadesTotales: 1_440_000, costeUnitDef: 0.016074, puntoVerdeDef: 23146.56 },
+      { id: "008-F1-C2", envase: "Tapones, tapas", material: "Aluminio", color: "Sin Color", rigidez: "Rígido", grEnvase: 3, unidades: 1, unidadesTotales: 720_000, costeUnitDef: 0.000342, puntoVerdeDef: 246.24 },
+      { id: "008-F1-C3", envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", grEnvase: 22, unidades: 1, unidadesTotales: 1_440_000, costeUnitDef: 0.00242, puntoVerdeDef: 3484.8 },
+    ],
+  },
+  {
+    id: 2, nombre: "Pack 6x1L Brik Zumo Film", producto: "zumos", ventas: 240_000, destino: "Doméstico",
+    componentes: [
+      { id: "008-F2-C1", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 15, unidades: 1, unidadesTotales: 240_000, costeUnitDef: 0.00762, puntoVerdeDef: 1828.8 },
+    ],
+  },
+];
+
+const correspondencia008: EmailMensaje[] = [
+  {
+    id: "008-M1",
+    de: "agente",
+    remitente: "Agente Auditor · Ecoembes",
+    asunto: "Declaración Período 56 — Variación significativa unidades Brik vs período anterior",
+    fecha: "2025-05-08",
+    cuerpo: "Estimados Sres. de Zumos Naturales Ibéricos S.A.,\n\nEn el análisis comparativo período 54 vs período 56, se ha detectado una reducción del 43% en las unidades de Brik declaradas (1.440.000 ud. en período 56 vs 2.520.000 ud. en período 54). Esta variación no está asociada a ningún cambio de formato, descatalogación de producto ni fusión empresarial registrada en el sistema.\n\nPara poder emitir dictamen sobre la declaración, se requiere que aporten justificación documental de la variación: informe de ventas del período, cambios en la cartera de productos o cualquier otro documento que explique la reducción.\n\nAtentamente,\nAgente Auditor · Ecoembes",
+    adjuntos: [],
+  },
+];
+
+const formatos009: Formato[] = [
+  {
+    id: 1, nombre: "Caja Cartón Transporte 1/2", producto: "distribución", ventas: 9_600_000, destino: "Comercial",
+    componentes: [
+      { id: "009-F1-C1", envase: "Caja, bandeja", material: "Papel/Cartón", color: "Sin Color", rigidez: "Rígido", grEnvase: 35, unidades: 1, unidadesTotales: 9_600_000, costeUnitDef: 0.003850, puntoVerdeDef: 36960 },
+    ],
+  },
+  {
+    id: 2, nombre: "Film Retractil Palé", producto: "distribución", ventas: 2_400_000, destino: "Comercial",
+    componentes: [
+      { id: "009-F2-C1", envase: "Lámina, film, flow pack", material: "LDPE", color: "Transparente o Light Blue", rigidez: "Flexible", grEnvase: 22, unidades: 1, unidadesTotales: 2_400_000, costeUnitDef: 0.011176, puntoVerdeDef: 26822.4 },
+    ],
+  },
+  {
+    id: 3, nombre: "Palé Madera Transporte", producto: "distribución", ventas: 120_000, destino: "Comercial",
+    componentes: [
+      { id: "009-F3-C1", envase: "Caja, bandeja", material: "Madera", color: "Sin Color", rigidez: "Rígido", grEnvase: 850, unidades: 1, unidadesTotales: 120_000, costeUnitDef: 0.04165, puntoVerdeDef: 4998 },
+    ],
+  },
+];
+
+// ─────────────────────────────────────────────────────────────
 // Final export
 // ─────────────────────────────────────────────────────────────
 export const declaraciones: Declaracion[] = [
@@ -290,6 +542,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.98,
     dictamen:
       "Declaración conforme. Todas las líneas SIG presentan coherencia interna con las fichas técnicas de envase y el volumen de ventas registrado. No se detectan anomalías.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota001,
+    formatos: formatos001,
+    estadoAgente: "apto",
+    correspondencia: [],
+    consultasAbiertas: 0,
+    veredicto: "apto",
   },
   {
     id: "DEC-002",
@@ -306,6 +566,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.97,
     dictamen:
       "Declaración verificada sin incidencias. Los materiales declarados (PEAD, Papel/Cartón, Aluminio, Film plástico, Brik) se ajustan al mix de envase de la gama láctea. Tarifa correcta en todas las líneas.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota002,
+    formatos: formatos002,
+    estadoAgente: "apto",
+    correspondencia: [],
+    consultasAbiertas: 0,
+    veredicto: "apto",
   },
   {
     id: "DEC-003",
@@ -322,6 +590,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.99,
     dictamen:
       "Declaración conforme. Relación PET/tapones coherente con la producción de botella 500 ml. Etiquetado e importe SIG calculados correctamente.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota003,
+    formatos: formatos003,
+    estadoAgente: "apto",
+    correspondencia: [],
+    consultasAbiertas: 0,
+    veredicto: "apto",
   },
   {
     id: "DEC-004",
@@ -338,6 +614,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.91,
     dictamen:
       "Declaración con hallazgo de alta severidad. Las unidades de envase PET declaradas son significativamente inferiores a las que se derivan del volumen de ventas auditado. Se requiere corrección y aportación de evidencia documental del sistema de compras de envases.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota004Declarada,
+    formatos: formatos004,
+    estadoAgente: "consulta_enviada",
+    correspondencia: correspondencia004,
+    consultasAbiertas: 1,
+    veredicto: null,
   },
   {
     id: "DEC-005",
@@ -354,6 +638,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.88,
     dictamen:
       "Declaración con error de tarifa en la línea de envase gel ducha (PEAD). Se ha aplicado la tarifa de Madera (0,049 €/kg) en lugar de la tarifa PEAD vigente (0,389 €/kg). La cuota resultante está infra-calculada. Se requiere corrección inmediata.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota005Declarada,
+    formatos: formatos005,
+    estadoAgente: "no_apto",
+    correspondencia: correspondencia005,
+    consultasAbiertas: 0,
+    veredicto: "no_apto",
   },
   {
     id: "DEC-006",
@@ -370,6 +662,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.84,
     dictamen:
       "Declaración incompleta: el material Film plástico (blister de sellado) no ha sido declarado. El cruce con la ficha técnica del producto lo identifica como material de envasado sujeto a cuota. Severidad media; pendiente de regularización.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota006Declarada,
+    formatos: formatos006,
+    estadoAgente: "respuesta_recibida",
+    correspondencia: correspondencia006,
+    consultasAbiertas: 0,
+    veredicto: null,
   },
   {
     id: "DEC-007",
@@ -386,6 +686,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.79,
     dictamen:
       "Declaración con anomalía en la línea de tapones PEAD: el peso unitario declarado (185 g) excede en un orden de magnitud el benchmark sectorial para este tipo de envase. Probable error de captura (desplazamiento decimal). Cuota sobredeclarada de forma material.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota007Declarada,
+    formatos: formatos007,
+    estadoAgente: "en_analisis",
+    correspondencia: [],
+    consultasAbiertas: 0,
+    veredicto: null,
   },
   {
     id: "DEC-008",
@@ -402,6 +710,14 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.67,
     dictamen:
       "Declaración en revisión. Se detecta una caída del 43% en unidades de Brik respecto al ejercicio anterior sin justificación en el sistema de ventas. La confianza del agente es insuficiente para emitir dictamen definitivo. Se remite a revisión humana para contraste con el equipo comercial.",
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: cuota008,
+    formatos: formatos008,
+    estadoAgente: "consulta_enviada",
+    correspondencia: correspondencia008,
+    consultasAbiertas: 1,
+    veredicto: null,
   },
   {
     id: "DEC-009",
@@ -418,5 +734,13 @@ export const declaraciones: Declaracion[] = [
     confianza: 0.62,
     dictamen:
       "Declaración incompleta con elementos de baja confianza. Se detecta omisión de flejes PVC y posibles discrepancias en el volumen de unidades de Papel/Cartón respecto al sistema logístico. Se remite a revisión humana por la complejidad del perfil de distribuidor multicliente.",
+    periodo: 54,
+    canal: "Ficticias Tipo Carta",
+    importeDaeEur: cuota009Declarada,
+    formatos: formatos009,
+    estadoAgente: "en_revision",
+    correspondencia: [],
+    consultasAbiertas: 0,
+    veredicto: null,
   },
 ];

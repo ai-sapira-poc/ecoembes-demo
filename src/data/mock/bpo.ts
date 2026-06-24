@@ -128,6 +128,9 @@ function makeRecord(i: number): ConciliacionRecord {
       muestreada: false,  // ← CRITICAL: seeded discrepancies are NEVER in the manual sample
       estado: s.estado,
       detalle: s.detalle,
+      canal: "PLATAFORMA 2.0",
+      periodo: 56,
+      fechaRecepcion: "2025-04-" + String(10 + (i % 20)).padStart(2, "0"),
     };
   }
 
@@ -142,10 +145,28 @@ function makeRecord(i: number): ConciliacionRecord {
       muestreada: true,
       estado: "ok",
       detalle: "Declaración verificada manualmente. Sin incidencias.",
+      canal: "PLATAFORMA 2.0",
+      periodo: 56,
+      fechaRecepcion: "2025-04-" + String(1 + (i % 20)).padStart(2, "0"),
     };
   }
 
   const imp = ordinaryImportes.get(i) ?? 5_000;
+  if (i <= 8) {
+    return {
+      id: String(i).padStart(3, "0"),
+      empresa: empresa.nombre,
+      cif: empresa.cif,
+      importeOrigenEur: imp,
+      importeSgaEur: imp,
+      muestreada: false,
+      estado: "ok",
+      detalle: "Declaración conciliada automáticamente. Sin incidencias.",
+      canal: "Ficticias Tipo Carta",
+      periodo: 50,
+      fechaRecepcion: "2025-04-" + String(1 + (i % 28)).padStart(2, "0"),
+    };
+  }
   return {
     id: String(i).padStart(3, "0"),
     empresa: empresa.nombre,
@@ -155,6 +176,9 @@ function makeRecord(i: number): ConciliacionRecord {
     muestreada: false,
     estado: "ok",
     detalle: "Declaración conciliada automáticamente. Sin incidencias.",
+    canal: "PLATAFORMA 2.0",
+    periodo: i % 3 === 0 ? 50 : 56,
+    fechaRecepcion: "2025-04-" + String(1 + (i % 28)).padStart(2, "0"),
   };
 }
 

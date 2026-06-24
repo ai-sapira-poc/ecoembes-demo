@@ -7,18 +7,18 @@ interface ConfidenceBadgeProps {
 }
 
 export function ConfidenceBadge({ value, className }: ConfidenceBadgeProps) {
-  const color =
+  const colorClass =
     value >= 0.85
-      ? "bg-ok/10 text-ok"
+      ? "bg-ok-soft text-ok"
       : value >= 0.7
-      ? "bg-warning/10 text-warning"
-      : "bg-danger/10 text-danger";
+      ? "bg-warning-soft text-warning"
+      : "bg-danger-soft text-danger";
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        color,
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none",
+        colorClass,
         className
       )}
     >

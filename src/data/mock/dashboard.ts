@@ -41,6 +41,11 @@ const coberturaManualPct =
 // This value MUST match the EvidenceCard total in the control module.
 const importeEnRiesgoEur = BPO_IMPORTE_EN_RIESGO_EUR; // 26_900
 
+const declaracionesAptas = declaraciones.filter(d => d.estadoAgente === "apto").length;
+const declaracionesNoAptas = declaraciones.filter(d => d.estadoAgente === "no_apto").length;
+const consultasAbiertas = declaraciones.reduce((acc, d) => acc + (d.consultasAbiertas ?? 0), 0);
+const enDialogo = declaraciones.filter(d => d.estadoAgente === "consulta_enviada" || d.estadoAgente === "respuesta_recibida").length;
+
 export const dashboardKpis: DashboardKpis = {
   declaracionesAuditadas,
   importeAuditadoEur,
@@ -50,6 +55,10 @@ export const dashboardKpis: DashboardKpis = {
   coberturaControlPct,
   coberturaManualPct,
   importeEnRiesgoEur,
+  declaracionesAptas,
+  declaracionesNoAptas,
+  consultasAbiertas,
+  enDialogo,
 };
 
 // ─────────────────────────────────────────────────────────────

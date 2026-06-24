@@ -17,6 +17,12 @@ export type {
   RevisionItem,
   DashboardKpis,
   TrendPoint,
+  EstadoAgente,
+  Veredicto,
+  Destino,
+  ComponenteEnvase,
+  Formato,
+  EmailMensaje,
 } from "@/data/types";
 
 // Mock arrays
@@ -40,7 +46,7 @@ export { dashboardKpis, trendData } from "@/data/mock/dashboard";
 // ─────────────────────────────────────────────────────────────
 
 import { declaraciones as _declaraciones } from "@/data/mock/declaraciones";
-import type { Declaracion, EstadoAuditoria } from "@/data/types";
+import type { Declaracion, EstadoAuditoria, EstadoAgente } from "@/data/types";
 
 /** Look up a single declaration by id. Returns undefined if not found. */
 export function getDeclaracion(id: string): Declaracion | undefined {
@@ -58,6 +64,16 @@ export function auditoriaResumen(): Record<EstadoAuditoria, number> {
     counts[d.estado]++;
   }
   return counts;
+}
+
+/** Group declarations by estadoAgente. Returns an object keyed by EstadoAgente. */
+export function auditoriaPipeline(): Record<EstadoAgente, Declaracion[]> {
+  const estados: EstadoAgente[] = ["recibida", "en_analisis", "consulta_enviada", "respuesta_recibida", "apto", "no_apto", "en_revision"];
+  const groups = Object.fromEntries(estados.map(e => [e, [] as Declaracion[]])) as Record<EstadoAgente, Declaracion[]>;
+  for (const d of _declaraciones) {
+    if (d.estadoAgente) groups[d.estadoAgente].push(d);
+  }
+  return groups;
 }
 
 // ─────────────────────────────────────────────────────────────

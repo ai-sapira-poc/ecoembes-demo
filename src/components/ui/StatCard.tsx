@@ -8,43 +8,57 @@ interface StatCardProps {
   sub?: string;
   icon?: ComponentType<{ className?: string; size?: number }>;
   trend?: "up" | "down";
+  /** Optional trend label shown next to the arrow (e.g. "+12%") */
+  trendLabel?: string;
   className?: string;
 }
 
-export function StatCard({ label, value, sub, icon: Icon, trend, className }: StatCardProps) {
+export function StatCard({ label, value, sub, icon: Icon, trend, trendLabel, className }: StatCardProps) {
   return (
     <div
       className={cn(
-        "bg-surface rounded-xl border border-black/5 shadow-sm p-6 flex flex-col gap-3",
+        "bg-surface rounded-xl border border-line p-5 flex flex-col gap-2.5",
         className
       )}
     >
+      {/* Header row: label + optional icon */}
       <div className="flex items-start justify-between gap-3">
-        <span className="text-sm text-muted font-medium">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted leading-none pt-0.5">
+          {label}
+        </span>
         {Icon && (
-          <span className="flex-shrink-0 w-9 h-9 rounded-full bg-brand-soft flex items-center justify-center">
-            <Icon className="text-brand" size={18} />
+          <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-soft flex items-center justify-center">
+            <Icon className="text-brand-dark" size={16} />
           </span>
         )}
       </div>
-      <div className="flex items-end gap-2">
-        <span className="text-2xl font-bold text-ink leading-none">{value}</span>
+
+      {/* Value row */}
+      <div className="flex items-baseline gap-2">
+        <span className="text-2xl font-semibold text-ink tabular-nums leading-none">
+          {value}
+        </span>
         {trend && (
           <span
             className={cn(
-              "flex items-center gap-0.5 text-xs font-medium mb-0.5",
+              "inline-flex items-center gap-0.5 text-xs font-medium",
               trend === "up" ? "text-ok" : "text-danger"
             )}
           >
             {trend === "up" ? (
-              <TrendingUp size={14} />
+              <TrendingUp size={13} strokeWidth={2.2} />
             ) : (
-              <TrendingDown size={14} />
+              <TrendingDown size={13} strokeWidth={2.2} />
             )}
+            {trendLabel && <span>{trendLabel}</span>}
           </span>
         )}
       </div>
-      {sub && <span className="text-xs text-muted">{sub}</span>}
+
+      {/* Sub-label */}
+      {sub && (
+        <span className="text-xs text-muted leading-snug">{sub}</span>
+      )}
     </div>
   );
 }
