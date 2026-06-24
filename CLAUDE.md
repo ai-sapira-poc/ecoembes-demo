@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 @AGENTS.md
 
 # Ecoembes Demo — "Cada declaración, verificada"
@@ -32,6 +36,20 @@ All seeded discrepancies are outside those 5 cases. That is the story.
 
 ---
 
+## Commands
+
+```bash
+npm run dev      # Next.js dev server at http://localhost:3000
+npm run build    # Production build (also the type-check gate — tsc runs as part of build)
+npm run start    # Serve the production build
+npm run lint     # ESLint (flat config: next/core-web-vitals + next/typescript)
+```
+
+No test runner is configured — there are no unit/e2e tests. Verification is visual: run `npm run dev`
+and check the screen against the narrative. `npm run build` is the only correctness gate (TS strict).
+
+---
+
 ## Brand Palette
 
 | Token          | Hex       | Usage                                    |
@@ -52,26 +70,48 @@ Footer must always read **"POWERED BY SAPIRA"** (bottom-right).
 
 ---
 
-## Project Structure
+## Route Architecture
+
+The App Router tree under `src/app/` splits into **two parallel experiences** — this is the single
+most important structural fact:
+
+- **`/plataforma/*`** — the always-on product UI (own `layout.tsx` with Sidebar/TopBar). This is
+  "the platform" a user explores freely.
+- **`/demos/*`** — scripted **Acto** walkthroughs (own `layout.tsx` with StepLayout/StepBar). These
+  are paced, step-by-step versions of the same modules for live presentations.
+
+| Route                          | Screen                          |
+|--------------------------------|---------------------------------|
+| `/`                            | Landing                         |
+| `/login`                       | Simulated login → `/plataforma` |
+| `/plataforma`                  | Dashboard (unified KPIs)        |
+| `/plataforma/auditoria`        | Auditoría — declaration listing |
+| `/plataforma/auditoria/[id]`   | Auditoría — full declaration ficha |
+| `/plataforma/control`          | Control BPO — coverage hero + reconciliation |
+| `/plataforma/revision`         | Revisión Humana (HITL queue)    |
+| `/demos/auditoria`             | Acto 1 — guided 5-step Auditoría |
+| `/demos/control`               | Acto 2 — guided 5-step Control BPO |
+
+Both the platform module and its matching Acto render the **same data** (`src/data/mock/*`) — the
+Acto just gates it behind steps. Keep them consistent.
+
+## Component & Data Layout
 
 ```
 src/
-  app/                   # Next.js App Router pages
   components/
-    ui/                  # Button, Card, Badge, StatCard, Table, Skeleton,
-                         #   SeverityBadge, ConfidenceBadge
-    layout/              # Sidebar, TopBar, Logo, Footer, StepLayout, StepBar
-    auditoria/           # SigLinesTable, FindingsPanel, DictamenCard
-    control/             # CoverageMeter, ReconciliationTable, EvidenceCard
-    revision/            # ReviewItemCard
-    dashboard/           # CoverageDonut, TrendChart
+    ui/          # Primitives: Button, Card, Badge, StatCard, Table, Skeleton, Severity/ConfidenceBadge
+    layout/      # Shell: Sidebar, TopBar, Logo, Footer, StepLayout, StepBar, MeshBackground
+    motion/      # Reveal, WhiteWipe — shared Framer Motion transition wrappers
+    auditoria/   # SIG lines, findings, dictamen, expediente, pipeline, correspondencia
+    control/     # CoverageMeter (the hero visual), ReconciliationTable, EvidenceCard
+    revision/    # ReviewItemCard
+    dashboard/   # CoverageDonut, TrendChart
   data/
-    types.ts             # All TypeScript interfaces
-    mock/                # empresas.ts, declaraciones.ts, bpo.ts,
-                         #   dashboard.ts, revision.ts
-    index.ts             # Re-exports + helpers (getDeclaracion, formatEUR, …)
-  lib/
-    utils.ts             # cn(), formatEUR(), formatNum(), formatPct()
+    types.ts     # All TypeScript interfaces
+    mock/        # empresas.ts, declaraciones.ts, bpo.ts, dashboard.ts, revision.ts
+    index.ts     # Re-exports + derived helpers (getDeclaracion, auditoriaResumen, auditoriaPipeline)
+  lib/utils.ts   # cn(), formatEUR(), formatNum(), formatPct()
 ```
 
 ---
@@ -145,3 +185,4 @@ turning pages, not switching tabs.
 ## docs/
 
 - `docs/DEMO_STRUCTURE.md` — condensed single source of truth: narrative, route map, module summaries, Actos.
+- `docs/DESIGN.md` — visual/design direction for the demo.

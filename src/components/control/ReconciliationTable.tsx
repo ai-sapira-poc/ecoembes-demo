@@ -62,8 +62,9 @@ export function ReconciliationTable({
 
   const getConfianza = (record: ConciliacionRecord) => confianzaById?.[record.id] ?? 0;
 
+  /** OK + confianza ≥ umbral → autónomo; cualquier discrepancia → revisión humana */
   const isAutonomo = (record: ConciliacionRecord) =>
-    getConfianza(record) >= confidenceThreshold;
+    record.estado === "ok" && getConfianza(record) >= confidenceThreshold;
 
   const filtered = records.filter((r) => {
     if (filterEstado !== "todos" && r.estado !== filterEstado) return false;
@@ -96,10 +97,8 @@ export function ReconciliationTable({
           </p>
           {isAgent && (
             <p className="text-[11px] text-muted">
-              Umbral autónomo:{" "}
-              <span className="font-semibold tabular-nums text-ink">
-                {confidenceThreshold * 100} %
-              </span>
+              Sin incidencia · ≥ {confidenceThreshold * 100} % → autónomo · incidencia → revisión
+              humana
             </p>
           )}
         </div>
@@ -178,6 +177,12 @@ export function ReconciliationTable({
 
         <span className="ml-auto text-[11px] text-muted tabular-nums">
           {filtered.length} de {records.length} registros
+          {isAgent && (
+            <>
+              {" "}
+              · umbral {confidenceThreshold * 100} %
+            </>
+          )}
         </span>
       </div>
 
@@ -209,14 +214,18 @@ export function ReconciliationTable({
             const isExpanded = expandedId === record.id;
             const confianza = getConfianza(record);
             const autonomo = isAutonomo(record);
+            const needsHuman = isAgent && !autonomo;
+
+            const rowClass = needsHuman
+              ? isDiscrepancy
+                ? "bg-warning/[0.08] hover:bg-warning/[0.14]"
+                : "bg-warning/[0.05] hover:bg-warning/[0.1]"
+              : undefined;
 
             return (
               <Fragment key={record.id}>
                 <TR
-                  className={cn(
-                    "cursor-pointer",
-                    isDiscrepancy && "bg-danger/[0.03] hover:bg-danger/[0.07]"
-                  )}
+                  className={cn("cursor-pointer", rowClass)}
                   onClick={() => toggleRow(record.id)}
                 >
                   {/* Expand toggle */}
@@ -321,7 +330,10 @@ export function ReconciliationTable({
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15 }}
-                      className={cn(isDiscrepancy && "bg-danger/[0.03]")}
+                      className={cn(
+                        needsHuman &&
+                          (isDiscrepancy ? "bg-warning/[0.08]" : "bg-warning/[0.05]")
+                      )}
                     >
                       <td colSpan={colSpan} className="px-6 py-3">
                         <motion.div
