@@ -12,6 +12,7 @@ import { WhiteWipe } from "@/components/motion/WhiteWipe";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { declaraciones, formatEUR } from "@/data/index";
+import { cn } from "@/lib/utils";
 import type { EstadoAgente } from "@/data/types";
 import {
   Mail,
@@ -195,7 +196,7 @@ function ExtractionTableSkeleton() {
           <Skeleton key={i} className="h-2.5 shrink-0 rounded-sm" style={{ width: w }} />
         ))}
       </div>
-      {[1, 2, 3, 4].map((row) => (
+      {[1, 2, 3].map((row) => (
         <div
           key={row}
           className="flex gap-2 border-b border-line px-3 py-2 last:border-0"
@@ -223,31 +224,29 @@ function ValidationRow({
   const status = resolved ? v.status : "pending";
 
   return (
-    <li className="flex items-start gap-4 px-5 py-3.5">
+    <li className="flex items-start gap-3 px-4 py-2">
       <div className="mt-0.5 flex-shrink-0">
-        {status === "ok" && <CheckCircle2 className="w-4 h-4 text-ok" />}
-        {status === "flag" && <AlertTriangle className="w-4 h-4 text-warning" />}
+        {status === "ok" && <CheckCircle2 className="w-3.5 h-3.5 text-ok" />}
+        {status === "flag" && <AlertTriangle className="w-3.5 h-3.5 text-warning" />}
         {status === "pending" && (
-          <Loader2 className="w-4 h-4 text-muted animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <p
-          className={`text-sm font-medium ${
+          className={`text-xs font-medium leading-snug ${
             status === "flag" ? "text-warning" : status === "pending" ? "text-muted" : "text-ink"
           }`}
         >
           {v.label}
         </p>
-        <p
-          className={`text-xs mt-0.5 leading-relaxed text-pretty transition-opacity duration-300 ${
-            resolved ? "text-muted" : "text-muted/50"
-          }`}
-        >
-          {resolved ? v.detalle : "Comprobando…"}
-        </p>
+        {resolved && (
+          <p className="mt-0.5 text-[11px] leading-snug text-muted line-clamp-2 text-pretty">
+            {v.detalle}
+          </p>
+        )}
       </div>
-      <div className="ml-auto flex-shrink-0">
+      <div className="ml-auto flex-shrink-0 self-center">
         {status === "ok" && (
           <span className="text-[11px] bg-ok-soft text-ok font-semibold px-2 py-0.5 rounded-full">
             OK
@@ -289,15 +288,21 @@ function AnalisisVisual() {
   const allResolved = resolvedCount >= validaciones005.length;
 
   return (
-    <div className="space-y-5">
-      <FadeUp>
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <FadeUp className="shrink-0">
         <EstadoBar estado="en_analisis" />
       </FadeUp>
 
-      {/* Extracted data — skeleton crossfades into table */}
-      <FadeUp delay={0.06}>
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-line flex items-center justify-between gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        {/* Extracted data — scrolls internally when validations share the viewport */}
+        <FadeUp
+          delay={0.06}
+          className={cn(
+            "flex min-h-0 flex-col overflow-hidden rounded-xl border border-line bg-surface",
+            phase === "validations" ? "flex-[5]" : "flex-1"
+          )}
+        >
+          <div className="shrink-0 border-b border-line px-4 py-2.5 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-ink">Declaración extraída</p>
               <p className="text-xs text-muted mt-0.5">
@@ -331,7 +336,7 @@ function AnalisisVisual() {
               )}
             </AnimatePresence>
           </div>
-          <div className="p-5">
+          <div className="min-h-0 flex-1 overflow-auto p-3">
             <AnimatePresence mode="wait">
               {phase === "extracting" ? (
                 <motion.div
@@ -356,20 +361,19 @@ function AnalisisVisual() {
               )}
             </AnimatePresence>
           </div>
-        </div>
-      </FadeUp>
+        </FadeUp>
 
-      {/* Validation checklist — rows resolve one by one */}
-      <AnimatePresence>
-        {phase === "validations" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="rounded-xl border border-line bg-surface overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-line">
+        {/* Validation checklist — shares viewport; list scrolls if needed */}
+        <AnimatePresence>
+          {phase === "validations" && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="flex min-h-0 flex-[4] flex-col overflow-hidden rounded-xl border border-line bg-surface"
+            >
+              <div className="shrink-0 border-b border-line px-4 py-2.5">
                 <p className="text-sm font-semibold text-ink">
                   Validaciones automáticas — monográfico
                 </p>
@@ -377,7 +381,7 @@ function AnalisisVisual() {
                   {dec.empresa} · Ejercicio {dec.ejercicio}
                 </p>
               </div>
-              <ul className="divide-y divide-line">
+              <ul className="min-h-0 flex-1 divide-y divide-line overflow-auto">
                 {validaciones005.map((v, i) => (
                   <ValidationRow key={v.label} v={v} resolved={resolvedCount > i} />
                 ))}
@@ -388,21 +392,21 @@ function AnalisisVisual() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="overflow-hidden"
+                    className="shrink-0 overflow-hidden"
                   >
-                    <div className="px-5 py-3 border-t border-warning/20 bg-warning-soft flex items-center gap-2">
-                      <XCircle className="w-4 h-4 text-warning flex-shrink-0" />
-                      <p className="text-xs text-warning font-medium">
+                    <div className="flex items-center gap-2 border-t border-warning/20 bg-warning-soft px-4 py-2">
+                      <XCircle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                      <p className="text-[11px] font-medium text-warning leading-snug">
                         2 alertas detectadas — el agente abre consulta formal con el cliente
                       </p>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

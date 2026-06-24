@@ -33,7 +33,7 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
       </div>
 
       {/* Two-column content area */}
-      <div className="flex-1 flex overflow-hidden px-6 gap-6 pb-20">
+      <div className="flex min-h-0 flex-1 overflow-hidden px-6 gap-6 pb-20">
         {/* Left column — narrow, explanation */}
         <div className="w-80 flex-shrink-0 flex flex-col justify-start py-6">
           <AnimatePresence mode="wait">
@@ -59,8 +59,8 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
           </AnimatePresence>
         </div>
 
-        {/* Right column — wide, visual */}
-        <div className="flex-1 min-w-0 py-6 overflow-auto">
+        {/* Right column — wide, visual (no page scroll; visuals manage their own overflow) */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden py-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`right-${activeN}`}
@@ -68,7 +68,7 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.3 }}
-              className="h-full"
+              className="flex min-h-0 flex-1 flex-col"
             >
               {activeStep.visual}
             </motion.div>

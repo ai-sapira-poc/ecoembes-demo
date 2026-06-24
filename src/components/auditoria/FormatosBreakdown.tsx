@@ -42,7 +42,7 @@ export function FormatosBreakdown({ formatos, flaggedComponenteIds = [] }: Forma
     <div className="overflow-x-auto rounded-lg border border-line">
       <table className="w-full border-collapse text-xs tabular-nums">
         <thead>
-          <tr className="bg-canvas text-[10px] uppercase tracking-wider text-muted">
+          <tr className="bg-canvas text-[10px] uppercase tracking-wider text-muted sticky top-0 z-10 shadow-[0_1px_0_0_var(--color-line)]">
             {COLS.map((c) => (
               <th
                 key={c.key}
