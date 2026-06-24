@@ -9,12 +9,14 @@ import { ReconciliationTable } from "@/components/control/ReconciliationTable";
 import { EvidenceCard } from "@/components/control/EvidenceCard";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import { bpoMes, BPO_IMPORTE_EN_RIESGO_EUR, revisionItems } from "@/data/index";
+import type { ConciliacionRecord } from "@/data/types";
 import { formatEUR, formatNum } from "@/lib/utils";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
 import {
   AlertTriangle,
   ArrowRight,
   Bot,
-  CheckCircle2,
   Database,
   Loader2,
   Users,
@@ -27,15 +29,6 @@ import { Skeleton } from "@/components/ui/Skeleton";
 const DISCREPANCY_RECORDS = bpoMes.records.filter((r) => r.estado !== "ok");
 const DISCREPANCY_COUNT = DISCREPANCY_RECORDS.length;          // 6
 const IMPORTE_EN_RIESGO = BPO_IMPORTE_EN_RIESGO_EUR;           // 26_900
-const MANUAL_PCT_DISPLAY = 1.6;
-const MANUAL_PCT_LABEL = MANUAL_PCT_DISPLAY.toLocaleString("es-ES", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
-const REST_PCT_LABEL = (100 - MANUAL_PCT_DISPLAY).toLocaleString("es-ES", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
 const CONFIDENCE_THRESHOLD = 0.8;
 const AUTO_DICTAMEN_COUNT = bpoMes.totalDeclaraciones - 2;     // 435 ≥80%
 const HITL_COUNT = 2;
@@ -48,9 +41,31 @@ const CIERRE_FEED_IDS = ["001", "002", "088", "103"];
 const CIERRE_FEED_RECORDS = CIERRE_FEED_IDS.map(
   (id) => bpoMes.records.find((r) => r.id === id)!
 );
-const HITL_IDS = new Set([158, 402]);
-const DISCREPANCY_IDS = new Set([45, 103, 158, 299, 402, 430]);
 const CONTROL_HITL = revisionItems.filter((item) => item.origen === "control");
+
+const HITL_CONFIDENCE: Record<number, number> = { 158: 0.58, 402: 0.71 };
+const HIGH_CONF_DISCREPANCY: Record<number, number> = {
+  45: 0.92,
+  103: 0.89,
+  299: 0.94,
+  430: 0.87,
+};
+
+function recordConfianza(id: number, estado: ConciliacionRecord["estado"]): number {
+  if (HITL_CONFIDENCE[id] != null) return HITL_CONFIDENCE[id];
+  if (HIGH_CONF_DISCREPANCY[id] != null) return HIGH_CONF_DISCREPANCY[id];
+  if (estado !== "ok") return 0.85;
+  return 0.97;
+}
+
+const CONFIDENCIA_BY_ID = Object.fromEntries(
+  bpoMes.records.map((r) => [r.id, recordConfianza(Number(r.id), r.estado)])
+);
+
+/** Demo sample: 3 OK + 6 incidencias + 1 extra OK */
+const DEMO_TABLE_RECORDS = ["001", "012", "088", "045", "103", "158", "299", "402", "430", "377"].map(
+  (id) => bpoMes.records.find((r) => r.id === id)!
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Animated count-up helper
@@ -323,379 +338,234 @@ function CierreMensualVisual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DotGrid — 437 dots, staggered reveal
+// Step 2 — Conciliación + enrutamiento (tablas)
 // ─────────────────────────────────────────────────────────────────────────────
-interface DotGridProps {
-  showDiscrepancies?: boolean;
-  animate?: boolean;
-}
-
-function DotGrid({
-  showDiscrepancies = false,
-  animate: shouldAnimate = false,
-}: DotGridProps) {
-  const TOTAL = bpoMes.totalDeclaraciones;
-
+function RoutingSummaryTable() {
   return (
-    <div>
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-5 mb-4 text-xs text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-brand inline-block" />
-          Verificada ({bpoMes.muestreadas} de {TOTAL})
-        </span>
-        {showDiscrepancies && (
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-danger inline-block" />
-            Discrepancia ({DISCREPANCY_COUNT} casos)
-          </span>
-        )}
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-line inline-block" />
-          Pendiente ({TOTAL - bpoMes.muestreadas} de {TOTAL})
-        </span>
-      </div>
-
-      {/* Grid */}
-      <div
-        className="flex flex-wrap gap-1"
-        aria-label={`${TOTAL} declaraciones — ${bpoMes.muestreadas} verificadas`}
-      >
-        {Array.from({ length: TOTAL }, (_, i) => {
-          const id = i + 1;
-          const isSampled = SAMPLED_IDS.has(id);
-          const isDiscrepancy = showDiscrepancies && DISCREPANCY_IDS.has(id);
-
-          const colorClass = isSampled
-            ? "bg-brand"
-            : isDiscrepancy
-            ? "bg-danger"
-            : "bg-line";
-
-          if (shouldAnimate) {
-            return (
-              <motion.span
-                key={id}
-                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colorClass}`}
-                initial={{ opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  delay: i * 0.002,
-                  duration: 0.2,
-                  ease: "easeOut",
-                }}
-                title={
-                  isSampled
-                    ? `Caso ${id} — verificada`
-                    : isDiscrepancy
-                    ? `Caso ${id} — discrepancia`
-                    : `Caso ${id}`
-                }
-              />
-            );
-          }
-
-          return (
-            <span
-              key={id}
-              className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colorClass}`}
-              title={
-                isSampled
-                  ? `Caso ${id} — verificada`
-                  : isDiscrepancy
-                  ? `Caso ${id} — discrepancia`
-                  : `Caso ${id}`
-              }
-            />
-          );
-        })}
-      </div>
-
-      <p className="mt-4 text-xs text-muted">
-        Cobertura: {bpoMes.muestreadas} de {formatNum(TOTAL)} casos &middot;{" "}
-        {formatEUR(bpoMes.importeMuestreadoEur)} &middot; {MANUAL_PCT_LABEL} % del importe
-      </p>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Step 2 — Control actual (dot grid, no discrepancies)
-// ─────────────────────────────────────────────────────────────────────────────
-function ControlHoySkeleton() {
-  return (
-    <>
-      <div className="px-5 py-4">
-        <Skeleton className="mb-3 h-3 w-40" />
-        <div className="flex flex-wrap gap-1">
-          {Array.from({ length: 120 }).map((_, i) => (
-            <Skeleton key={i} className="h-2.5 w-2.5 rounded-full" />
-          ))}
-        </div>
-      </div>
-      <div className="space-y-0 border-t border-line">
-        <Skeleton className="mx-5 mt-4 h-2 w-full rounded-full" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between border-t border-line px-5 py-3">
-            <div className="space-y-1.5">
-              <Skeleton className="h-3.5 w-36" />
-              <Skeleton className="h-3 w-10" />
-            </div>
-            <Skeleton className="h-3.5 w-14" />
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function MuestreoManualBar({ animateIn }: { animateIn: boolean }) {
-  return (
-    <div className="border-t border-line px-5 py-4">
-      <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-        <span className="font-semibold uppercase tracking-[0.12em] text-muted">
-          Cobertura verificada
-        </span>
-        <span className="tabular-nums font-semibold text-ink">{MANUAL_PCT_LABEL} %</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-line">
-        <motion.div
-          className="h-full rounded-full bg-brand"
-          initial={{ width: 0 }}
-          animate={animateIn ? { width: `${MANUAL_PCT_DISPLAY}%` } : { width: 0 }}
-          transition={{ duration: 0.9, delay: 0.1, ease: EASE_OUT }}
-        />
-      </div>
-      <p className="mt-2 text-[11px] text-muted">
-        {formatEUR(bpoMes.importeMuestreadoEur)} verificados de {formatEUR(bpoMes.importeTotalEur)}{" "}
-        · {bpoMes.muestreadas} casos de {formatNum(bpoMes.totalDeclaraciones)}
-      </p>
-    </div>
-  );
-}
-
-function MuestreadosFeed() {
-  return (
-    <div className="border-t border-line">
-      <div className="flex items-center justify-between px-5 pb-1 pt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-          Casos verificados
+    <div className="overflow-hidden rounded-xl border border-line bg-white shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)]">
+      <div className="border-b border-line px-5 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          Resumen de enrutamiento
         </p>
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ok">
-          <CheckCircle2 className="h-3 w-3" />
-          Todas OK
-        </span>
       </div>
-      {SAMPLED_RECORDS.map((row, i) => (
-        <motion.div
-          key={row.id}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.1 + i * 0.05, ease: EASE_OUT }}
-          className="flex items-center justify-between gap-4 border-t border-line px-5 py-3"
-        >
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-ink">{row.empresa}</p>
-            <p className="mt-0.5 font-mono text-[11px] text-brand-dark">{row.id}</p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-sm font-medium tabular-nums text-ink">
-              {formatEUR(row.importeOrigenEur)}
-            </p>
-            <p className="mt-0.5 text-[10px] text-ok">Conciliada</p>
-          </div>
-        </motion.div>
-      ))}
+      <Table>
+        <THead>
+          <TR>
+            <TH>Enrutamiento</TH>
+            <TH className="text-right">Registros</TH>
+            <TH>Qué ocurre</TH>
+          </TR>
+        </THead>
+        <TBody>
+          <TR>
+            <TD>
+              <div className="flex items-center gap-2">
+                <Badge color="ok">Autónomo</Badge>
+                <span className="text-xs text-muted">≥ {CONFIDENCE_THRESHOLD * 100} %</span>
+              </div>
+            </TD>
+            <TD className="text-right tabular-nums font-semibold text-ink">
+              {formatNum(AUTO_DICTAMEN_COUNT)}
+            </TD>
+            <TD className="text-xs text-ink-soft leading-relaxed">
+              Cierre automático · {formatNum(HIGH_CONF_INCIDENCIAS)} incidencias con confianza alta
+            </TD>
+          </TR>
+          <TR>
+            <TD>
+              <div className="flex items-center gap-2">
+                <Badge color="warning">Revisión humana</Badge>
+                <span className="text-xs text-muted">&lt; {CONFIDENCE_THRESHOLD * 100} %</span>
+              </div>
+            </TD>
+            <TD className="text-right tabular-nums font-semibold text-ink">{HITL_COUNT}</TD>
+            <TD className="text-xs text-ink-soft leading-relaxed">
+              Escalados a cola HITL — sin dictamen definitivo del agente
+            </TD>
+          </TR>
+        </TBody>
+      </Table>
     </div>
   );
 }
 
-function ControlHoyVisual() {
-  const [phase, setPhase] = useState<"loading" | "grid" | "detail">("loading");
+function HitlQueueTable() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-line bg-white shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)]">
+      <div className="border-b border-line px-5 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          Cola de revisión humana — Control BPO
+        </p>
+      </div>
+      <Table>
+        <THead>
+          <TR>
+            <TH>ID</TH>
+            <TH>Caso</TH>
+            <TH className="text-center">Confianza</TH>
+            <TH className="text-right">Impacto</TH>
+            <TH>Acción sugerida</TH>
+          </TR>
+        </THead>
+        <TBody>
+          {CONTROL_HITL.map((item) => (
+            <TR key={item.id}>
+              <TD className="font-mono text-xs text-muted">{item.id}</TD>
+              <TD className="max-w-[220px]">
+                <p className="truncate text-sm font-medium text-ink" title={item.titulo}>
+                  {item.titulo}
+                </p>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted">{item.resumen}</p>
+              </TD>
+              <TD className="text-center">
+                <ConfidenceBadge value={item.confianza} />
+              </TD>
+              <TD className="text-right tabular-nums font-medium text-ink">
+                {formatEUR(item.impactoEur)}
+              </TD>
+              <TD className="max-w-[240px] text-xs text-ink-soft leading-relaxed">
+                {item.accionSugerida}
+              </TD>
+            </TR>
+          ))}
+        </TBody>
+      </Table>
+    </div>
+  );
+}
+
+function ConciliacionAgenteVisual() {
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const toGrid = setTimeout(() => setPhase("grid"), 850);
-    const toDetail = setTimeout(() => setPhase("detail"), 1700);
-    return () => {
-      clearTimeout(toGrid);
-      clearTimeout(toDetail);
-    };
+    const t = setTimeout(() => setReady(true), 1800);
+    return () => clearTimeout(t);
   }, []);
 
-  const uncheckedCount = bpoMes.totalDeclaraciones - bpoMes.muestreadas;
-  const uncheckedEur = bpoMes.importeTotalEur - bpoMes.importeMuestreadoEur;
-
   return (
-    <FadeUp>
-      <div className="mx-auto w-full max-w-xl space-y-3">
-        <article className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
-            <span className="flex items-center gap-2 text-xs text-muted">
-              <ClipboardList className="h-3.5 w-3.5" />
-              Cobertura del cierre
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+          <span className="flex items-center gap-2 text-xs text-muted">
+            <Bot className="h-3.5 w-3.5" />
+            Agente Sapira · Conciliación y enrutamiento
+          </span>
+          {!ready ? (
+            <span className="flex items-center gap-1.5 text-[11px] text-muted">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Conciliando {formatNum(bpoMes.totalDeclaraciones)} registros…
             </span>
-            <AnimatePresence mode="wait">
-              {phase === "loading" ? (
-                <motion.span
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-[11px] text-muted"
-                >
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Seleccionando muestra…
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="ready"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: EASE_OUT }}
-                  className="text-[11px] text-muted"
-                >
-                  {bpoMes.muestreadas} de {formatNum(bpoMes.totalDeclaraciones)} · {MANUAL_PCT_LABEL} %
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {phase === "loading" ? (
-              <motion.div
-                key="skeleton"
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ControlHoySkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: EASE_OUT }}
-              >
-                <div className="px-5 py-4">
-                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-                    Distribución del cierre
-                  </p>
-                  <DotGrid showDiscrepancies={false} animate={true} />
-                </div>
-
-                <AnimatePresence>
-                  {phase === "detail" && (
-                    <motion.div
-                      key="detail"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.35, ease: EASE_OUT }}
-                    >
-                      <MuestreoManualBar animateIn={true} />
-                      <MuestreadosFeed />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </article>
-
-        <AnimatePresence>
-          {phase === "detail" && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.06 }}
-              className="rounded-xl border border-line bg-surface px-5 py-3.5"
-            >
-              <p className="text-sm leading-relaxed text-ink-soft">
-                <strong className="font-semibold text-ink">
-                  {formatNum(uncheckedCount)} declaraciones
-                </strong>{" "}
-                ({REST_PCT_LABEL} % · {formatEUR(uncheckedEur)}) quedan sin verificar en cada
-                cierre. Un error en cualquiera de ellas pasa desapercibido hasta una reclamación o
-                auditoría externa.
-              </p>
-            </motion.div>
+          ) : (
+            <span className="text-[11px] font-semibold text-ok">
+              Completado · umbral {CONFIDENCE_THRESHOLD * 100} %
+            </span>
           )}
-        </AnimatePresence>
-      </div>
-    </FadeUp>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Step 3 — Conciliación agente: CoverageMeter
-// ─────────────────────────────────────────────────────────────────────────────
-function ConciliacionVisual() {
-  return (
-    <div className="space-y-4">
-      <CoverageMeter
-        manualPct={MANUAL_PCT_DISPLAY}
-        fullPct={100}
-        manualEur={bpoMes.importeMuestreadoEur}
-        totalEur={bpoMes.importeTotalEur}
-        manualCount={bpoMes.muestreadas}
-        totalCount={bpoMes.totalDeclaraciones}
-      />
-
-      {/* Process diagram */}
-      <div className="rounded-xl bg-white border border-line p-5 flex items-center gap-3 shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)]">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted whitespace-nowrap">
-          Proceso
-        </p>
-        <div className="flex items-center gap-3 text-sm text-ink">
-          <span className="rounded-lg bg-brand-soft px-3 py-2 text-xs font-semibold text-brand-dark">
-            Sistema Origen
-          </span>
-          <span className="text-muted font-medium text-base">↔</span>
-          <span className="rounded-lg bg-brand-soft px-3 py-2 text-xs font-semibold text-brand-dark">
-            SGA
-          </span>
-          <span className="text-muted ml-1 text-xs">
-            campo a campo · {formatNum(bpoMes.totalDeclaraciones)} registros · {bpoMes.periodo}
-          </span>
         </div>
-      </div>
+
+        {!ready ? (
+          <div className="grid grid-cols-4 gap-4 px-5 py-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-px border-t border-line bg-line sm:grid-cols-4">
+            {[
+              { value: formatNum(bpoMes.totalDeclaraciones), label: "conciliados" },
+              { value: formatNum(AUTO_OK_COUNT), label: "sin incidencia" },
+              { value: String(DISCREPANCY_COUNT), label: "incidencias" },
+              { value: String(HITL_COUNT), label: "en cola HITL" },
+            ].map(({ value, label }) => (
+              <div key={label} className="bg-surface px-4 py-3 text-center">
+                <p className="text-lg font-semibold tabular-nums text-ink">{value}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
+                  {label}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </article>
+
+      {ready && (
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+          <RoutingSummaryTable />
+          <ReconciliationTable
+            variant="agent"
+            records={DEMO_TABLE_RECORDS}
+            confianzaById={CONFIDENCIA_BY_ID}
+            confidenceThreshold={CONFIDENCE_THRESHOLD}
+            title="Registros conciliados"
+          />
+          <p className="text-center text-xs text-muted">
+            Muestra de {DEMO_TABLE_RECORDS.length} registros ·{" "}
+            <Link href="/plataforma/control" className="font-medium text-brand hover:underline">
+              {formatNum(bpoMes.totalDeclaraciones)} en plataforma
+            </Link>
+          </p>
+          <HitlQueueTable />
+          <Link
+            href="/plataforma/revision"
+            className="inline-flex w-full items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+          >
+            <Users className="h-4 w-4 shrink-0" />
+            Abrir cola de revisión humana
+            <ArrowRight className="ml-auto h-4 w-4" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 4 — Discrepancias
+// Step 3 — Discrepancias
 // ─────────────────────────────────────────────────────────────────────────────
 function DiscrepanciasVisual() {
   return (
-    <div className="space-y-5">
-      {/* Alert */}
-      <div className="rounded-xl bg-danger/5 border border-danger/20 px-5 py-4 flex items-start gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0 rounded-xl border border-danger/20 bg-danger/5 px-5 py-4 flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-danger leading-snug">
-            {DISCREPANCY_COUNT} discrepancias detectadas — {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
+            {DISCREPANCY_COUNT} incidencias detectadas — {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
           </p>
           <p className="text-xs text-ink-soft mt-1.5 leading-relaxed">
-            Ninguna caía entre los {bpoMes.muestreadas} casos ya verificados. Las anomalías están
-            en el {REST_PCT_LABEL} % del cierre aún pendiente.
+            {HIGH_CONF_INCIDENCIAS} con confianza ≥ {CONFIDENCE_THRESHOLD * 100} % · {HITL_COUNT}{" "}
+            escaladas a revisión humana por confianza insuficiente.
           </p>
         </div>
       </div>
 
-      {/* Dot grid with discrepancies */}
-      <div className="rounded-xl bg-white border border-line shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)] px-6 py-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-          Distribución visual — {formatNum(bpoMes.totalDeclaraciones)} declaraciones
-        </p>
-        <DotGrid showDiscrepancies={true} animate={true} />
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <ReconciliationTable
+          variant="agent"
+          records={DISCREPANCY_RECORDS}
+          confianzaById={CONFIDENCIA_BY_ID}
+          confidenceThreshold={CONFIDENCE_THRESHOLD}
+          title="Incidencias del cierre"
+        />
       </div>
+    </div>
+  );
+}
 
-      {/* Filtered table — discrepancy records only */}
-      <ReconciliationTable records={DISCREPANCY_RECORDS} />
+function EvidenciaVisual() {
+  return (
+    <div className="mx-auto w-full max-w-xl space-y-3">
+      <EvidenceCard
+        mes={bpoMes}
+        discrepancias={DISCREPANCY_COUNT}
+        importeEnRiesgoEur={IMPORTE_EN_RIESGO}
+      />
+      <Link
+        href="/plataforma/revision"
+        className="inline-flex w-full items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+      >
+        <Users className="h-4 w-4 shrink-0" />
+        {HITL_COUNT} casos en cola de revisión humana
+        <ArrowRight className="ml-auto h-4 w-4" />
+      </Link>
     </div>
   );
 }
@@ -726,7 +596,7 @@ const steps: Step[] = [
           <StepAsideList
             items={[
               "Toma el cierre mensual como entrada automática.",
-              "Prepara la conciliación campo a campo sobre todo el volumen.",
+              "Concilia los 437 registros campo a campo con el SGA.",
               "El análisis arranca en cuanto el mes queda registrado.",
             ]}
           />
@@ -741,107 +611,69 @@ const steps: Step[] = [
   },
   {
     n: 2,
-    nombre: "Cobertura",
-    titulo: "Cobertura del cierre",
-    explicacion: (
-      <>
-        <StepAsideSection title="Qué ocurre">
-          <p>
-            En cada cierre, solo una fracción del importe queda verificada antes de dar el mes por
-            cerrado:{" "}
-            <strong className="text-ink">{MANUAL_PCT_LABEL} %</strong> en este caso —{" "}
-            {bpoMes.muestreadas} de {formatNum(bpoMes.totalDeclaraciones)} declaraciones.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="La brecha">
-          <StepAsideList
-            items={[
-              "Cada punto del gráfico es una declaración del cierre.",
-              "La mayor parte del volumen queda sin conciliación campo a campo.",
-              "Las anomalías se concentran donde nadie mira.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideSection title="Con el agente">
-          <StepAsideList
-            items={[
-              "Cobertura del 100 % del importe y de los registros.",
-              "Mismo criterio de conciliación, aplicado a todo el cierre.",
-              "Las discrepancias dejan de depender del azar.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideMeta>
-          Verificados: {bpoMes.muestreadas} casos · {formatEUR(bpoMes.importeMuestreadoEur)}
-        </StepAsideMeta>
-      </>
-    ),
-    visual: <ControlHoyVisual />,
-  },
-  {
-    n: 3,
-    nombre: "Agente IA",
-    titulo: "Conciliación del agente",
+    nombre: "Conciliación",
+    titulo: "Conciliación y enrutamiento",
     explicacion: (
       <>
         <StepAsideSection title="Qué hace el agente">
           <p>
             Cruza origen y SGA campo a campo para los{" "}
             <strong className="text-ink">{formatNum(bpoMes.totalDeclaraciones)} registros</strong>{" "}
-            en cuestión de minutos.
+            del cierre. Cada dictamen recibe una puntuación de confianza.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Cobertura">
+        <StepAsideSection title="Enrutamiento automático">
           <StepAsideList
             items={[
-              "100 % del importe y de los registros, automático.",
-              "Importe, CIF, estado de carga y datos de empresa en cada registro.",
-              "El agente no muestrea: revisa todo el cierre.",
+              `Confianza ≥ ${CONFIDENCE_THRESHOLD * 100} % → cierre autónomo (${formatNum(AUTO_DICTAMEN_COUNT)} registros).`,
+              `Confianza < ${CONFIDENCE_THRESHOLD * 100} % → cola de revisión humana (${HITL_COUNT} casos).`,
+              "Misma cola HITL que el módulo Auditoría.",
             ]}
           />
         </StepAsideSection>
-        <StepAsideSection title="Por qué importa">
+        <StepAsideSection title="En la plataforma">
           <StepAsideList
             items={[
-              "Cierra el mes con certeza sobre todo el volumen.",
-              "Mismo flujo origen ↔ SGA, sin intervención del equipo BPO.",
-              "El resultado alimenta directamente el informe de control.",
+              "Tabla de registros conciliados con confianza y enrutamiento.",
+              "Filtros por estado, discrepancia y cola humana.",
+              `${formatNum(AUTO_OK_COUNT)} OK · ${DISCREPANCY_COUNT} incidencias · 100 % cobertura.`,
             ]}
           />
         </StepAsideSection>
+        <StepAsideMeta>
+          Umbral autónomo: {CONFIDENCE_THRESHOLD * 100} % · {HITL_COUNT} casos escalados
+        </StepAsideMeta>
       </>
     ),
-    visual: <ConciliacionVisual />,
+    visual: <ConciliacionAgenteVisual />,
   },
   {
-    n: 4,
+    n: 3,
     nombre: "Discrepancias",
-    titulo: "Discrepancias detectadas",
+    titulo: "Incidencias detectadas",
     explicacion: (
       <>
         <StepAsideSection title="Hallazgo">
           <p>
-            El agente encuentra{" "}
-            <strong className="text-ink">{DISCREPANCY_COUNT} discrepancias</strong>: importes
-            distintos entre origen y SGA, registros no cargados y duplicados.
+            El agente detecta{" "}
+            <strong className="text-ink">{DISCREPANCY_COUNT} incidencias</strong>: importes
+            distintos, registros no cargados, duplicados y campos inconsistentes.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Dónde caían">
-          <p>
-            <strong className="text-ink">
-              Ninguna discrepancia estaba entre los {bpoMes.muestreadas} casos ya verificados.
-            </strong>{" "}
-            Todas se escondían en el resto del cierre.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="Impacto">
+        <StepAsideSection title="Enrutamiento">
           <StepAsideList
             items={[
-              `${formatEUR(IMPORTE_EN_RIESGO)} en riesgo, invisible sin cobertura completa.`,
-              "Los casos verificados eran correctos; las anomalías estaban en el volumen pendiente.",
-              "Cada incidencia queda priorizada con evidencia de conciliación.",
+              `${HIGH_CONF_INCIDENCIAS} incidencias con confianza ≥ 80 % — dictamen automático.`,
+              `${HITL_COUNT} casos ambiguos escalados a revisión humana.`,
+              "Cada incidencia incluye evidencia de conciliación campo a campo.",
             ]}
           />
+        </StepAsideSection>
+        <StepAsideSection title="Impacto">
+          <p>
+            <strong className="text-ink">{formatEUR(IMPORTE_EN_RIESGO)}</strong> en riesgo
+            identificados antes del cierre del mes.
+          </p>
         </StepAsideSection>
         <StepAsideMeta>
           Importe en riesgo:{" "}
@@ -852,32 +684,32 @@ const steps: Step[] = [
     visual: <DiscrepanciasVisual />,
   },
   {
-    n: 5,
+    n: 4,
     nombre: "Evidencia",
     titulo: "Evidencia y traza",
     explicacion: (
       <>
         <StepAsideSection title="Qué genera el agente">
           <p>
-            Informe de control con trazabilidad completa: cada registro revisado, cada anomalía
-            detectada, marca de tiempo y firma digital.
+            Informe de control con trazabilidad completa: cada registro conciliado, cada incidencia,
+            marca de tiempo y firma digital.
           </p>
         </StepAsideSection>
         <StepAsideSection title="Listo para actuar">
           <StepAsideList
             items={[
-              `${DISCREPANCY_COUNT} incidencias priorizadas listas para actuar.`,
-              `${formatEUR(IMPORTE_EN_RIESGO)} a recuperar con evidencia auditable.`,
-              "Informe completo del cierre, no un subconjunto del volumen.",
+              `${DISCREPANCY_COUNT} incidencias priorizadas con evidencia.`,
+              `${formatEUR(IMPORTE_EN_RIESGO)} a recuperar.`,
+              `${HITL_COUNT} casos en cola de revisión humana pendientes de dictamen.`,
             ]}
           />
         </StepAsideSection>
         <StepAsideSection title="La plataforma real">
           <StepAsideList
             items={[
-              "El informe vive en el módulo Control de la plataforma.",
-              "Historial mensual, discrepancias y exportación en un solo lugar.",
-              "En el siguiente paso del acto verás la vista de plataforma.",
+              "Informe en el módulo Control de la plataforma.",
+              "Cola HITL unificada en /plataforma/revision.",
+              "Historial mensual, discrepancias y exportación.",
             ]}
           />
         </StepAsideSection>
@@ -887,13 +719,7 @@ const steps: Step[] = [
         </StepAsideMeta>
       </>
     ),
-    visual: (
-      <EvidenceCard
-        mes={bpoMes}
-        discrepancias={DISCREPANCY_COUNT}
-        importeEnRiesgoEur={IMPORTE_EN_RIESGO}
-      />
-    ),
+    visual: <EvidenciaVisual />,
   },
 ];
 

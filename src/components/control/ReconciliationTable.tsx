@@ -4,12 +4,20 @@ import { Fragment, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import { formatEUR, cn } from "@/lib/utils";
 import type { ConciliacionRecord, EstadoConciliacion } from "@/data/types";
 
+type EnrutamientoFiltro = "todos" | "autonomo" | "revision";
+
 interface ReconciliationTableProps {
   records: ConciliacionRecord[];
+  /** platform = muestra manual; agent = confianza + enrutamiento */
+  variant?: "platform" | "agent";
+  confianzaById?: Record<string, number>;
+  confidenceThreshold?: number;
+  title?: string;
 }
 
 const estadoLabel: Record<EstadoConciliacion, string> = {
@@ -38,16 +46,31 @@ const ESTADOS: EstadoConciliacion[] = [
   "campos_distintos",
 ];
 
-export function ReconciliationTable({ records }: ReconciliationTableProps) {
+export function ReconciliationTable({
+  records,
+  variant = "platform",
+  confianzaById,
+  confidenceThreshold = 0.8,
+  title,
+}: ReconciliationTableProps) {
+  const isAgent = variant === "agent";
   const [filterEstado, setFilterEstado] = useState<EstadoConciliacion | "todos">("todos");
   const [soloDiscrepancias, setSoloDiscrepancias] = useState(false);
   const [soloMuestreadas, setSoloMuestreadas] = useState(false);
+  const [filterEnrutamiento, setFilterEnrutamiento] = useState<EnrutamientoFiltro>("todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const getConfianza = (record: ConciliacionRecord) => confianzaById?.[record.id] ?? 0;
+
+  const isAutonomo = (record: ConciliacionRecord) =>
+    getConfianza(record) >= confidenceThreshold;
 
   const filtered = records.filter((r) => {
     if (filterEstado !== "todos" && r.estado !== filterEstado) return false;
     if (soloDiscrepancias && r.estado === "ok") return false;
-    if (soloMuestreadas && !r.muestreada) return false;
+    if (!isAgent && soloMuestreadas && !r.muestreada) return false;
+    if (isAgent && filterEnrutamiento === "autonomo" && !isAutonomo(r)) return false;
+    if (isAgent && filterEnrutamiento === "revision" && isAutonomo(r)) return false;
     return true;
   });
 
@@ -58,8 +81,30 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
   const hasCanal = records.some((r) => r.canal != null);
   const hasPeriodo = records.some((r) => r.periodo != null);
 
+  const colSpan =
+    5 +
+    (hasCanal ? 1 : 0) +
+    (hasPeriodo ? 1 : 0) +
+    (isAgent ? 2 : 2); // expand + muestreada/estado vs confianza/enrutamiento/estado
+
   return (
     <div className="rounded-xl border border-line bg-white shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)] overflow-hidden">
+      {(title || isAgent) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+            {title ?? "Registros conciliados"}
+          </p>
+          {isAgent && (
+            <p className="text-[11px] text-muted">
+              Umbral autónomo:{" "}
+              <span className="font-semibold tabular-nums text-ink">
+                {confidenceThreshold * 100} %
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Filter toolbar */}
       <div className="px-5 py-3.5 border-b border-line bg-canvas flex flex-wrap items-center gap-4">
         {/* Estado filter */}
@@ -98,16 +143,38 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
           <span className="text-xs text-ink-soft">Solo discrepancias</span>
         </label>
 
-        {/* Toggle: solo muestreadas */}
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={soloMuestreadas}
-            onChange={(e) => setSoloMuestreadas(e.target.checked)}
-            className="rounded border-line text-brand focus:ring-brand/40"
-          />
-          <span className="text-xs text-ink-soft">Solo muestreadas</span>
-        </label>
+        {!isAgent && (
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={soloMuestreadas}
+              onChange={(e) => setSoloMuestreadas(e.target.checked)}
+              className="rounded border-line text-brand focus:ring-brand/40"
+            />
+            <span className="text-xs text-ink-soft">Solo muestreadas</span>
+          </label>
+        )}
+
+        {isAgent && (
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="enrutamiento-filter"
+              className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted whitespace-nowrap"
+            >
+              Enrutamiento
+            </label>
+            <select
+              id="enrutamiento-filter"
+              value={filterEnrutamiento}
+              onChange={(e) => setFilterEnrutamiento(e.target.value as EnrutamientoFiltro)}
+              className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand/40"
+            >
+              <option value="todos">Todos</option>
+              <option value="autonomo">Autónomo</option>
+              <option value="revision">Revisión humana</option>
+            </select>
+          </div>
+        )}
 
         <span className="ml-auto text-[11px] text-muted tabular-nums">
           {filtered.length} de {records.length} registros
@@ -125,7 +192,14 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
             {hasPeriodo && <TH className="text-right">Período</TH>}
             <TH className="text-right">Importe origen</TH>
             <TH className="text-right">Importe SGA</TH>
-            <TH className="text-center">Muestreada</TH>
+            {isAgent ? (
+              <>
+                <TH className="text-center">Confianza</TH>
+                <TH className="text-center">Enrutamiento</TH>
+              </>
+            ) : (
+              <TH className="text-center">Muestreada</TH>
+            )}
             <TH className="text-center">Estado</TH>
           </TR>
         </THead>
@@ -133,6 +207,8 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
           {filtered.map((record) => {
             const isDiscrepancy = record.estado !== "ok";
             const isExpanded = expandedId === record.id;
+            const confianza = getConfianza(record);
+            const autonomo = isAutonomo(record);
 
             return (
               <Fragment key={record.id}>
@@ -203,18 +279,30 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
                     )}
                   </TD>
 
-                  {/* Muestreada */}
-                  <TD className="text-center">
-                    {record.muestreada ? (
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10">
-                        <Check size={11} className="text-brand" />
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-line">
-                        <X size={11} className="text-muted" />
-                      </span>
-                    )}
-                  </TD>
+                  {isAgent ? (
+                    <>
+                      <TD className="text-center">
+                        <ConfidenceBadge value={confianza} />
+                      </TD>
+                      <TD className="text-center">
+                        <Badge color={autonomo ? "ok" : "warning"}>
+                          {autonomo ? "Autónomo" : "Revisión humana"}
+                        </Badge>
+                      </TD>
+                    </>
+                  ) : (
+                    <TD className="text-center">
+                      {record.muestreada ? (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10">
+                          <Check size={11} className="text-brand" />
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-line">
+                          <X size={11} className="text-muted" />
+                        </span>
+                      )}
+                    </TD>
+                  )}
 
                   {/* Estado */}
                   <TD className="text-center">
@@ -235,10 +323,7 @@ export function ReconciliationTable({ records }: ReconciliationTableProps) {
                       transition={{ duration: 0.15 }}
                       className={cn(isDiscrepancy && "bg-danger/[0.03]")}
                     >
-                      <td
-                        colSpan={5 + (hasCanal ? 1 : 0) + (hasPeriodo ? 1 : 0) + 2}
-                        className="px-6 py-3"
-                      >
+                      <td colSpan={colSpan} className="px-6 py-3">
                         <motion.div
                           initial={{ height: 0 }}
                           animate={{ height: "auto" }}
