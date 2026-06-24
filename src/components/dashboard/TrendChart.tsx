@@ -39,8 +39,8 @@ export function TrendChart({ data, className }: TrendChartProps) {
         <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradImporte" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6CB33F" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#6CB33F" stopOpacity={0.02} />
+              <stop offset="5%" stopColor="#1AA84B" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="#1AA84B" stopOpacity={0.02} />
             </linearGradient>
             <linearGradient id="gradDeclaraciones" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#1f7a8c" stopOpacity={0.2} />
@@ -90,10 +90,10 @@ export function TrendChart({ data, className }: TrendChartProps) {
             yAxisId="importe"
             type="monotone"
             dataKey="importeEur"
-            stroke="#6CB33F"
+            stroke="#1AA84B"
             strokeWidth={2}
             fill="url(#gradImporte)"
-            dot={{ r: 3, fill: "#6CB33F", strokeWidth: 0 }}
+            dot={{ r: 3, fill: "#1AA84B", strokeWidth: 0 }}
             activeDot={{ r: 5 }}
           />
           <Area
@@ -110,7 +110,7 @@ export function TrendChart({ data, className }: TrendChartProps) {
       </ResponsiveContainer>
       <div className="flex items-center gap-4 justify-center mt-2">
         <span className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="inline-block w-3 h-0.5 bg-[#6CB33F] rounded" />
+          <span className="inline-block w-3 h-0.5 bg-[#1AA84B] rounded" />
           Importe auditado
         </span>
         <span className="flex items-center gap-1.5 text-xs text-muted">

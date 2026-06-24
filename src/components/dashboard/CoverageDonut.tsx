@@ -17,7 +17,7 @@ interface CoverageDonutProps {
 }
 
 const agentData = [
-  { name: "Agente IA", value: AGENT_PCT, color: "#6CB33F" },
+  { name: "Agente IA", value: AGENT_PCT, color: "#1AA84B" },
   { name: "Sin cobertura", value: 0, color: "#E5E7EB" },
 ];
 
