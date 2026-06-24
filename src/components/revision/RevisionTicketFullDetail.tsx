@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ClipboardCheck,
   FileText,
+  GitBranch,
   RotateCcw,
   XCircle,
 } from "lucide-react";
@@ -84,8 +85,8 @@ export function RevisionTicketFullDetail({ id }: RevisionTicketFullDetailProps) 
   const BadgeIcon = badgeInfo.icon;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => router.push("/plataforma/revision")}
@@ -104,31 +105,30 @@ export function RevisionTicketFullDetail({ id }: RevisionTicketFullDetailProps) 
           <span>{item.prioridad === "alta" ? "Prioridad alta" : "Prioridad media"}</span>
           <span aria-hidden>·</span>
           <span>Hace {item.creadoHace}</span>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge color={badgeInfo.color}>
+          <Badge color={badgeInfo.color} className="ml-1">
             {BadgeIcon && <BadgeIcon className="mr-1 h-3 w-3" aria-hidden />}
             {badgeInfo.label}
           </Badge>
         </div>
-        <h1 className="max-w-5xl text-balance text-2xl font-semibold leading-snug text-ink">
+      </div>
+
+      <div className="space-y-1.5">
+        <h1 className="max-w-5xl text-balance text-xl font-semibold leading-snug text-ink">
           {item.titulo}
         </h1>
+        <p className="max-w-4xl text-pretty text-sm leading-relaxed text-muted">{item.resumen}</p>
       </div>
 
       <section className="overflow-hidden rounded-xl border border-line bg-surface">
         <div className="grid xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="border-b border-line p-6 xl:border-b-0 xl:border-r">
+          <div className="border-b border-line p-5 xl:border-b-0 xl:border-r">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-dark">
               Decisión requerida
             </p>
-            <p className="mt-3 max-w-4xl text-pretty text-base font-semibold leading-relaxed text-ink">
+            <p className="mt-2 max-w-4xl text-pretty text-base font-semibold leading-relaxed text-ink">
               {item.decisionRequerida}
             </p>
-            <p className="mt-2 max-w-4xl text-pretty text-sm leading-relaxed text-ink-soft">
+            <p className="mt-1.5 max-w-4xl text-pretty text-sm leading-relaxed text-ink-soft">
               {item.accionSugerida}
             </p>
           </div>
@@ -147,75 +147,63 @@ export function RevisionTicketFullDetail({ id }: RevisionTicketFullDetailProps) 
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <div className="space-y-6">
-          <section className="rounded-xl border border-line bg-surface p-6">
-            <div className="mb-5 flex items-center gap-2">
-              <ClipboardCheck className="h-4 w-4 text-muted" aria-hidden />
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                Evidencia
-              </h2>
-            </div>
-            <div className="divide-y divide-line">
-              {item.evidencia.map((evidencia, idx) => (
-                <div key={idx} className="py-4 first:pt-0 last:pb-0">
-                  <p className="text-sm font-semibold text-ink">{evidencia.fuente}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">{evidencia.detalle}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-line bg-surface p-6">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <section className="rounded-xl border border-line bg-surface p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4 text-muted" aria-hidden />
             <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-              Resumen del agente
+              Evidencia
             </h2>
-            <p className="mt-3 max-w-4xl text-pretty text-sm leading-relaxed text-ink-soft">
-              {item.resumen}
-            </p>
-          </section>
-        </div>
+          </div>
+          <div className="divide-y divide-line">
+            {item.evidencia.map((evidencia, idx) => (
+              <div key={idx} className="py-3 first:pt-0 last:pb-0">
+                <p className="text-sm font-semibold text-ink">{evidencia.fuente}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{evidencia.detalle}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="space-y-6">
-          <details className="group rounded-xl border border-line bg-surface">
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl p-5 text-xs font-semibold uppercase tracking-[0.18em] text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25">
+        <section className="rounded-xl border border-line bg-surface p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <GitBranch className="h-4 w-4 text-muted" aria-hidden />
+            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
               Ruta de decisión del agente
+            </h2>
+          </div>
+          <ol className="space-y-0">
+            {item.pasos.map((paso, index) => (
+              <li key={`${item.id}-${index}`} className="grid grid-cols-[1.25rem_1fr] gap-2.5">
+                <div className="relative flex justify-center">
+                  <span className="z-10 mt-1.5 h-2 w-2 rounded-full bg-ink-soft" aria-hidden />
+                  {index < item.pasos.length - 1 && (
+                    <span className="absolute top-4 bottom-0 w-px bg-line" aria-hidden />
+                  )}
+                </div>
+                <div className="pb-3 last:pb-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                    {paso.etapa}
+                  </p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-ink-soft">{paso.detalle}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <details className="group mt-1 border-t border-line pt-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25">
+              Razonamiento completo
               <ChevronDown
-                className="h-4 w-4 transition-transform group-open:rotate-180"
+                className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
                 aria-hidden
               />
             </summary>
-            <div className="border-t border-line p-5 pt-4">
-              <ol className="space-y-0">
-                {item.pasos.map((paso, index) => (
-                  <li key={`${item.id}-${index}`} className="grid grid-cols-[1.5rem_1fr] gap-3">
-                    <div className="relative flex justify-center">
-                      <span className="z-10 mt-1.5 h-2 w-2 rounded-full bg-ink-soft" aria-hidden />
-                      {index < item.pasos.length - 1 && (
-                        <span className="absolute top-4 bottom-0 w-px bg-line" aria-hidden />
-                      )}
-                    </div>
-                    <div className="pb-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-                        {paso.etapa}
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed text-ink-soft">{paso.detalle}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <div className="mt-2 rounded-lg bg-canvas p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-                  Razonamiento completo
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.razonamiento}</p>
-              </div>
-            </div>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.razonamiento}</p>
           </details>
-        </div>
+        </section>
       </div>
 
-      <section className="rounded-xl border border-line bg-surface p-5 md:p-6">
+      <section className="rounded-xl border border-line bg-surface p-5">
         {isResolved && resolucion ? (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="text-sm text-ink-soft">
@@ -275,9 +263,9 @@ export function RevisionTicketFullDetail({ id }: RevisionTicketFullDetailProps) 
 
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="border-r border-line p-5 last:border-r-0 xl:border-b xl:border-r-0 xl:last:border-b-0">
+    <div className="border-r border-line p-4 last:border-r-0 xl:border-b xl:border-r-0 xl:last:border-b-0">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{label}</p>
-      <div className="mt-2 text-xl font-semibold text-ink">{value}</div>
+      <div className="mt-1.5 text-lg font-semibold text-ink">{value}</div>
     </div>
   );
 }
