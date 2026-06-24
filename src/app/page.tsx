@@ -41,14 +41,18 @@ export default function LandingPage() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
-        <Reveal className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
-          <RevealItem className="px-6 py-4">
-            <Logo variant="horizontal-claim" tone="white" className="h-[96px] w-auto md:h-[120px]" />
+        <Reveal className="flex w-full max-w-3xl flex-col items-center gap-10 text-center">
+          <RevealItem className="w-full px-4 py-2">
+            <Logo
+              variant="horizontal-claim"
+              tone="white"
+              className="mx-auto h-[152px] w-auto sm:h-[176px] md:h-[208px]"
+            />
           </RevealItem>
 
           <RevealItem>
-            <h1 className="text-balance text-5xl font-medium leading-[1.05] tracking-tight text-white md:text-6xl">
-              Auditorías <span className="text-brand-soft">automatizadas</span>.
+            <h1 className="text-balance text-4xl font-medium leading-[1.05] tracking-tight text-white md:text-5xl">
+              Auditorías y BPO <span className="text-brand-soft">automatizados</span>.
             </h1>
           </RevealItem>
 
