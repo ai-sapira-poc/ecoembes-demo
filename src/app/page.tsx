@@ -17,7 +17,7 @@ const actos = [
     label: "Acto 2",
     icon: GitCompareArrows,
     title: "Control de Integridad",
-    desc: "Conciliación automática del 100% de las declaraciones recibidas.",
+    desc: "Conciliación automática del 100%, con revisión humana de cada discrepancia.",
   },
 ];
 
