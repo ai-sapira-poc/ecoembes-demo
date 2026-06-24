@@ -131,6 +131,42 @@ purpose-led — not cold SaaS jargon. Prefer lines like *"Cada declaración, ver
 - Background: `MeshBackground` (drifting green blobs) on landing/login/Acto canvases; cinematic photo +
   brand-green wash on the landing hero; plain `bg-canvas` in the platform shell content area.
 
+### Acto cards — hug content, keep beats in view
+
+Reference: Acto 1 step 2 (`AnalisisVisual` in `src/app/demos/auditoria/page.tsx`).
+
+Acto step visuals are **narrative panels**, not dashboard tiles. Cards must wrap their content — never
+stretch to fill leftover column height and leave dead white space below a table or list.
+
+**Layout chain (StepLayout → step visual):**
+
+- Right column: `flex min-h-0 flex-1 flex-col overflow-hidden` — no page-level scroll in the panel.
+- Step visual root: `flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto` — the column scrolls only if
+  the stacked beats truly exceed the viewport (rare on laptop sizes).
+- Pin chrome that must stay visible first (`EstadoBar`, kickers): `shrink-0`.
+
+**Card rules (apply to all Acto cards — extraction tables, validation lists, email threads, veredicto):**
+
+- Card shell: `shrink-0 overflow-hidden rounded-xl border border-line bg-surface` — **not** `flex-1`.
+- Card header: `border-b border-line px-4 py-2.5` — fixed height, `shrink-0`.
+- Card body: `p-3` — **not** `flex-1 min-h-0 overflow-auto` unless the card is intentionally a
+  single full-height data pane (e.g. a long platform table in `/plataforma`).
+- Stack multiple cards vertically with `gap-3`; each card hugs its content so the next beat (e.g.
+  validations after extraction) appears naturally below without pushing animations off-screen.
+- Prefer **sequential beats** (skeleton → reveal → next card) over one card that grows to fill the column.
+
+**When internal scroll is OK:**
+
+- Only inside a card whose *content* is genuinely long and the card already owns the remaining viewport
+  (platform audit list, full-width reconciliation table).
+- Never use `flex-1` on a card body just to “fill space” — that creates the empty gap under short tables.
+
+**Motion on stacked cards:**
+
+- Stagger with `<FadeUp delay>` / `<AnimatePresence>` per card, not one monolithic flex stretch.
+- Staged row resolution (validation checklist ticking off) stays inside a content-hugging card so the
+  user sees the full sequence without scrolling past dead space.
+
 ---
 
 ## Component conventions
