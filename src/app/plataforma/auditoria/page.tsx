@@ -5,7 +5,6 @@ import Link from "next/link";
 import { declaraciones } from "@/data";
 import type { EstadoAuditoria, Severidad } from "@/data/types";
 import { Badge } from "@/components/ui/Badge";
-import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import {
   Table,

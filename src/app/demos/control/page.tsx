@@ -15,7 +15,6 @@ import { AlertTriangle, Building2, CalendarDays, CheckCircle2 } from "lucide-rea
 const DISCREPANCY_RECORDS = bpoMes.records.filter((r) => r.estado !== "ok");
 const DISCREPANCY_COUNT = DISCREPANCY_RECORDS.length; // 6
 const IMPORTE_EN_RIESGO = BPO_IMPORTE_EN_RIESGO_EUR;  // 26_900
-const MANUAL_PCT = (bpoMes.muestreadas / bpoMes.totalDeclaraciones) * 100; // ~1.14 → use the spec's 1.6 for display
 const MANUAL_PCT_DISPLAY = 1.6; // spec-mandated display value (importe-based: 37_367 / 2_338_519)
 
 // ─────────────────────────────────────────────────────────────────────────────

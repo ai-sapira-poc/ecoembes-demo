@@ -6,7 +6,6 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 // Manual coverage: 1.6% by amount (€37.367 of €2.338.519)

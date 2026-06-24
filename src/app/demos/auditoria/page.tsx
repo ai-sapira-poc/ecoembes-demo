@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { StepLayout, type Step } from "@/components/layout/StepLayout";
 import { SigLinesTable } from "@/components/auditoria/SigLinesTable";
-import { FindingsPanel } from "@/components/auditoria/FindingsPanel";
 import { DictamenCard } from "@/components/auditoria/DictamenCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { declaraciones } from "@/data/index";
