@@ -9,7 +9,7 @@ import { ReconciliationTable } from "@/components/control/ReconciliationTable";
 import { EvidenceCard } from "@/components/control/EvidenceCard";
 import { bpoMes, BPO_IMPORTE_EN_RIESGO_EUR } from "@/data/index";
 import { formatEUR, formatNum } from "@/lib/utils";
-import { AlertTriangle, ArrowRight, Building2, CalendarDays, Database, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardList, Database, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,11 +30,14 @@ const REST_PCT_LABEL = (100 - MANUAL_PCT_DISPLAY).toLocaleString("es-ES", {
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const CIERRE_PREVIEW_IDS = ["001", "002", "003", "012", "045", "088", "103", "191"];
-const CIERRE_PREVIEW_RECORDS = CIERRE_PREVIEW_IDS.map(
+const CIERRE_FEED_IDS = ["001", "002", "088", "103"];
+const CIERRE_FEED_RECORDS = CIERRE_FEED_IDS.map(
   (id) => bpoMes.records.find((r) => r.id === id)!
 );
 const SAMPLED_IDS = new Set([12, 88, 191, 264, 377]);
+const SAMPLED_RECORDS = Array.from(SAMPLED_IDS)
+  .sort((a, b) => a - b)
+  .map((id) => bpoMes.records.find((r) => r.id === String(id).padStart(3, "0"))!);
 const DISCREPANCY_IDS = new Set([45, 103, 158, 299, 402, 430]);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -87,142 +90,74 @@ function CountUp({
 function CierreMensualSkeleton() {
   return (
     <>
-      <div className="space-y-3 px-5 py-6">
-        <Skeleton className="mx-auto h-3 w-40" />
-        <div className="flex flex-wrap justify-center gap-2 pt-1">
-          <Skeleton className="h-6 w-28 rounded-full" />
-          <Skeleton className="h-6 w-32 rounded-full" />
-          <Skeleton className="h-6 w-24 rounded-full" />
-        </div>
+      <div className="space-y-4 px-5 py-8">
+        <Skeleton className="mx-auto h-3 w-36" />
         <div className="flex items-end justify-center gap-8 pt-2">
           <div className="space-y-2 text-center">
-            <Skeleton className="mx-auto h-16 w-28" />
-            <Skeleton className="mx-auto h-3 w-32" />
+            <Skeleton className="mx-auto h-14 w-24" />
+            <Skeleton className="mx-auto h-3 w-28" />
           </div>
-          <Skeleton className="mb-4 h-8 w-3" />
+          <Skeleton className="mb-3 h-6 w-2" />
           <div className="space-y-2 text-center">
-            <Skeleton className="mx-auto h-14 w-36" />
-            <Skeleton className="mx-auto h-3 w-36" />
+            <Skeleton className="mx-auto h-12 w-32" />
+            <Skeleton className="mx-auto h-3 w-32" />
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 border-t border-line px-5 py-3.5">
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
       </div>
-      <div className="space-y-2 border-t border-line px-5 py-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-9 w-full" />
+      <div className="space-y-0 border-t border-line">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between border-b border-line px-5 py-3 last:border-0">
+            <div className="space-y-1.5">
+              <Skeleton className="h-3.5 w-40" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-3.5 w-16" />
+          </div>
         ))}
-      </div>
-      <div className="border-t border-line px-5 py-4">
-        <Skeleton className="mb-3 h-3 w-48" />
-        <Skeleton className="h-16 w-full" />
       </div>
     </>
   );
 }
 
-function CierreColaPreview() {
-  const restantes = bpoMes.totalDeclaraciones - CIERRE_PREVIEW_RECORDS.length;
+function CierreEntradasFeed() {
+  const restantes = bpoMes.totalDeclaraciones - CIERRE_FEED_RECORDS.length;
 
   return (
     <div className="border-t border-line">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-            Cola del cierre
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-ink">
-            {formatNum(bpoMes.totalDeclaraciones)} registros entrantes
-          </p>
-        </div>
-        <span className="rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-muted">
-          Pendiente conciliación
-        </span>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-xs">
-          <thead>
-            <tr className="border-b border-line text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-              <th className="px-5 py-2.5 font-semibold">ID</th>
-              <th className="px-3 py-2.5 font-semibold">Empresa</th>
-              <th className="px-3 py-2.5 font-semibold">CIF</th>
-              <th className="px-3 py-2.5 font-semibold text-right">Importe</th>
-              <th className="px-3 py-2.5 font-semibold">Canal</th>
-              <th className="px-5 py-2.5 font-semibold">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CIERRE_PREVIEW_RECORDS.map((row, i) => (
-              <motion.tr
-                key={row.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.08 + i * 0.04, ease: EASE_OUT }}
-                className="border-b border-line/70 last:border-0"
-              >
-                <td className="px-5 py-2.5 font-mono text-muted">{row.id}</td>
-                <td className="max-w-[11rem] truncate px-3 py-2.5 font-medium text-ink">
-                  {row.empresa}
-                </td>
-                <td className="px-3 py-2.5 font-mono text-muted">{row.cif}</td>
-                <td className="px-3 py-2.5 text-right tabular-nums font-medium text-ink">
-                  {formatEUR(row.importeOrigenEur)}
-                </td>
-                <td className="px-3 py-2.5 text-muted">{row.canal ?? "—"}</td>
-                <td className="px-5 py-2.5">
-                  <span className="inline-flex rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-semibold text-muted">
-                    Recibida
-                  </span>
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="border-t border-line px-5 py-2.5 text-[11px] text-muted">
-        + {formatNum(restantes)} registros más en cola · importe acumulado{" "}
-        {formatEUR(bpoMes.importeTotalEur)}
+      <p className="px-5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+        Entradas del cierre
       </p>
-    </div>
-  );
-}
-
-function CierreVolumePreview() {
-  const TOTAL = bpoMes.totalDeclaraciones;
-
-  return (
-    <div className="border-t border-line px-5 py-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-          Volumen del cierre
-        </p>
-        <span className="text-[11px] text-muted">
-          Cada punto = 1 declaración · {formatNum(TOTAL)} en total
-        </span>
-      </div>
-      <div
-        className="flex flex-wrap gap-1"
-        aria-label={`${TOTAL} declaraciones en el cierre mensual`}
-      >
-        {Array.from({ length: TOTAL }, (_, i) => (
-          <motion.span
-            key={i + 1}
-            className="h-2 w-2 shrink-0 rounded-full bg-line"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: 0.35 + i * 0.0015,
-              duration: 0.15,
-              ease: "easeOut",
-            }}
-          />
-        ))}
-      </div>
+      {CIERRE_FEED_RECORDS.map((row, i) => (
+        <motion.div
+          key={row.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 + i * 0.05, ease: EASE_OUT }}
+          className="flex items-center justify-between gap-4 border-t border-line px-5 py-3"
+        >
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-ink">{row.empresa}</p>
+            <p className="mt-0.5 font-mono text-[11px] text-muted">
+              {row.id} · {row.cif}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-medium tabular-nums text-ink">
+              {formatEUR(row.importeOrigenEur)}
+            </p>
+            <p className="mt-0.5 text-[10px] text-muted">Recibida</p>
+          </div>
+        </motion.div>
+      ))}
+      <p className="border-t border-line px-5 py-2.5 text-[11px] text-muted">
+        + {formatNum(restantes)} registros más · {formatEUR(bpoMes.importeTotalEur)} en total
+      </p>
     </div>
   );
 }
@@ -231,14 +166,14 @@ function CierreMensualVisual() {
   const [phase, setPhase] = useState<"loading" | "ready">("loading");
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase("ready"), 900);
+    const t = setTimeout(() => setPhase("ready"), 1100);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="shrink-0">
-        <article className="w-full overflow-hidden rounded-xl border border-line bg-surface">
+    <FadeUp>
+      <div className="mx-auto w-full max-w-xl space-y-3">
+        <article className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
               <Database className="h-3.5 w-3.5" />
@@ -276,8 +211,6 @@ function CierreMensualVisual() {
             {phase === "loading" ? (
               <motion.div
                 key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
               >
@@ -288,39 +221,25 @@ function CierreMensualVisual() {
                 key="content"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE_OUT }}
+                transition={{ duration: 0.45, ease: EASE_OUT }}
               >
-                <div className="px-5 py-6">
+                <div className="px-5 py-8">
                   <p className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
                     Cierre registrado
                   </p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {[
-                      `${formatNum(bpoMes.totalDeclaraciones)} declaraciones`,
-                      formatEUR(bpoMes.importeTotalEur),
-                      "Período 56",
-                    ].map((label) => (
-                      <span
-                        key={label}
-                        className="inline-flex rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-6 flex items-end justify-center gap-10">
+                  <div className="mt-6 flex items-end justify-center gap-8">
                     <div className="text-center">
                       <CountUp
                         to={bpoMes.totalDeclaraciones}
                         duration={0.9}
-                        delay={0.1}
-                        className="block text-6xl font-medium leading-none tracking-tight text-ink tabular-nums"
+                        delay={0.08}
+                        className="block text-5xl font-medium leading-none tracking-tight text-ink tabular-nums md:text-6xl"
                       />
                       <p className="mt-2 text-sm text-muted">declaraciones recibidas</p>
                     </div>
-                    <span className="mb-5 text-3xl text-line">&middot;</span>
+                    <span className="mb-4 text-2xl text-line">&middot;</span>
                     <div className="text-center">
-                      <p className="text-5xl font-medium tabular-nums leading-none tracking-tight text-ink">
+                      <p className="text-4xl font-medium tabular-nums leading-none tracking-tight text-ink md:text-5xl">
                         {formatEUR(bpoMes.importeTotalEur)}
                       </p>
                       <p className="mt-2 text-sm text-muted">importe total declarado</p>
@@ -328,72 +247,66 @@ function CierreMensualVisual() {
                   </div>
                 </div>
 
-                <dl className="grid grid-cols-3 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs">
+                <motion.dl
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: EASE_OUT, delay: 0.12 }}
+                  className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs"
+                >
                   <div>
-                    <dt className="flex items-center gap-1.5 text-muted">
-                      <CalendarDays className="h-3 w-3" />
-                      Período
-                    </dt>
+                    <dt className="text-muted">Período</dt>
                     <dd className="mt-0.5 font-medium text-ink">{bpoMes.periodo}</dd>
                   </div>
                   <div>
-                    <dt className="flex items-center gap-1.5 text-muted">
-                      <Building2 className="h-3 w-3" />
-                      Empresas declarantes
-                    </dt>
+                    <dt className="text-muted">Empresas declarantes</dt>
                     <dd className="mt-0.5 font-medium text-ink">
-                      {formatNum(bpoMes.totalDeclaraciones)} empresas
+                      {formatNum(bpoMes.totalDeclaraciones)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-muted">Destino de conciliación</dt>
-                    <dd className="mt-0.5 font-medium text-ink">Sistema origen → SGA</dd>
+                    <dt className="text-muted">Conciliación</dt>
+                    <dd className="mt-0.5 font-medium text-ink">Origen → SGA</dd>
                   </div>
-                </dl>
+                  <div>
+                    <dt className="text-muted">Estado</dt>
+                    <dd className="mt-0.5 font-medium text-ink">Pendiente</dd>
+                  </div>
+                </motion.dl>
 
-                <CierreColaPreview />
-                <CierreVolumePreview />
+                <CierreEntradasFeed />
               </motion.div>
             )}
           </AnimatePresence>
         </article>
-      </FadeUp>
 
-      <AnimatePresence>
-        {phase === "ready" && (
-          <FadeUp delay={0.2} className="shrink-0">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-              <div className="flex flex-1 items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5">
-                <span className="rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink">
-                  Sistema origen
-                </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
-                <span className="rounded-lg bg-canvas px-3 py-2 text-xs font-semibold text-ink">
-                  SGA
-                </span>
-                <p className="ml-1 text-xs text-muted">
-                  {formatNum(bpoMes.totalDeclaraciones)} registros · conciliación pendiente
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5 sm:max-w-sm">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
-                  <span
-                    className="h-2 w-2 rounded-full bg-brand"
-                    style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
-                  />
-                </span>
-                <p className="flex-1 text-sm text-ink-soft">
-                  El agente recibe el cierre completo y{" "}
-                  <strong className="font-semibold text-ink">prepara la conciliación</strong>{" "}
-                  campo a campo con el SGA.
-                </p>
-              </div>
-            </div>
-          </FadeUp>
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence>
+          {phase === "ready" && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.08 }}
+              className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5"
+            >
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
+                <span
+                  className="h-2 w-2 rounded-full bg-brand"
+                  style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
+                />
+              </span>
+              <p className="flex-1 text-sm text-ink-soft">
+                El agente recibe el cierre de {formatNum(bpoMes.totalDeclaraciones)} declaraciones e{" "}
+                <strong className="font-semibold text-ink">inicia la conciliación</strong> campo a
+                campo con el SGA.
+              </p>
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
+                En curso
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </FadeUp>
   );
 }
 
@@ -497,31 +410,244 @@ function DotGrid({
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 2 — Control actual (dot grid, no discrepancies)
 // ─────────────────────────────────────────────────────────────────────────────
-function ControlHoyVisual() {
+function ControlHoySkeleton() {
   return (
-    <div className="rounded-xl bg-white border border-line shadow-[0_2px_20px_-6px_rgba(20,32,26,0.10)] p-8 space-y-4">
-      <div className="mb-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted mb-1">
-          Control manual actual
-        </p>
-        <h3 className="text-base font-semibold text-ink">
-          Septiembre 2025 — {formatNum(bpoMes.totalDeclaraciones)} declaraciones en el sistema
-        </h3>
+    <>
+      <div className="flex flex-wrap gap-2 px-5 pt-4">
+        <Skeleton className="h-6 w-24 rounded-full" />
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-6 w-28 rounded-full" />
+      </div>
+      <div className="px-5 py-4">
+        <Skeleton className="mb-3 h-3 w-56" />
+        <div className="flex flex-wrap gap-1">
+          {Array.from({ length: 120 }).map((_, i) => (
+            <Skeleton key={i} className="h-2.5 w-2.5 rounded-full" />
+          ))}
+        </div>
+      </div>
+      <div className="space-y-2 border-t border-line px-5 py-4">
+        <Skeleton className="h-2 w-full rounded-full" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-full" />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function MuestreoManualBar({ animateIn }: { animateIn: boolean }) {
+  return (
+    <div className="border-t border-line px-5 py-4">
+      <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+        <span className="font-semibold uppercase tracking-[0.12em] text-muted">
+          Cobertura del muestreo manual
+        </span>
+        <span className="tabular-nums font-semibold text-ink">{MANUAL_PCT_LABEL} %</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-line">
+        <motion.div
+          className="h-full rounded-full bg-brand"
+          initial={{ width: 0 }}
+          animate={animateIn ? { width: `${MANUAL_PCT_DISPLAY}%` } : { width: 0 }}
+          transition={{ duration: 0.9, delay: 0.1, ease: EASE_OUT }}
+        />
+      </div>
+      <p className="mt-2 text-[11px] text-muted">
+        {formatEUR(bpoMes.importeMuestreadoEur)} verificados de {formatEUR(bpoMes.importeTotalEur)}{" "}
+        · {bpoMes.muestreadas} casos de {formatNum(bpoMes.totalDeclaraciones)}
+      </p>
+    </div>
+  );
+}
+
+function MuestreadosTable() {
+  return (
+    <div className="border-t border-line">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+            Casos revisados manualmente
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-ink">
+            {bpoMes.muestreadas} declaraciones seleccionadas al azar
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ok">
+          <CheckCircle2 className="h-3 w-3" />
+          Todas OK
+        </span>
       </div>
 
-      <DotGrid showDiscrepancies={false} animate={true} />
-
-      {/* Warning callout */}
-      <div className="mt-4 rounded-lg bg-warning/5 border border-warning/20 px-5 py-4">
-        <p className="text-sm font-semibold text-warning">
-          Solo 5 casos revisados de 437
-        </p>
-        <p className="text-xs text-ink-soft mt-1 leading-relaxed">
-          El muestreo manual cubre {MANUAL_PCT_LABEL} % del importe total. El{" "}
-          <span className="font-semibold text-ink">{REST_PCT_LABEL} %</span> restante —{" "}
-          {formatEUR(bpoMes.importeTotalEur - bpoMes.importeMuestreadoEur)} — no se verifica.
-        </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] text-left text-xs">
+          <thead>
+            <tr className="border-b border-line text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+              <th className="px-5 py-2.5 font-semibold">ID</th>
+              <th className="px-3 py-2.5 font-semibold">Empresa</th>
+              <th className="px-3 py-2.5 font-semibold text-right">Importe</th>
+              <th className="px-5 py-2.5 font-semibold">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SAMPLED_RECORDS.map((row, i) => (
+              <motion.tr
+                key={row.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.12 + i * 0.06, ease: EASE_OUT }}
+                className="border-b border-line/70 last:border-0"
+              >
+                <td className="px-5 py-2.5 font-mono text-brand-dark">{row.id}</td>
+                <td className="max-w-[14rem] truncate px-3 py-2.5 font-medium text-ink">
+                  {row.empresa}
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums font-medium text-ink">
+                  {formatEUR(row.importeOrigenEur)}
+                </td>
+                <td className="px-5 py-2.5">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-ok-soft px-2 py-0.5 text-[10px] font-semibold text-ok">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Conciliada
+                  </span>
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+    </div>
+  );
+}
+
+function ControlHoyVisual() {
+  const [phase, setPhase] = useState<"loading" | "grid" | "detail">("loading");
+
+  useEffect(() => {
+    const toGrid = setTimeout(() => setPhase("grid"), 850);
+    const toDetail = setTimeout(() => setPhase("detail"), 1700);
+    return () => {
+      clearTimeout(toGrid);
+      clearTimeout(toDetail);
+    };
+  }, []);
+
+  const uncheckedCount = bpoMes.totalDeclaraciones - bpoMes.muestreadas;
+  const uncheckedEur = bpoMes.importeTotalEur - bpoMes.importeMuestreadoEur;
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <FadeUp className="shrink-0">
+        <article className="w-full overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+            <span className="flex items-center gap-2 text-xs text-muted">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Control manual · Muestreo mensual
+            </span>
+            <AnimatePresence mode="wait">
+              {phase === "loading" ? (
+                <motion.span
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 text-[11px] text-muted"
+                >
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Seleccionando muestra…
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="ready"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: EASE_OUT }}
+                  className="text-[11px] text-muted"
+                >
+                  {bpoMes.periodo}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {phase === "loading" ? (
+              <motion.div
+                key="skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <ControlHoySkeleton />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: EASE_OUT }}
+              >
+                <div className="flex flex-wrap gap-2 px-5 pt-4">
+                  {[
+                    `${bpoMes.muestreadas} casos muestreados`,
+                    `${MANUAL_PCT_LABEL} % del importe`,
+                    formatEUR(bpoMes.importeMuestreadoEur),
+                  ].map((label) => (
+                    <span
+                      key={label}
+                      className="inline-flex rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="px-5 py-4">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+                    Distribución del cierre — {formatNum(bpoMes.totalDeclaraciones)} declaraciones
+                  </p>
+                  <DotGrid showDiscrepancies={false} animate={true} />
+                </div>
+
+                <AnimatePresence>
+                  {phase === "detail" && (
+                    <motion.div
+                      key="detail"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.35, ease: EASE_OUT }}
+                    >
+                      <MuestreoManualBar animateIn={true} />
+                      <MuestreadosTable />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </article>
+      </FadeUp>
+
+      <AnimatePresence>
+        {phase === "detail" && (
+          <FadeUp delay={0.15} className="shrink-0">
+            <div className="rounded-xl border border-line bg-surface px-5 py-3.5">
+              <p className="text-sm leading-relaxed text-ink-soft">
+                <strong className="font-semibold text-ink">
+                  {formatNum(uncheckedCount)} declaraciones
+                </strong>{" "}
+                ({REST_PCT_LABEL} % · {formatEUR(uncheckedEur)}) quedan fuera del control manual
+                cada mes. Un error en cualquiera de ellas pasa desapercibido hasta una reclamación o
+                auditoría externa.
+              </p>
+            </div>
+          </FadeUp>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
