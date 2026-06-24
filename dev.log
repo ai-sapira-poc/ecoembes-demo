@@ -1,0 +1,17 @@
+
+> demo@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.28.98.79:3000
+✓ Ready in 206ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3001
+- PID:          83600
+- Dir:          /Users/albertfolch/ecoembes/demo
+- Log:          .next/dev/logs/next-development.log
+
+Run kill 83600 to stop it.
+[?25h

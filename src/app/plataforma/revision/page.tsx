@@ -22,30 +22,23 @@ export default function RevisionPage() {
   const nControl = revisionItems.filter((i) => i.origen === "control").length;
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="space-y-5">
       {/* Page header */}
       <FadeUp delay={0}>
-        <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted mb-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted mb-1">
             Revisión humana
           </p>
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-brand-soft p-2 shrink-0 mt-0.5">
-              <UserCheck size={18} className="text-brand" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-ink">Cola de revisión</h1>
-              <p className="text-sm text-muted mt-0.5 leading-relaxed">
-                El agente procesa el 100 % de las declaraciones; el humano revisa solo lo dudoso.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-xl font-bold text-ink">Cola de revisión</h1>
+          <p className="text-xs text-muted mt-0.5">
+            El agente procesa el 100 % de las declaraciones; el humano revisa solo lo dudoso.
+          </p>
         </div>
       </FadeUp>
 
       {/* Explanatory callout */}
       <FadeUp delay={0.08}>
-        <div className="mb-6 rounded-xl bg-brand-soft border border-brand/15 px-5 py-4">
+        <div className="rounded-xl bg-brand-soft border border-brand/15 px-4 py-3">
           <p className="text-sm text-ink-soft leading-relaxed">
             Estos{" "}
             <strong className="text-ink">{nTotal} casos</strong> han sido escalados porque la
@@ -59,7 +52,7 @@ export default function RevisionPage() {
 
       {/* Count + filter bar */}
       <FadeUp delay={0.14}>
-        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-medium text-ink">
             {filtroOrigen === "todos"
               ? `${nTotal} casos en revisión`
@@ -95,13 +88,13 @@ export default function RevisionPage() {
         </div>
       </FadeUp>
 
-      {/* Review item cards — staggered */}
+      {/* Review item cards — staggered, two-up on wide screens */}
       {itemsFiltrados.length === 0 ? (
         <div className="text-center py-16 text-muted text-sm">
           No hay casos que coincidan con el filtro seleccionado.
         </div>
       ) : (
-        <Reveal className="flex flex-col gap-4">
+        <Reveal className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
           {itemsFiltrados.map((item) => (
             <RevealItem key={item.id}>
               <ReviewItemCard item={item} />

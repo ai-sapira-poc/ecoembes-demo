@@ -13,17 +13,15 @@ const manualPct =
 
 export default function ControlPage() {
   return (
-    <Reveal className="space-y-8">
+    <Reveal className="space-y-5">
       {/* Page header */}
       <RevealItem>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted mb-1">
             Módulo
           </p>
-          <h1 className="text-2xl font-semibold text-ink text-balance">
-            Control de Integridad BPO
-          </h1>
-          <p className="text-sm text-ink-soft mt-1.5 leading-relaxed">
+          <h1 className="text-xl font-bold text-ink">Control de Integridad BPO</h1>
+          <p className="text-xs text-muted mt-0.5">
             Conciliación automática de declaraciones · {bpoMes.periodo}
           </p>
         </div>

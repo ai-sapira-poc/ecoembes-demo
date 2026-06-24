@@ -44,16 +44,17 @@ export default function ConfiguracionPage() {
   const [formato, setFormato] = useState("PDF");
 
   return (
-    <Reveal className="max-w-2xl space-y-6">
+    <Reveal className="max-w-5xl space-y-5">
       <RevealItem>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted mb-1">
             Configuración
           </p>
-          <h1 className="text-2xl font-semibold text-ink">Ajustes de la plataforma</h1>
+          <h1 className="text-xl font-bold text-ink">Ajustes de la plataforma</h1>
         </div>
       </RevealItem>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
       <RevealItem>
         <Card>
           <CardHeader>
@@ -151,6 +152,7 @@ export default function ConfiguracionPage() {
           </CardContent>
         </Card>
       </RevealItem>
+      </div>
 
       <RevealItem>
         <div className="flex justify-end">
