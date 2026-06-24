@@ -89,11 +89,11 @@ export function CoverageMeter({
 
         {/* Bars */}
         <div className="space-y-5">
-          {/* Manual row */}
+          {/* Cobertura parcial — contexto del cierre */}
           <div>
             <div className="flex items-baseline justify-between mb-2">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                Muestreo manual
+                Cobertura parcial
               </span>
               <span className="text-xs text-muted tabular-nums">
                 {manualCount} / {totalCount} &middot; {formatEUR(manualEur)} ({formatPct(manualPct)})
@@ -135,9 +135,9 @@ export function CoverageMeter({
         {/* Divider + caption */}
         <div className="mt-6 pt-5 border-t border-line flex items-center gap-8">
           <div>
-            <p className="text-xs text-muted">frente al control manual</p>
+            <p className="text-xs text-muted">cobertura previa del cierre</p>
             <p className="text-sm font-semibold text-warning mt-0.5">
-              {formatPct(manualPct)} cubierto antes
+              {formatPct(manualPct)} verificado
             </p>
           </div>
           <div>
@@ -147,7 +147,7 @@ export function CoverageMeter({
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted">importe no revisado antes</p>
+            <p className="text-xs text-muted">sin verificar antes</p>
             <p className="text-sm font-semibold text-ink mt-0.5">
               {formatEUR(totalEur - manualEur)}
             </p>

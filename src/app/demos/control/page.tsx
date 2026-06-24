@@ -1,15 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FadeUp } from "@/components/motion/Reveal";
-import { CoverageMeter } from "@/components/control/CoverageMeter";
 import { ReconciliationTable } from "@/components/control/ReconciliationTable";
 import { EvidenceCard } from "@/components/control/EvidenceCard";
-import { bpoMes, BPO_IMPORTE_EN_RIESGO_EUR } from "@/data/index";
+import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
+import { bpoMes, BPO_IMPORTE_EN_RIESGO_EUR, revisionItems } from "@/data/index";
 import { formatEUR, formatNum } from "@/lib/utils";
-import { AlertTriangle, CheckCircle2, ClipboardList, Database, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Database,
+  Loader2,
+  Users,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,6 +36,11 @@ const REST_PCT_LABEL = (100 - MANUAL_PCT_DISPLAY).toLocaleString("es-ES", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
+const CONFIDENCE_THRESHOLD = 0.8;
+const AUTO_DICTAMEN_COUNT = bpoMes.totalDeclaraciones - 2;     // 435 ≥80%
+const HITL_COUNT = 2;
+const AUTO_OK_COUNT = bpoMes.totalDeclaraciones - DISCREPANCY_COUNT; // 431 sin incidencia
+const HIGH_CONF_INCIDENCIAS = DISCREPANCY_COUNT - HITL_COUNT;  // 4
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -34,11 +48,9 @@ const CIERRE_FEED_IDS = ["001", "002", "088", "103"];
 const CIERRE_FEED_RECORDS = CIERRE_FEED_IDS.map(
   (id) => bpoMes.records.find((r) => r.id === id)!
 );
-const SAMPLED_IDS = new Set([12, 88, 191, 264, 377]);
-const SAMPLED_RECORDS = Array.from(SAMPLED_IDS)
-  .sort((a, b) => a - b)
-  .map((id) => bpoMes.records.find((r) => r.id === String(id).padStart(3, "0"))!);
+const HITL_IDS = new Set([158, 402]);
 const DISCREPANCY_IDS = new Set([45, 103, 158, 299, 402, 430]);
+const CONTROL_HITL = revisionItems.filter((item) => item.origen === "control");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Animated count-up helper
@@ -330,24 +342,24 @@ function DotGrid({
       <div className="flex flex-wrap items-center gap-5 mb-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-brand inline-block" />
-          Muestreada ({bpoMes.muestreadas} de {TOTAL})
+          Verificada ({bpoMes.muestreadas} de {TOTAL})
         </span>
         {showDiscrepancies && (
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-danger inline-block" />
-            Discrepancia ({DISCREPANCY_COUNT} casos — fuera de la muestra)
+            Discrepancia ({DISCREPANCY_COUNT} casos)
           </span>
         )}
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-line inline-block" />
-          No muestreada ({TOTAL - bpoMes.muestreadas} de {TOTAL})
+          Pendiente ({TOTAL - bpoMes.muestreadas} de {TOTAL})
         </span>
       </div>
 
       {/* Grid */}
       <div
         className="flex flex-wrap gap-1"
-        aria-label={`${TOTAL} declaraciones — 5 muestreadas`}
+        aria-label={`${TOTAL} declaraciones — ${bpoMes.muestreadas} verificadas`}
       >
         {Array.from({ length: TOTAL }, (_, i) => {
           const id = i + 1;
@@ -374,7 +386,7 @@ function DotGrid({
                 }}
                 title={
                   isSampled
-                    ? `Caso ${id} — muestreada`
+                    ? `Caso ${id} — verificada`
                     : isDiscrepancy
                     ? `Caso ${id} — discrepancia`
                     : `Caso ${id}`
@@ -389,7 +401,7 @@ function DotGrid({
               className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colorClass}`}
               title={
                 isSampled
-                  ? `Caso ${id} — muestreada`
+                  ? `Caso ${id} — verificada`
                   : isDiscrepancy
                   ? `Caso ${id} — discrepancia`
                   : `Caso ${id}`
@@ -400,7 +412,7 @@ function DotGrid({
       </div>
 
       <p className="mt-4 text-xs text-muted">
-        Muestreo manual: {bpoMes.muestreadas} de {formatNum(TOTAL)} casos &middot;{" "}
+        Cobertura: {bpoMes.muestreadas} de {formatNum(TOTAL)} casos &middot;{" "}
         {formatEUR(bpoMes.importeMuestreadoEur)} &middot; {MANUAL_PCT_LABEL} % del importe
       </p>
     </div>
@@ -413,23 +425,24 @@ function DotGrid({
 function ControlHoySkeleton() {
   return (
     <>
-      <div className="flex flex-wrap gap-2 px-5 pt-4">
-        <Skeleton className="h-6 w-24 rounded-full" />
-        <Skeleton className="h-6 w-16 rounded-full" />
-        <Skeleton className="h-6 w-28 rounded-full" />
-      </div>
       <div className="px-5 py-4">
-        <Skeleton className="mb-3 h-3 w-56" />
+        <Skeleton className="mb-3 h-3 w-40" />
         <div className="flex flex-wrap gap-1">
           {Array.from({ length: 120 }).map((_, i) => (
             <Skeleton key={i} className="h-2.5 w-2.5 rounded-full" />
           ))}
         </div>
       </div>
-      <div className="space-y-2 border-t border-line px-5 py-4">
-        <Skeleton className="h-2 w-full rounded-full" />
+      <div className="space-y-0 border-t border-line">
+        <Skeleton className="mx-5 mt-4 h-2 w-full rounded-full" />
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-9 w-full" />
+          <div key={i} className="flex items-center justify-between border-t border-line px-5 py-3">
+            <div className="space-y-1.5">
+              <Skeleton className="h-3.5 w-36" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+            <Skeleton className="h-3.5 w-14" />
+          </div>
         ))}
       </div>
     </>
@@ -441,7 +454,7 @@ function MuestreoManualBar({ animateIn }: { animateIn: boolean }) {
     <div className="border-t border-line px-5 py-4">
       <div className="mb-2 flex items-center justify-between gap-3 text-xs">
         <span className="font-semibold uppercase tracking-[0.12em] text-muted">
-          Cobertura del muestreo manual
+          Cobertura verificada
         </span>
         <span className="tabular-nums font-semibold text-ink">{MANUAL_PCT_LABEL} %</span>
       </div>
@@ -461,61 +474,38 @@ function MuestreoManualBar({ animateIn }: { animateIn: boolean }) {
   );
 }
 
-function MuestreadosTable() {
+function MuestreadosFeed() {
   return (
     <div className="border-t border-line">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-            Casos revisados manualmente
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-ink">
-            {bpoMes.muestreadas} declaraciones seleccionadas al azar
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ok">
+      <div className="flex items-center justify-between px-5 pb-1 pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+          Casos verificados
+        </p>
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-ok">
           <CheckCircle2 className="h-3 w-3" />
           Todas OK
         </span>
       </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-left text-xs">
-          <thead>
-            <tr className="border-b border-line text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-              <th className="px-5 py-2.5 font-semibold">ID</th>
-              <th className="px-3 py-2.5 font-semibold">Empresa</th>
-              <th className="px-3 py-2.5 font-semibold text-right">Importe</th>
-              <th className="px-5 py-2.5 font-semibold">Resultado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {SAMPLED_RECORDS.map((row, i) => (
-              <motion.tr
-                key={row.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.12 + i * 0.06, ease: EASE_OUT }}
-                className="border-b border-line/70 last:border-0"
-              >
-                <td className="px-5 py-2.5 font-mono text-brand-dark">{row.id}</td>
-                <td className="max-w-[14rem] truncate px-3 py-2.5 font-medium text-ink">
-                  {row.empresa}
-                </td>
-                <td className="px-3 py-2.5 text-right tabular-nums font-medium text-ink">
-                  {formatEUR(row.importeOrigenEur)}
-                </td>
-                <td className="px-5 py-2.5">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-ok-soft px-2 py-0.5 text-[10px] font-semibold text-ok">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Conciliada
-                  </span>
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {SAMPLED_RECORDS.map((row, i) => (
+        <motion.div
+          key={row.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 + i * 0.05, ease: EASE_OUT }}
+          className="flex items-center justify-between gap-4 border-t border-line px-5 py-3"
+        >
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-ink">{row.empresa}</p>
+            <p className="mt-0.5 font-mono text-[11px] text-brand-dark">{row.id}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-medium tabular-nums text-ink">
+              {formatEUR(row.importeOrigenEur)}
+            </p>
+            <p className="mt-0.5 text-[10px] text-ok">Conciliada</p>
+          </div>
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -536,13 +526,13 @@ function ControlHoyVisual() {
   const uncheckedEur = bpoMes.importeTotalEur - bpoMes.importeMuestreadoEur;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="shrink-0">
-        <article className="w-full overflow-hidden rounded-xl border border-line bg-surface">
+    <FadeUp>
+      <div className="mx-auto w-full max-w-xl space-y-3">
+        <article className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
               <ClipboardList className="h-3.5 w-3.5" />
-              Control manual · Muestreo mensual
+              Cobertura del cierre
             </span>
             <AnimatePresence mode="wait">
               {phase === "loading" ? (
@@ -566,7 +556,7 @@ function ControlHoyVisual() {
                   transition={{ duration: 0.3, ease: EASE_OUT }}
                   className="text-[11px] text-muted"
                 >
-                  {bpoMes.periodo}
+                  {bpoMes.muestreadas} de {formatNum(bpoMes.totalDeclaraciones)} · {MANUAL_PCT_LABEL} %
                 </motion.span>
               )}
             </AnimatePresence>
@@ -576,8 +566,6 @@ function ControlHoyVisual() {
             {phase === "loading" ? (
               <motion.div
                 key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
               >
@@ -588,26 +576,11 @@ function ControlHoyVisual() {
                 key="content"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE_OUT }}
+                transition={{ duration: 0.45, ease: EASE_OUT }}
               >
-                <div className="flex flex-wrap gap-2 px-5 pt-4">
-                  {[
-                    `${bpoMes.muestreadas} casos muestreados`,
-                    `${MANUAL_PCT_LABEL} % del importe`,
-                    formatEUR(bpoMes.importeMuestreadoEur),
-                  ].map((label) => (
-                    <span
-                      key={label}
-                      className="inline-flex rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-
                 <div className="px-5 py-4">
                   <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-                    Distribución del cierre — {formatNum(bpoMes.totalDeclaraciones)} declaraciones
+                    Distribución del cierre
                   </p>
                   <DotGrid showDiscrepancies={false} animate={true} />
                 </div>
@@ -622,7 +595,7 @@ function ControlHoyVisual() {
                       transition={{ duration: 0.35, ease: EASE_OUT }}
                     >
                       <MuestreoManualBar animateIn={true} />
-                      <MuestreadosTable />
+                      <MuestreadosFeed />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -630,25 +603,29 @@ function ControlHoyVisual() {
             )}
           </AnimatePresence>
         </article>
-      </FadeUp>
 
-      <AnimatePresence>
-        {phase === "detail" && (
-          <FadeUp delay={0.15} className="shrink-0">
-            <div className="rounded-xl border border-line bg-surface px-5 py-3.5">
+        <AnimatePresence>
+          {phase === "detail" && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.06 }}
+              className="rounded-xl border border-line bg-surface px-5 py-3.5"
+            >
               <p className="text-sm leading-relaxed text-ink-soft">
                 <strong className="font-semibold text-ink">
                   {formatNum(uncheckedCount)} declaraciones
                 </strong>{" "}
-                ({REST_PCT_LABEL} % · {formatEUR(uncheckedEur)}) quedan fuera del control manual
-                cada mes. Un error en cualquiera de ellas pasa desapercibido hasta una reclamación o
+                ({REST_PCT_LABEL} % · {formatEUR(uncheckedEur)}) quedan sin verificar en cada
+                cierre. Un error en cualquiera de ellas pasa desapercibido hasta una reclamación o
                 auditoría externa.
               </p>
-            </div>
-          </FadeUp>
-        )}
-      </AnimatePresence>
-    </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </FadeUp>
   );
 }
 
@@ -700,12 +677,11 @@ function DiscrepanciasVisual() {
         <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-danger leading-snug">
-            Ninguna de las {DISCREPANCY_COUNT} discrepancias estaba en la muestra manual —{" "}
-            {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
+            {DISCREPANCY_COUNT} discrepancias detectadas — {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
           </p>
           <p className="text-xs text-ink-soft mt-1.5 leading-relaxed">
-            Los {bpoMes.muestreadas} casos muestreados son correctos. Las anomalías se
-            esconden en el 98,4 % no revisado.
+            Ninguna caía entre los {bpoMes.muestreadas} casos ya verificados. Las anomalías están
+            en el {REST_PCT_LABEL} % del cierre aún pendiente.
           </p>
         </div>
       </div>
@@ -742,24 +718,15 @@ const steps: Step[] = [
             <strong className="text-ink">{formatEUR(bpoMes.importeTotalEur)}</strong>.
           </p>
           <p className="mt-2">
-            Cada registro debe conciliarse con el SGA: importe, CIF, estado de carga y campos
-            clave, uno a uno.
+            Cada registro debe conciliarse con el SGA — importe, CIF, estado de carga y campos
+            clave — antes de cerrar el mes.
           </p>
-        </StepAsideSection>
-        <StepAsideSection title="Proceso tradicional">
-          <StepAsideList
-            items={[
-              "El equipo BPO recibe el cierre completo al cerrar el mes.",
-              "Revisar 437 registros a mano cada mes es inviable.",
-              "Se recurre al muestreo: un subconjunto representativo del importe.",
-            ]}
-          />
         </StepAsideSection>
         <StepAsideSection title="Con el agente">
           <StepAsideList
             items={[
               "Toma el cierre mensual como entrada automática.",
-              "Prepara la conciliación campo a campo sin selección manual.",
+              "Prepara la conciliación campo a campo sobre todo el volumen.",
               "El análisis arranca en cuanto el mes queda registrado.",
             ]}
           />
@@ -774,39 +741,38 @@ const steps: Step[] = [
   },
   {
     n: 2,
-    nombre: "Control actual",
-    titulo: "El control de hoy",
+    nombre: "Cobertura",
+    titulo: "Cobertura del cierre",
     explicacion: (
       <>
         <StepAsideSection title="Qué ocurre">
           <p>
-            El control manual actual selecciona{" "}
-            <strong className="text-ink">{bpoMes.muestreadas} casos</strong> de los{" "}
-            {formatNum(bpoMes.totalDeclaraciones)}: el{" "}
-            <strong className="text-ink">{MANUAL_PCT_LABEL} % del importe</strong>.
+            En cada cierre, solo una fracción del importe queda verificada antes de dar el mes por
+            cerrado:{" "}
+            <strong className="text-ink">{MANUAL_PCT_LABEL} %</strong> en este caso —{" "}
+            {bpoMes.muestreadas} de {formatNum(bpoMes.totalDeclaraciones)} declaraciones.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Proceso tradicional">
+        <StepAsideSection title="La brecha">
           <StepAsideList
             items={[
               "Cada punto del gráfico es una declaración del cierre.",
-              "Solo los 5 casos muestreados se revisan campo a campo.",
-              "Los 432 restantes no se tocan hasta una reclamación o auditoría externa.",
+              "La mayor parte del volumen queda sin conciliación campo a campo.",
+              "Las anomalías se concentran donde nadie mira.",
             ]}
           />
         </StepAsideSection>
         <StepAsideSection title="Con el agente">
           <StepAsideList
             items={[
-              "Sustituye la selección manual por cobertura del 100 %.",
-              "Mismo criterio de conciliación, aplicado a todos los registros.",
-              "Las discrepancias dejan de depender del azar del muestreo.",
+              "Cobertura del 100 % del importe y de los registros.",
+              "Mismo criterio de conciliación, aplicado a todo el cierre.",
+              "Las discrepancias dejan de depender del azar.",
             ]}
           />
         </StepAsideSection>
         <StepAsideMeta>
-          Muestreo actual: {bpoMes.muestreadas} casos · {formatEUR(bpoMes.importeMuestreadoEur)}{" "}
-          revisados
+          Verificados: {bpoMes.muestreadas} casos · {formatEUR(bpoMes.importeMuestreadoEur)}
         </StepAsideMeta>
       </>
     ),
@@ -828,7 +794,7 @@ const steps: Step[] = [
         <StepAsideSection title="Cobertura">
           <StepAsideList
             items={[
-              `Del ${MANUAL_PCT_LABEL} % del muestreo manual al 100 % automático.`,
+              "100 % del importe y de los registros, automático.",
               "Importe, CIF, estado de carga y datos de empresa en cada registro.",
               "El agente no muestrea: revisa todo el cierre.",
             ]}
@@ -837,7 +803,7 @@ const steps: Step[] = [
         <StepAsideSection title="Por qué importa">
           <StepAsideList
             items={[
-              "Elimina la ventana ciega del 98,4 % no revisado.",
+              "Cierra el mes con certeza sobre todo el volumen.",
               "Mismo flujo origen ↔ SGA, sin intervención del equipo BPO.",
               "El resultado alimenta directamente el informe de control.",
             ]}
@@ -860,19 +826,19 @@ const steps: Step[] = [
             distintos entre origen y SGA, registros no cargados y duplicados.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Fuera de la muestra">
+        <StepAsideSection title="Dónde caían">
           <p>
             <strong className="text-ink">
-              Ninguna estaba entre los {bpoMes.muestreadas} casos muestreados.
+              Ninguna discrepancia estaba entre los {bpoMes.muestreadas} casos ya verificados.
             </strong>{" "}
-            El control manual habría cerrado el mes sin detectarlas.
+            Todas se escondían en el resto del cierre.
           </p>
         </StepAsideSection>
         <StepAsideSection title="Impacto">
           <StepAsideList
             items={[
-              `${formatEUR(IMPORTE_EN_RIESGO)} en riesgo — invisible para el proceso actual.`,
-              "Los 5 casos muestreados son correctos; las anomalías están en el 98,4 % no revisado.",
+              `${formatEUR(IMPORTE_EN_RIESGO)} en riesgo, invisible sin cobertura completa.`,
+              "Los casos verificados eran correctos; las anomalías estaban en el volumen pendiente.",
               "Cada incidencia queda priorizada con evidencia de conciliación.",
             ]}
           />
@@ -897,12 +863,12 @@ const steps: Step[] = [
             detectada, marca de tiempo y firma digital.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Entrega al equipo BPO">
+        <StepAsideSection title="Listo para actuar">
           <StepAsideList
             items={[
               `${DISCREPANCY_COUNT} incidencias priorizadas listas para actuar.`,
               `${formatEUR(IMPORTE_EN_RIESGO)} a recuperar con evidencia auditable.`,
-              "Sin el agente, el muestreo del 1,6 % no habría detectado nada.",
+              "Informe completo del cierre, no un subconjunto del volumen.",
             ]}
           />
         </StepAsideSection>
