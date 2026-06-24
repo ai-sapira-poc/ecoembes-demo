@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { StepLayout, type Step } from "@/components/layout/StepLayout";
+import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
 import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
 import { CorrespondenciaThread } from "@/components/auditoria/CorrespondenciaThread";
@@ -552,26 +552,36 @@ const steps: Step[] = [
     titulo: "La declaración llega",
     explicacion: (
       <>
-        <p>
-          <strong className="text-ink">{dec.empresa}</strong> envía su
-          declaración SIG del período {dec.periodo} por correo, con la hoja DAE
-          adjunta.
-        </p>
-        <p>
-          En el proceso tradicional, ese correo entraría en una bandeja
-          compartida y esperaría turno para una revisión manual — días, a veces
-          semanas.
-        </p>
-        <p>
-          Con el agente, la recepción desencadena inmediatamente el análisis
-          automático. El proceso empieza en el momento en que llega.
-        </p>
-        <p className="text-xs text-muted italic">
+        <StepAsideSection title="Qué ocurre">
+          <p>
+            <strong className="text-ink">{dec.empresa}</strong> envía la declaración SIG del
+            período {dec.periodo} por correo, con la hoja DAE adjunta.
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Proceso tradicional">
+          <StepAsideList
+            items={[
+              "El correo entra en una bandeja compartida.",
+              "Espera turno para revisión manual — días o semanas.",
+              "El análisis no empieza hasta que un auditor lo recoge.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Con el agente">
+          <StepAsideList
+            items={[
+              "La recepción dispara el análisis al instante.",
+              "El adjunto se extrae y normaliza sin intervención humana.",
+              "El expediente queda abierto desde el primer minuto.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideMeta>
           Importe declarado:{" "}
-          <span className="tabular-nums font-medium">
+          <span className="tabular-nums font-medium not-italic text-ink">
             {formatEUR(dec.importeDaeEur ?? dec.cuotaDeclaradaEur)}
           </span>
-        </p>
+        </StepAsideMeta>
       </>
     ),
     visual: <IntakeVisual />,
@@ -582,25 +592,42 @@ const steps: Step[] = [
     titulo: "El agente analiza",
     explicacion: (
       <>
-        <p>
-          El agente extrae los formatos y componentes de envase declarados, los
-          normaliza contra el catálogo Ecoembes 2025 y ejecuta el{" "}
-          <strong className="text-ink">monográfico de validación</strong>:
-          integridad del envase, coherencia de pesos, materiales y atributos,
-          infradeclaración.
-        </p>
-        <p>
-          En segundos, detecta que la línea del envase gel ducha PEAD aplica una
-          tarifa de Madera (
-          <span className="font-mono text-xs">0,049 €/kg</span>) en lugar de la
-          tarifa PEAD vigente (
-          <span className="font-mono text-xs">0,389 €/kg</span>).
-        </p>
-        <p>
-          El agente no solo valida números — cruza materiales, tarifas y
-          benchmarks sectoriales, como un auditor que conoce el reglamento de
-          memoria.
-        </p>
+        <StepAsideSection title="Qué hace el agente">
+          <StepAsideList
+            items={[
+              "Extrae formatos y componentes del adjunto SIG.",
+              "Normaliza materiales contra el catálogo Ecoembes 2025.",
+              "Ejecuta el monográfico de validación automática.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Validaciones del monográfico">
+          <StepAsideList
+            items={[
+              "Integridad del envase y coherencia de pesos.",
+              "Materiales y atributos reconocidos.",
+              "Cruce de tarifas por material y detección de infradeclaración.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Hallazgo en este caso">
+          <p>
+            La línea del gel ducha PEAD aplica tarifa de{" "}
+            <strong className="text-ink">Madera</strong> (
+            <span className="font-mono text-xs">0,049 €/kg</span>) en lugar de la tarifa{" "}
+            <strong className="text-ink">PEAD</strong> vigente (
+            <span className="font-mono text-xs">0,389 €/kg</span>).
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Por qué importa">
+          <StepAsideList
+            items={[
+              "Cruza materiales, tarifas y benchmarks sectoriales.",
+              "Actúa con el criterio de un auditor que conoce el reglamento.",
+              "Señala la discrepancia antes de escalar al cliente.",
+            ]}
+          />
+        </StepAsideSection>
       </>
     ),
     visual: <AnalisisVisual />,
@@ -611,22 +638,32 @@ const steps: Step[] = [
     titulo: "El agente escribe al cliente",
     explicacion: (
       <>
-        <p>
-          Ante la discrepancia de tarifa, el agente no la descarta ni la marca
-          automáticamente como error.{" "}
-          <strong className="text-ink">Actúa como un auditor:</strong> abre un
-          expediente de consulta y redacta un correo formal al responsable de
-          cumplimiento de la empresa.
-        </p>
-        <p>
-          El mensaje es preciso: identifica la línea afectada, la tarifa
-          detectada, la tarifa correcta y la magnitud del impacto. Solicita
-          confirmación o justificación documental.
-        </p>
-        <p>
-          Todo esto ocurre sin intervención humana, pero con la forma y el tono
-          de una comunicación auditora profesional.
-        </p>
+        <StepAsideSection title="Principio auditor">
+          <p>
+            Ante la discrepancia, el agente{" "}
+            <strong className="text-ink">no asume el error</strong> ni lo cierra
+            automáticamente. Abre consulta formal con la empresa.
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Qué incluye el correo">
+          <StepAsideList
+            items={[
+              "Línea y componente afectados.",
+              "Tarifa detectada vs. tarifa correcta.",
+              "Impacto económico estimado en la cuota.",
+              "Solicitud de confirmación o justificación documental.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Sin intervención humana">
+          <StepAsideList
+            items={[
+              "Redacta y envía el mensaje con tono auditor profesional.",
+              "Registra el expediente y actualiza el estado del agente.",
+              "Deja trazabilidad lista para revisión posterior.",
+            ]}
+          />
+        </StepAsideSection>
       </>
     ),
     visual: <ConsultaVisual />,
@@ -637,23 +674,30 @@ const steps: Step[] = [
     titulo: "Diálogo con el cliente",
     explicacion: (
       <>
-        <p>
-          El cliente responde: confirma que fue un error de selección en la
-          plataforma. El agente registra la respuesta, actualiza el expediente y
-          re-evalúa la declaración con la nueva información.
-        </p>
-        <p>
-          El agente cierra el intercambio con un tercer mensaje que comunica la
-          resolución — la declaración original se marcará como NO APTA y se
-          establece el plazo de subsanación.
-        </p>
-        <p>
-          Este diálogo estructurado reemplaza las llamadas telefónicas, los
-          correos perdidos y la memoria de cada auditor.{" "}
-          <strong className="text-ink">
-            Todo queda registrado con trazabilidad completa.
-          </strong>
-        </p>
+        <StepAsideSection title="Respuesta del cliente">
+          <p>
+            La empresa confirma un error de selección en la plataforma. El agente
+            registra la respuesta y re-evalúa la declaración con la nueva información.
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Cierre del hilo">
+          <StepAsideList
+            items={[
+              "Tercer mensaje con la resolución formal.",
+              "Declaración original marcada como NO APTO.",
+              "Plazo de subsanación comunicado al cliente.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Trazabilidad">
+          <StepAsideList
+            items={[
+              "Sustituye llamadas, correos sueltos y memoria del auditor.",
+              "Todo el intercambio queda en el expediente.",
+              "Hallazgos confirmados antes del veredicto.",
+            ]}
+          />
+        </StepAsideSection>
       </>
     ),
     visual: <DialogoVisual />,
@@ -664,25 +708,34 @@ const steps: Step[] = [
     titulo: "Veredicto: NO APTO",
     explicacion: (
       <>
-        <p>
-          Con el hallazgo confirmado y el diálogo cerrado, el agente emite el{" "}
-          <strong className="text-ink">veredicto definitivo: NO APTO.</strong>
-        </p>
-        <p>
-          La cuota se recalcula con la tarifa correcta. La diferencia, el plazo
-          de subsanación y toda la evidencia quedan archivados en el expediente.
-        </p>
-        <p>
-          El auditor humano solo necesita revisar los casos en los que el agente
-          escala por incertidumbre. En este caso, el agente lo resolvió solo —
-          con rigor documental, sin ambigüedad.
-        </p>
-        <p className="text-xs text-muted italic">
+        <StepAsideSection title="Veredicto">
+          <p>
+            Con el hallazgo confirmado y el diálogo cerrado, el agente emite{" "}
+            <strong className="text-ink">NO APTO</strong> como resolución definitiva.
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Consecuencias">
+          <StepAsideList
+            items={[
+              "Cuota recalculada con la tarifa correcta.",
+              "Diferencia y plazo de subsanación archivados.",
+              "Evidencia: hilo de correo + documentación adjunta.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="Rol del auditor humano">
+          <StepAsideList
+            items={[
+              "Solo revisa casos escalados por incertidumbre.",
+              "En este expediente, el agente cierra solo.",
+              "Rigor documental, sin ambigüedad.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideMeta>
           Confianza del agente:{" "}
-          <strong className="text-ink">
-            {Math.round(dec.confianza * 100)}%
-          </strong>
-        </p>
+          <strong className="not-italic text-ink">{Math.round(dec.confianza * 100)}%</strong>
+        </StepAsideMeta>
       </>
     ),
     visual: <VeredictoVisual />,

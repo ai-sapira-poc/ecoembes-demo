@@ -131,6 +131,19 @@ purpose-led — not cold SaaS jargon. Prefer lines like *"Cada declaración, ver
 - Background: `MeshBackground` (drifting green blobs) on landing/login/Acto canvases; cinematic photo +
   brand-green wash on the landing hero; plain `bg-canvas` in the platform shell content area.
 
+### Acto sidebar copy (left rail)
+
+Use `StepAsideSection`, `StepAsideList`, and `StepAsideMeta` from `@/components/layout/StepLayout`
+for all Acto step explainers — not long prose paragraphs.
+
+- **Section title:** `text-[11px] uppercase tracking-[0.14em] text-brand-dark` — one kicker per beat
+  (e.g. "Qué hace el agente", "Validaciones del monográfico", "Hallazgo en este caso").
+- **Body:** `text-sm text-ink-soft`; use `<StepAsideList>` for enumerations (checks, steps, consequences).
+- **Meta footnote:** `<StepAsideMeta>` for figures (importe declarado, confianza) — separated by `border-t`.
+- Stack sections with `space-y-4` in the left column; 2–4 sections per step is the target density.
+
+Reference: Acto 1 steps in `src/app/demos/auditoria/page.tsx`.
+
 ### Acto cards — hug content, keep beats in view
 
 Reference: Acto 1 step 2 (`AnalisisVisual` in `src/app/demos/auditoria/page.tsx`).

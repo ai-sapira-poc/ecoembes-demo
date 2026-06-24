@@ -14,6 +14,45 @@ export interface Step {
   visual: React.ReactNode;
 }
 
+/** Left-rail section heading for Acto step explainers. */
+export function StepAsideSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-dark">
+        {title}
+      </p>
+      <div className="space-y-2 text-sm text-ink-soft leading-relaxed">{children}</div>
+    </section>
+  );
+}
+
+/** Bulleted list for Acto sidebar copy. */
+export function StepAsideList({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2.5">
+          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand" aria-hidden />
+          <span className="text-pretty">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Optional footnote line below sections (meta, figures). */
+export function StepAsideMeta({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="border-t border-line pt-3 text-xs italic text-muted">{children}</p>
+  );
+}
+
 export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
   const [activeN, setActiveN] = useState<number>(steps[0].n);
 
@@ -52,9 +91,7 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
                   {activeStep.titulo}
                 </h2>
               </div>
-              <div className="text-sm text-muted leading-relaxed space-y-3">
-                {activeStep.explicacion}
-              </div>
+              <div className="space-y-4">{activeStep.explicacion}</div>
             </motion.div>
           </AnimatePresence>
         </div>
