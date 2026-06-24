@@ -62,7 +62,7 @@ export default function ConfiguracionPage() {
           <CardContent className="space-y-5">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-ink">
+                <label htmlFor="umbral-confianza" className="text-sm font-medium text-ink">
                   Umbral de confianza para dictamen autónomo
                 </label>
                 <span className="text-sm font-semibold text-brand tabular-nums">
@@ -70,6 +70,7 @@ export default function ConfiguracionPage() {
                 </span>
               </div>
               <input
+                id="umbral-confianza"
                 type="range"
                 min={0.5}
                 max={0.95}

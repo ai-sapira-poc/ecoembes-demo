@@ -50,6 +50,9 @@ export function CommandPalette() {
       setQ("");
       setActive(0);
       setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
+      setQ("");
+      setActive(0);
     }
   }, [open]);
 
@@ -81,7 +84,7 @@ export function CommandPalette() {
   function onInputKey(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((a) => Math.min(a + 1, results.flat.length - 1));
+      setActive((a) => Math.min(a + 1, Math.max(0, results.flat.length - 1)));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive((a) => Math.max(a - 1, 0));
