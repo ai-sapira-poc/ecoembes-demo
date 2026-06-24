@@ -109,11 +109,6 @@ export default function RevisionPage() {
           ))}
         </Reveal>
       )}
-
-      {/* Footer note */}
-      <p className="mt-10 text-center text-xs text-muted">
-        Las acciones de esta pantalla son visuales y no persisten entre sesiones — demo v1.0.
-      </p>
     </div>
   );
 }
