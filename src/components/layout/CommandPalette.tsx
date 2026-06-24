@@ -14,6 +14,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { declaraciones } from "@/data/mock/declaraciones";
 import { cn, formatEUR } from "@/lib/utils";
+import { chromelessSearchInputClass } from "@/components/ui/ToolbarSearchField";
 
 type Cmd = { id: string; label: string; sub?: string; href: string; icon: typeof Search };
 
@@ -136,7 +137,7 @@ export function CommandPalette() {
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={onInputKey}
                   placeholder="Buscar empresas, módulos…"
-                  className="flex-1 py-3.5 text-sm text-ink placeholder:text-muted bg-transparent focus:outline-none"
+                  className={cn("flex-1 py-3.5 text-sm text-ink placeholder:text-muted bg-transparent", chromelessSearchInputClass)}
                 />
                 <kbd className="rounded border border-line bg-canvas px-1.5 py-0.5 text-[10px] text-muted">
                   Esc

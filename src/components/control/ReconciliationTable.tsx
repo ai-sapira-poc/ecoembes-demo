@@ -1,19 +1,19 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronRight, Check, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
+import { InlineFilter } from "@/components/ui/InlineFilter";
+import { ToolbarSearchField } from "@/components/ui/ToolbarSearchField";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import { formatEUR, cn } from "@/lib/utils";
 import type { ConciliacionRecord, EstadoConciliacion } from "@/data/types";
 
-type EnrutamientoFiltro = "todos" | "autonomo" | "revision";
-
 interface ReconciliationTableProps {
   records: ConciliacionRecord[];
-  /** platform = muestra manual; agent = confianza + enrutamiento */
+  /** platform = conciliación operativa; agent = confianza + enrutamiento */
   variant?: "platform" | "agent";
   confianzaById?: Record<string, number>;
   confidenceThreshold?: number;
@@ -46,6 +46,16 @@ const ESTADOS: EstadoConciliacion[] = [
   "campos_distintos",
 ];
 
+const ESTADO_FILTER_OPTIONS = ESTADOS.map((e) => ({
+  value: e,
+  label: estadoLabel[e],
+}));
+
+const ENRUTAMIENTO_OPTIONS = [
+  { value: "autonomo", label: "Autónomo" },
+  { value: "revision", label: "Revisión humana" },
+] as const;
+
 export function ReconciliationTable({
   records,
   variant = "platform",
@@ -54,10 +64,10 @@ export function ReconciliationTable({
   title,
 }: ReconciliationTableProps) {
   const isAgent = variant === "agent";
-  const [filterEstado, setFilterEstado] = useState<EstadoConciliacion | "todos">("todos");
+  const [filterEstado, setFilterEstado] = useState("");
   const [soloDiscrepancias, setSoloDiscrepancias] = useState(false);
-  const [soloMuestreadas, setSoloMuestreadas] = useState(false);
-  const [filterEnrutamiento, setFilterEnrutamiento] = useState<EnrutamientoFiltro>("todos");
+  const [filterEnrutamiento, setFilterEnrutamiento] = useState("");
+  const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const getConfianza = (record: ConciliacionRecord) => confianzaById?.[record.id] ?? 0;
@@ -66,14 +76,28 @@ export function ReconciliationTable({
   const isAutonomo = (record: ConciliacionRecord) =>
     record.estado === "ok" && getConfianza(record) >= confidenceThreshold;
 
-  const filtered = records.filter((r) => {
-    if (filterEstado !== "todos" && r.estado !== filterEstado) return false;
-    if (soloDiscrepancias && r.estado === "ok") return false;
-    if (!isAgent && soloMuestreadas && !r.muestreada) return false;
-    if (isAgent && filterEnrutamiento === "autonomo" && !isAutonomo(r)) return false;
-    if (isAgent && filterEnrutamiento === "revision" && isAutonomo(r)) return false;
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return records.filter((r) => {
+      if (filterEstado && r.estado !== filterEstado) return false;
+      if (soloDiscrepancias && r.estado === "ok") return false;
+      if (isAgent && filterEnrutamiento === "autonomo" && !isAutonomo(r)) return false;
+      if (isAgent && filterEnrutamiento === "revision" && isAutonomo(r)) return false;
+      if (q && !r.empresa.toLowerCase().includes(q) && !r.cif.toLowerCase().includes(q)) {
+        return false;
+      }
+      return true;
+    });
+  }, [
+    records,
+    filterEstado,
+    soloDiscrepancias,
+    filterEnrutamiento,
+    search,
+    isAgent,
+    confianzaById,
+    confidenceThreshold,
+  ]);
 
   const toggleRow = (id: string) =>
     setExpandedId((prev) => (prev === id ? null : id));
@@ -83,10 +107,10 @@ export function ReconciliationTable({
   const hasPeriodo = records.some((r) => r.periodo != null);
 
   const colSpan =
-    5 +
+    6 +
     (hasCanal ? 1 : 0) +
     (hasPeriodo ? 1 : 0) +
-    (isAgent ? 2 : 2); // expand + muestreada/estado vs confianza/enrutamiento/estado
+    (isAgent ? 2 : 0);
 
   return (
     <div className="rounded-xl border border-line bg-white shadow-[0_2px_12px_-4px_rgba(20,32,26,0.08)] overflow-hidden">
@@ -105,84 +129,38 @@ export function ReconciliationTable({
       )}
 
       {/* Filter toolbar */}
-      <div className="px-5 py-3.5 border-b border-line bg-canvas flex flex-wrap items-center gap-4">
-        {/* Estado filter */}
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="estado-filter"
-            className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted whitespace-nowrap"
-          >
-            Estado
-          </label>
-          <select
-            id="estado-filter"
+      <div className="flex flex-wrap items-center border-b border-line bg-surface">
+        <ToolbarSearchField value={search} onChange={setSearch} className="min-w-[200px]" />
+        <div className="hidden sm:block h-7 w-px bg-line shrink-0" />
+        <div className="flex flex-wrap items-center gap-1 px-2 sm:px-4 sm:pr-3 shrink-0">
+          <Filter className="hidden sm:block h-4 w-4 shrink-0 text-muted" />
+          <InlineFilter
+            label="Estado"
             value={filterEstado}
-            onChange={(e) =>
-              setFilterEstado(e.target.value as EstadoConciliacion | "todos")
-            }
-            className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand/40"
-          >
-            <option value="todos">Todos</option>
-            {ESTADOS.map((e) => (
-              <option key={e} value={e}>
-                {estadoLabel[e]}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Toggle: solo discrepancias */}
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={soloDiscrepancias}
-            onChange={(e) => setSoloDiscrepancias(e.target.checked)}
-            className="rounded border-line text-brand focus:ring-brand/40"
+            options={ESTADO_FILTER_OPTIONS}
+            onChange={setFilterEstado}
           />
-          <span className="text-xs text-ink-soft">Solo discrepancias</span>
-        </label>
-
-        {!isAgent && (
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          {isAgent && (
+            <InlineFilter
+              label="Enrutamiento"
+              value={filterEnrutamiento}
+              options={ENRUTAMIENTO_OPTIONS}
+              onChange={setFilterEnrutamiento}
+            />
+          )}
+          <label className="flex cursor-pointer select-none items-center gap-2 whitespace-nowrap px-3 py-3.5">
             <input
               type="checkbox"
-              checked={soloMuestreadas}
-              onChange={(e) => setSoloMuestreadas(e.target.checked)}
+              checked={soloDiscrepancias}
+              onChange={(e) => setSoloDiscrepancias(e.target.checked)}
               className="rounded border-line text-brand focus:ring-brand/40"
             />
-            <span className="text-xs text-ink-soft">Solo muestreadas</span>
+            <span className="text-sm text-ink-soft">Solo discrepancias</span>
           </label>
-        )}
-
-        {isAgent && (
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="enrutamiento-filter"
-              className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted whitespace-nowrap"
-            >
-              Enrutamiento
-            </label>
-            <select
-              id="enrutamiento-filter"
-              value={filterEnrutamiento}
-              onChange={(e) => setFilterEnrutamiento(e.target.value as EnrutamientoFiltro)}
-              className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand/40"
-            >
-              <option value="todos">Todos</option>
-              <option value="autonomo">Autónomo</option>
-              <option value="revision">Revisión humana</option>
-            </select>
-          </div>
-        )}
-
-        <span className="ml-auto text-[11px] text-muted tabular-nums">
+        </div>
+        <span className="w-full border-t border-line px-4 py-2 text-[11px] text-muted tabular-nums sm:w-auto sm:border-t-0 sm:ml-auto sm:px-5 sm:py-3.5">
           {filtered.length} de {records.length} registros
-          {isAgent && (
-            <>
-              {" "}
-              · umbral {confidenceThreshold * 100} %
-            </>
-          )}
+          {isAgent && <> · umbral {confidenceThreshold * 100} %</>}
         </span>
       </div>
 
@@ -202,9 +180,7 @@ export function ReconciliationTable({
                 <TH className="text-center">Confianza</TH>
                 <TH className="text-center">Enrutamiento</TH>
               </>
-            ) : (
-              <TH className="text-center">Muestreada</TH>
-            )}
+            ) : null}
             <TH className="text-center">Estado</TH>
           </TR>
         </THead>
@@ -288,7 +264,7 @@ export function ReconciliationTable({
                     )}
                   </TD>
 
-                  {isAgent ? (
+                  {isAgent && (
                     <>
                       <TD className="text-center">
                         <ConfidenceBadge value={confianza} />
@@ -299,18 +275,6 @@ export function ReconciliationTable({
                         </Badge>
                       </TD>
                     </>
-                  ) : (
-                    <TD className="text-center">
-                      {record.muestreada ? (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10">
-                          <Check size={11} className="text-brand" />
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-line">
-                          <X size={11} className="text-muted" />
-                        </span>
-                      )}
-                    </TD>
                   )}
 
                   {/* Estado */}

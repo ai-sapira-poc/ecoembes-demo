@@ -6,9 +6,10 @@ import { declaraciones } from "@/data";
 import type { EstadoAgente } from "@/data/types";
 import { EstadoBadge, ESTADO_FILTER_OPTIONS } from "@/components/auditoria/EstadoBadge";
 import { InlineFilter } from "@/components/ui/InlineFilter";
+import { ToolbarSearchField } from "@/components/ui/ToolbarSearchField";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import { formatEUR } from "@/lib/utils";
-import { Search, ChevronRight, MessageSquare, Filter } from "lucide-react";
+import { ChevronRight, MessageSquare, Filter, Search } from "lucide-react";
 
 const SECTORS = [...new Set(declaraciones.map((d) => d.sector))].sort();
 
@@ -47,16 +48,7 @@ export default function AuditoriaListPage() {
       </div>
 
       <div className="flex items-center rounded-xl border border-line bg-surface">
-        <div className="flex flex-1 items-center px-4 min-w-0">
-          <Search className="h-4 w-4 shrink-0 text-muted" />
-          <input
-            type="text"
-            placeholder="Buscar por empresa o CIF…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border-0 bg-transparent px-3 py-3.5 text-sm text-ink outline-none placeholder:text-muted"
-          />
-        </div>
+        <ToolbarSearchField value={search} onChange={setSearch} />
         <div className="hidden sm:block h-7 w-px bg-line shrink-0" />
         <div className="flex items-center gap-1 px-2 sm:px-4 sm:pr-6 shrink-0">
           <Filter className="hidden sm:block h-4 w-4 shrink-0 text-muted" />
