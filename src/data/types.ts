@@ -118,6 +118,8 @@ export interface RevisionItem {
   accionSugerida: string;
   impactoEur: number;
   resolucion?: "aprobado" | "rechazado" | "solicitar_datos" | null;
+  /** For control-origin tickets: the ConciliacionRecord id this ticket resolves. */
+  registroId?: string;
 }
 
 export interface DashboardKpis {

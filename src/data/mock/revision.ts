@@ -160,6 +160,7 @@ export const revisionItems: RevisionItem[] = [
       "Corregir el CIF en SGA antes del cierre del período. Solicitar a la empresa " +
       "confirmación del NIF oficial mediante certificado de la AEAT.",
     impactoEur: 5_650,
+    registroId: "402",
   },
   {
     id: "REV-004",
@@ -213,6 +214,7 @@ export const revisionItems: RevisionItem[] = [
       "Verificar los logs de integración entre el sistema de origen y SGA para el rango " +
       "temporal de Septiembre 2025. Comprobar si existió un rechazo de carga no notificado.",
     impactoEur: 6_210,
+    registroId: "158",
   },
   {
     id: "REV-005",
@@ -267,5 +269,218 @@ export const revisionItems: RevisionItem[] = [
       "Solicitar al cliente el desglose de referencias expedidas por tipo de envase " +
       "y el albarán de compra de flejes del ejercicio 2025.",
     impactoEur: 14_949,
+  },
+  {
+    id: "REV-006",
+    origen: "control",
+    prioridad: "alta",
+    creadoHace: "3 h",
+    titulo: "Declaración sin registro SGA — ID 045 · Aguas de Sierra Azul S.A.",
+    resumen:
+      "La declaración 045 figura como recibida en el sistema de origen pero no tiene " +
+      "contrapartida en SGA. Importe en riesgo: 5.840 €.",
+    razonamiento:
+      "El registro de origen (período Septiembre 2025, ID 045, 'Aguas de Sierra Azul S.A.') " +
+      "consta como recibido y procesado. No existe ningún registro en SGA con ese identificador " +
+      "ni con el CIF y período coincidentes. El patrón es idéntico a otros fallos de integración " +
+      "detectados este período, lo que sugiere un rechazo silencioso en la carga.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Declaración ID 045 presente en origen (Sept 2025) sin match en SGA por ID, CIF o período.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "Estado en origen: recibido y procesado; los logs de integración no muestran confirmación en SGA.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 60 % — probable fallo de integración; 5.840 € sin contrapartida operativa.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Revisión humana para decidir reintento de carga o escalado a IT.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Sistema origen",
+        detalle: "Declaración ID 045 recibida y procesada para Septiembre 2025.",
+      },
+      {
+        fuente: "Búsqueda SGA",
+        detalle: "Sin coincidencia por ID, CIF ni período.",
+      },
+      {
+        fuente: "Conciliación BPO",
+        detalle: "Importe pendiente de 5.840 € sin registro en SGA.",
+      },
+    ],
+    confianza: 0.6,
+    decisionRequerida: "Decidir si se reintenta la carga en SGA o se escala a IT.",
+    accionSugerida:
+      "Revisar los logs de integración de Septiembre 2025 para el ID 045 y reintentar " +
+      "la carga si se confirma un rechazo no notificado.",
+    impactoEur: 5_840,
+    registroId: "045",
+  },
+  {
+    id: "REV-007",
+    origen: "control",
+    prioridad: "media",
+    creadoHace: "6 h",
+    titulo: "Importe SGA inferior al origen — ID 103 · Conservas del Cantábrico S.A.",
+    resumen:
+      "El importe cargado en SGA (18.420 €) es 3.520 € inferior al declarado en origen " +
+      "(21.940 €) para la declaración 103.",
+    razonamiento:
+      "La conciliación detecta una diferencia de −3.520 € entre el importe del sistema de origen " +
+      "(21.940 €) y el cargado en SGA (18.420 €). No hay nota de abono ni ajuste documentado que " +
+      "justifique la diferencia. El delta podría deberse a un truncamiento de líneas en la carga.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Importe SGA (18.420 €) ≠ importe origen (21.940 €) en el registro 103.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "Diferencia de −3.520 € sin nota de abono ni ajuste documentado en SGA.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 74 % — probable truncamiento de líneas en la carga a SGA.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Revisión humana para confirmar el importe correcto antes del cierre.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Sistema origen",
+        detalle: "Importe declarado de 21.940 € para la declaración 103.",
+      },
+      {
+        fuente: "SGA",
+        detalle: "Importe cargado de 18.420 € (−3.520 €).",
+      },
+      {
+        fuente: "Conciliación BPO",
+        detalle: "Sin documento de ajuste que justifique la diferencia.",
+      },
+    ],
+    confianza: 0.74,
+    decisionRequerida: "Confirmar el importe correcto y autorizar el ajuste en SGA.",
+    accionSugerida:
+      "Cotejar el detalle de líneas de la declaración 103 en origen frente a SGA y corregir " +
+      "el importe cargado si se confirma el truncamiento.",
+    impactoEur: 3_520,
+    registroId: "103",
+  },
+  {
+    id: "REV-008",
+    origen: "control",
+    prioridad: "alta",
+    creadoHace: "8 h",
+    titulo: "Declaración duplicada en SGA — ID 299 · Galletas y Cereales del Sur S.L.",
+    resumen:
+      "La declaración 299 aparece cargada dos veces en SGA, con riesgo de doble cobro " +
+      "de 7.780 €.",
+    razonamiento:
+      "Se detectan dos registros en SGA con el mismo CIF, período e importe (7.780 €) para la " +
+      "declaración 299, mientras que en origen solo consta una declaración. La duplicidad genera " +
+      "un doble cobro potencial si no se anula el registro repetido antes de la facturación.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Dos registros idénticos en SGA (mismo CIF, período e importe) para el ID 299.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "El sistema de origen solo contiene una declaración; la segunda carga es redundante.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 69 % — duplicidad confirmada; 7.780 € de doble cobro potencial.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Revisión humana para anular el registro repetido antes de facturar.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "SGA",
+        detalle: "Dos registros con CIF B41672309, mismo período e importe de 7.780 €.",
+      },
+      {
+        fuente: "Sistema origen",
+        detalle: "Una única declaración 299 para el período.",
+      },
+      {
+        fuente: "Conciliación BPO",
+        detalle: "Doble cobro potencial de 7.780 € si no se corrige.",
+      },
+    ],
+    confianza: 0.69,
+    decisionRequerida: "Confirmar la duplicidad y anular el registro repetido.",
+    accionSugerida:
+      "Verificar cuál de los dos registros SGA es el válido y anular el duplicado antes " +
+      "del cierre de facturación.",
+    impactoEur: 7_780,
+    registroId: "299",
+  },
+  {
+    id: "REV-009",
+    origen: "control",
+    prioridad: "media",
+    creadoHace: "1 d",
+    titulo: "Importe SGA inferior al origen — ID 430 · Bodegas Marqués de Tordella S.L.",
+    resumen:
+      "El importe en SGA (9.110 €) es 3.550 € inferior al declarado en origen (12.660 €) " +
+      "para la declaración 430.",
+    razonamiento:
+      "La conciliación detecta una diferencia de −3.550 € entre el importe del sistema de origen " +
+      "(12.660 €) y el cargado en SGA (9.110 €). No existe ajuste ni nota de abono documentada. " +
+      "El patrón coincide con cargas parciales por error de mapeo de líneas.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Importe SGA (9.110 €) ≠ importe origen (12.660 €) en el registro 430.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "Diferencia de −3.550 € sin ajuste ni nota de abono documentada.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 72 % — probable carga parcial por error de mapeo de líneas.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Revisión humana para confirmar el importe correcto antes del cierre.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Sistema origen",
+        detalle: "Importe declarado de 12.660 € para la declaración 430.",
+      },
+      {
+        fuente: "SGA",
+        detalle: "Importe cargado de 9.110 € (−3.550 €).",
+      },
+      {
+        fuente: "Conciliación BPO",
+        detalle: "Sin documento de ajuste que justifique la diferencia.",
+      },
+    ],
+    confianza: 0.72,
+    decisionRequerida: "Confirmar el importe correcto y autorizar el ajuste en SGA.",
+    accionSugerida:
+      "Cotejar el detalle de líneas de la declaración 430 en origen frente a SGA y corregir " +
+      "el importe cargado si se confirma la carga parcial.",
+    impactoEur: 3_550,
+    registroId: "430",
   },
 ];

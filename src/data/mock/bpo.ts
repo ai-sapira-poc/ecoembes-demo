@@ -32,6 +32,9 @@ interface SeededEntry {
   estado: EstadoConciliacion;
   detalle: string;
   importeSgaEur: number | null;
+  /** Override the deterministic empresa so the record matches its revision ticket. */
+  empresa?: string;
+  cif?: string;
 }
 
 const SEEDED: Record<number, SeededEntry> = {
@@ -40,36 +43,48 @@ const SEEDED: Record<number, SeededEntry> = {
     estado: "no_cargada",
     detalle: "Declaración recibida en origen, sin registro en SGA.",
     importeSgaEur: null,
+    empresa: "Aguas de Sierra Azul S.A.",
+    cif: "A46739210",
   },
   103: {
     importeOrigenEur: 21_940,
     estado: "importe_distinto",
     detalle: "Importe SGA 18.420 € vs 21.940 € en origen (−3.520 €).",
     importeSgaEur: 18_420,
+    empresa: "Conservas del Cantábrico S.A.",
+    cif: "A28541367",
   },
   158: {
     importeOrigenEur: 6_210,
     estado: "no_cargada",
     detalle: "Declaración recibida en origen, sin registro en SGA.",
     importeSgaEur: null,
+    empresa: "Distribuidora Central Peninsular S.A.",
+    cif: "A63095482",
   },
   299: {
     importeOrigenEur: 7_780,
     estado: "duplicada",
     detalle: "Cargada dos veces en SGA (doble cobro potencial).",
     importeSgaEur: 7_780,
+    empresa: "Galletas y Cereales del Sur S.L.",
+    cif: "B41672309",
   },
   402: {
     importeOrigenEur: 5_650,
     estado: "campos_distintos",
     detalle: "CIF cargado con dígito de control erróneo.",
     importeSgaEur: 5_650,
+    empresa: "Higiene Natura Iberia S.A.",
+    cif: "A80127654",
   },
   430: {
     importeOrigenEur: 12_660,
     estado: "importe_distinto",
     detalle: "Importe SGA 9.110 € vs 12.660 € en origen (−3.550 €).",
     importeSgaEur: 9_110,
+    empresa: "Bodegas Marqués de Tordella S.L.",
+    cif: "B26083741",
   },
 };
 
@@ -121,8 +136,8 @@ function makeRecord(i: number): ConciliacionRecord {
     const s = SEEDED[i];
     return {
       id: String(i).padStart(3, "0"),
-      empresa: empresa.nombre,
-      cif: empresa.cif,
+      empresa: s.empresa ?? empresa.nombre,
+      cif: s.cif ?? empresa.cif,
       importeOrigenEur: s.importeOrigenEur,
       importeSgaEur: s.importeSgaEur,
       muestreada: false,  // ← CRITICAL: seeded discrepancies are NEVER in the manual sample

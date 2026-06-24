@@ -1,13 +1,15 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronRight, Filter } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import { InlineFilter } from "@/components/ui/InlineFilter";
 import { ToolbarSearchField } from "@/components/ui/ToolbarSearchField";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { revisionItems } from "@/data/index";
 import { formatEUR, cn } from "@/lib/utils";
 import type { ConciliacionRecord, EstadoConciliacion } from "@/data/types";
 
@@ -64,11 +66,21 @@ export function ReconciliationTable({
   title,
 }: ReconciliationTableProps) {
   const isAgent = variant === "agent";
+  const router = useRouter();
   const [filterEstado, setFilterEstado] = useState("");
   const [soloDiscrepancias, setSoloDiscrepancias] = useState(false);
   const [filterEnrutamiento, setFilterEnrutamiento] = useState("");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  /** Map each ConciliacionRecord id to its open revision ticket (control origin). */
+  const ticketByRecordId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const t of revisionItems) {
+      if (t.origen === "control" && t.registroId) map[t.registroId] = t.id;
+    }
+    return map;
+  }, []);
 
   const getConfianza = (record: ConciliacionRecord) => confianzaById?.[record.id] ?? 0;
 
@@ -191,6 +203,8 @@ export function ReconciliationTable({
             const confianza = getConfianza(record);
             const autonomo = isAutonomo(record);
             const needsHuman = isAgent && !autonomo;
+            const ticketId =
+              isDiscrepancy && !isAgent ? ticketByRecordId[record.id] : undefined;
 
             const rowClass = needsHuman
               ? isDiscrepancy
@@ -202,11 +216,17 @@ export function ReconciliationTable({
               <Fragment key={record.id}>
                 <TR
                   className={cn("cursor-pointer", rowClass)}
-                  onClick={() => toggleRow(record.id)}
+                  onClick={() =>
+                    ticketId
+                      ? router.push(`/plataforma/revision/${ticketId}`)
+                      : toggleRow(record.id)
+                  }
                 >
-                  {/* Expand toggle */}
+                  {/* Leading affordance: navigate to ticket vs expand inline */}
                   <TD className="pl-4 text-muted">
-                    {isExpanded ? (
+                    {ticketId ? (
+                      <ArrowUpRight size={14} className="text-brand" />
+                    ) : isExpanded ? (
                       <ChevronDown size={13} />
                     ) : (
                       <ChevronRight size={13} />
@@ -279,9 +299,17 @@ export function ReconciliationTable({
 
                   {/* Estado */}
                   <TD className="text-center">
-                    <Badge color={estadoColor[record.estado]}>
-                      {estadoLabel[record.estado]}
-                    </Badge>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Badge color={estadoColor[record.estado]}>
+                        {estadoLabel[record.estado]}
+                      </Badge>
+                      {ticketId && (
+                        <span className="hidden items-center gap-0.5 text-[11px] font-medium text-brand-dark sm:inline-flex">
+                          Ver ticket
+                          <ArrowUpRight size={12} aria-hidden />
+                        </span>
+                      )}
+                    </span>
                   </TD>
                 </TR>
 
