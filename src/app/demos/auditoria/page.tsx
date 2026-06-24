@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
 import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
 import { CorrespondenciaThread, pickExchangePair } from "@/components/auditoria/CorrespondenciaThread";
-import { VeredictoCard } from "@/components/auditoria/VeredictoCard";
+import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
+import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido";
 import { FindingsPanel } from "@/components/auditoria/FindingsPanel";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
+import { FadeUp } from "@/components/motion/Reveal";
 import { declaraciones, formatEUR } from "@/data/index";
 import { cn } from "@/lib/utils";
-import type { EstadoAgente } from "@/data/types";
+import type { Declaracion, EstadoAgente } from "@/data/types";
 import {
   Mail,
   Paperclip,
@@ -21,6 +23,9 @@ import {
   AlertTriangle,
   Loader2,
   XCircle,
+  ArrowRight,
+  MessageSquare,
+  ChevronDown,
 } from "lucide-react";
 
 // DEC-005 — Higiene Natura Iberia S.A.
@@ -530,55 +535,183 @@ function DialogoVisual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 5 Visual — VeredictoCard + closing statement
+// Step 5 Visual — Platform-style validation queue + hero verdict
 // ─────────────────────────────────────────────────────────────────────────────
-function VeredictoVisual() {
+const QUEUE_SUMMARY_CHIPS: { estado: EstadoAgente; label: string }[] = [
+  { estado: "apto", label: "Aptas" },
+  { estado: "no_apto", label: "No aptas" },
+  { estado: "en_revision", label: "En revisión" },
+  { estado: "consulta_enviada", label: "Consulta enviada" },
+  { estado: "respuesta_recibida", label: "Respuesta recibida" },
+  { estado: "en_analisis", label: "En análisis" },
+  { estado: "recibida", label: "Recibidas" },
+];
+
+/** Representative slice of the workload — mirrors /plataforma/auditoria. */
+const QUEUE_SHOWCASE_IDS = [
+  "DEC-001",
+  "DEC-003",
+  "DEC-005",
+  "DEC-006",
+  "DEC-009",
+  "DEC-007",
+] as const;
+
+function countByEstado(items: Declaracion[]) {
+  const counts: Partial<Record<EstadoAgente, number>> = {};
+  for (const item of items) {
+    if (item.estadoAgente) {
+      counts[item.estadoAgente] = (counts[item.estadoAgente] ?? 0) + 1;
+    }
+  }
+  return counts;
+}
+
+function QueueAccordionItem({
+  item,
+  expanded,
+  onToggle,
+}: {
+  item: Declaracion;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <div className="space-y-5">
-      <EstadoBar estado="no_apto" />
-
-      {/* Verdict */}
-      <VeredictoCard
-        veredicto={dec.veredicto ?? null}
-        estadoAgente={dec.estadoAgente ?? "no_apto"}
-        consultasAbiertas={dec.consultasAbiertas ?? 0}
-        cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
-        cuotaCalculadaEur={dec.cuotaCalculadaEur}
-        confianza={dec.confianza}
-        razonamiento={dec.dictamen}
-      />
-
-      {/* Consequence callout */}
-      <Reveal>
-        <RevealItem>
-          <div className="rounded-xl border border-danger/20 bg-danger-soft px-5 py-4 space-y-2">
-            <p className="text-sm font-semibold text-danger">
-              Consecuencias del veredicto NO APTO
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border transition-colors",
+        expanded ? "border-line bg-surface shadow-sm" : "border-line bg-surface"
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-start justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-canvas/50"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-start gap-2">
+            <p className={cn("truncate text-sm font-semibold", expanded ? "text-ink" : "text-ink-soft")}>
+              {item.empresa}
             </p>
-            <ul className="space-y-1.5">
-              {[
-                `Cuota recalculada: ${formatEUR(dec.cuotaCalculadaEur)} (vs. declarada ${formatEUR(dec.cuotaDeclaradaEur)})`,
-                `Diferencia: ${formatEUR(dec.cuotaCalculadaEur - dec.cuotaDeclaradaEur)} — requiere declaración complementaria`,
-                "Plazo de subsanación: 30 de junio de 2025",
-                "Evidencia archivada: hilo de correo + documento de confirmación adjunto",
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-ink-soft">
-                  <XCircle className="w-3.5 h-3.5 text-danger mt-0.5 flex-shrink-0" />
-                  <span className="text-pretty">{item}</span>
-                </li>
-              ))}
-            </ul>
+            {item.consultasAbiertas != null && item.consultasAbiertas > 0 && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning">
+                <MessageSquare className="h-3 w-3" />
+                {item.consultasAbiertas}
+              </span>
+            )}
           </div>
-        </RevealItem>
-        <RevealItem>
-          <div className="rounded-lg border border-line bg-canvas px-4 py-2.5 flex items-center gap-2 text-xs text-muted">
-            <CheckCircle2 className="w-3.5 h-3.5 text-ok flex-shrink-0" />
-            Documento marcado como{" "}
-            <strong className="text-ink mx-0.5">NO APTO</strong> · evidencia
-            archivada · trazabilidad completa
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted">
+            <span className="font-mono">{item.cif}</span>
+            <span>{item.sector}</span>
+            {item.periodo != null && <span>Período {item.periodo}</span>}
           </div>
-        </RevealItem>
-      </Reveal>
+        </div>
+        <div className="flex shrink-0 items-start gap-2">
+          <div className="flex flex-col items-end gap-1.5">
+            {item.estadoAgente && <EstadoBadge estado={item.estadoAgente} />}
+            {item.importeDaeEur != null && (
+              <span className="text-sm font-semibold tabular-nums text-ink">
+                {formatEUR(item.importeDaeEur)}
+              </span>
+            )}
+          </div>
+          <ChevronDown
+            className={cn(
+              "mt-1 h-4 w-4 shrink-0 text-muted transition-transform duration-200",
+              expanded && "rotate-180"
+            )}
+            aria-hidden
+          />
+        </div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="panel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-line px-4 pb-4 pt-3">
+              <ExpedienteExpandido item={item} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function VeredictoVisual() {
+  const counts = useMemo(() => countByEstado(declaraciones), []);
+  const showcase = QUEUE_SHOWCASE_IDS.map((id) => declaraciones.find((d) => d.id === id)!);
+  const [expandedId, setExpandedId] = useState<string | null>(dec.id);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedId((current) => (current === id ? null : id));
+  };
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <FadeUp className="shrink-0">
+        <EstadoBar estado="no_apto" />
+      </FadeUp>
+
+      <FadeUp delay={0.06} className="shrink-0">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="border-b border-line px-5 py-3.5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+              Módulo Auditoría
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-ink">Carga de trabajo del agente</p>
+            <p className="mt-0.5 text-xs text-muted">
+              {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 px-5 py-3.5">
+            {QUEUE_SUMMARY_CHIPS.map(({ estado, label }) => {
+              const count = counts[estado] ?? 0;
+              if (count === 0) return null;
+              return (
+                <span
+                  key={estado}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
+                >
+                  {label}
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-surface text-[10px] font-bold text-muted">
+                    {count}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </FadeUp>
+
+      <FadeUp delay={0.12} className="shrink-0 space-y-2">
+        {showcase.map((item) => (
+          <QueueAccordionItem
+            key={item.id}
+            item={item}
+            expanded={expandedId === item.id}
+            onToggle={() => toggleExpanded(item.id)}
+          />
+        ))}
+      </FadeUp>
+
+      <FadeUp delay={0.2} className="shrink-0">
+        <Link
+          href="/plataforma/auditoria"
+          className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+        >
+          Abrir módulo Auditoría en la plataforma
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </FadeUp>
     </div>
   );
 }
@@ -745,37 +878,39 @@ const steps: Step[] = [
   },
   {
     n: 5,
-    nombre: "Veredicto",
-    titulo: "Veredicto: NO APTO",
+    nombre: "Validación",
+    titulo: "Validación y cierre",
     explicacion: (
       <>
-        <StepAsideSection title="Veredicto">
+        <StepAsideSection title="La plataforma real">
           <p>
-            Con el hallazgo confirmado y el diálogo cerrado, el agente emite{" "}
-            <strong className="text-ink">NO APTO</strong> como resolución definitiva.
+            El agente no cierra un expediente aislado: opera sobre la{" "}
+            <strong className="text-ink">carga de trabajo completa</strong> del período —
+            aptas, no aptas, consultas abiertas y casos escalados conviven en el mismo módulo.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Consecuencias">
+        <StepAsideSection title="Qué muestra este paso">
           <StepAsideList
             items={[
-              "Cuota recalculada con la tarifa correcta.",
-              "Diferencia y plazo de subsanación archivados.",
-              "Evidencia: hilo de correo + documentación adjunta.",
+              "Resumen por estado — igual que en /plataforma/auditoria.",
+              "Expedientes expandibles con resumen y registro de actividad.",
+              "Trazabilidad completa: recepción, análisis, correos y dictamen.",
             ]}
           />
         </StepAsideSection>
-        <StepAsideSection title="Rol del auditor humano">
+        <StepAsideSection title="Resolución automática">
           <StepAsideList
             items={[
-              "Solo revisa casos escalados por incertidumbre.",
-              "En este expediente, el agente cierra solo.",
-              "Rigor documental, sin ambigüedad.",
+              "La mayoría cierra sola con dictamen APTO.",
+              "NO APTO solo cuando el hallazgo queda confirmado.",
+              "En revisión humana solo los casos de baja confianza.",
             ]}
           />
         </StepAsideSection>
         <StepAsideMeta>
-          Confianza del agente:{" "}
-          <strong className="not-italic text-ink">{Math.round(dec.confianza * 100)}%</strong>
+          Este expediente:{" "}
+          <strong className="not-italic text-ink">NO APTO</strong> · confianza{" "}
+          {Math.round(dec.confianza * 100)}%
         </StepAsideMeta>
       </>
     ),

@@ -16,6 +16,8 @@ export interface VeredictoCardProps {
   cuotaCalculadaEur: number;
   confianza: number;
   razonamiento?: string;
+  /** Skip entry animation when nested in accordions/lists. */
+  embedded?: boolean;
 }
 
 export function VeredictoCard({
@@ -26,11 +28,12 @@ export function VeredictoCard({
   cuotaCalculadaEur,
   confianza,
   razonamiento,
+  embedded = false,
 }: VeredictoCardProps) {
   const diff = cuotaDeclaradaEur - cuotaCalculadaEur;
 
-  return (
-    <FadeUp delay={0.2}>
+  const body = (
+    <>
       {veredicto === "apto" && (
         <div className="rounded-xl border border-ok/30 bg-ok-soft p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
@@ -130,6 +133,10 @@ export function VeredictoCard({
           </div>
         </div>
       )}
-    </FadeUp>
+    </>
   );
+
+  if (embedded) return body;
+
+  return <FadeUp delay={0.2}>{body}</FadeUp>;
 }
