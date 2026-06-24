@@ -1,0 +1,83 @@
+"use client";
+
+import React, { useState, type JSX } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { StepBar } from "./StepBar";
+
+export interface Step {
+  n: number;
+  nombre: string;
+  titulo: string;
+  explicacion: React.ReactNode;
+  visual: React.ReactNode;
+}
+
+export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
+  const [activeN, setActiveN] = useState<number>(steps[0].n);
+
+  const activeStep = steps.find((s) => s.n === activeN) ?? steps[0];
+
+  return (
+    <div className="flex flex-col min-h-screen bg-canvas">
+      {/* Back link */}
+      <div className="px-6 pt-5 pb-2 flex-shrink-0">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver al inicio
+        </Link>
+      </div>
+
+      {/* Two-column content area */}
+      <div className="flex-1 flex overflow-hidden px-6 gap-6 pb-20">
+        {/* Left column — narrow, explanation */}
+        <div className="w-80 flex-shrink-0 flex flex-col justify-start py-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`left-${activeN}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-7 h-7 rounded-full bg-brand text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+                  {activeStep.n}
+                </span>
+                <h2 className="text-xl font-bold text-ink leading-tight">
+                  {activeStep.titulo}
+                </h2>
+              </div>
+              <div className="text-sm text-muted leading-relaxed space-y-3">
+                {activeStep.explicacion}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Right column — wide, visual */}
+        <div className="flex-1 min-w-0 py-6 overflow-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`right-${activeN}`}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              {activeStep.visual}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Step bar fixed at bottom */}
+      <StepBar steps={steps} active={activeN} onChange={setActiveN} />
+    </div>
+  );
+}
