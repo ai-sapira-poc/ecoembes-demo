@@ -42,15 +42,17 @@ const initials = dec.empresa
   .join("")
   .toUpperCase();
 
-// Compact agent-state bar — slim, reused across steps
+// Agent-state stepper — reused across Acto 1 steps (inline, comfortable density)
 function EstadoBar({ estado }: { estado: EstadoAgente }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-2">
-      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
-        Estado del agente
-      </span>
-      <div className="flex-1">
-        <EstadoPipeline estadoAgente={estado} compact />
+    <div className="rounded-xl border border-line bg-surface px-5 py-3">
+      <div className="flex items-center gap-4">
+        <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+          Estado del agente
+        </span>
+        <div className="min-w-0 flex-1">
+          <EstadoPipeline estadoAgente={estado} compact />
+        </div>
       </div>
     </div>
   );
