@@ -2,8 +2,7 @@
 
 import React, { useState, type JSX } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { StepBar } from "./StepBar";
 
 export interface Step {
@@ -12,6 +11,16 @@ export interface Step {
   titulo: string;
   explicacion: React.ReactNode;
   visual: React.ReactNode;
+}
+
+export interface StepLayoutProps {
+  steps: Step[];
+  /** Breadcrumb tail, e.g. "Acto 1 · Auditoría de Declaraciones SIG" */
+  actLabel: string;
+  /** Optional muted detail after act label */
+  actMeta?: string;
+  demoLabel?: string;
+  homeHref?: string;
 }
 
 /** Left-rail section heading for Acto step explainers. */
@@ -53,28 +62,56 @@ export function StepAsideMeta({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
+export function StepLayout({
+  steps,
+  actLabel,
+  actMeta,
+  demoLabel = "Demo paso a paso",
+  homeHref = "/",
+}: StepLayoutProps): JSX.Element {
   const [activeN, setActiveN] = useState<number>(steps[0].n);
+  const [replayKey, setReplayKey] = useState(0);
 
   const activeStep = steps.find((s) => s.n === activeN) ?? steps[0];
+  const activeIndex = steps.findIndex((s) => s.n === activeN);
+  const progressPct = ((activeIndex + 1) / steps.length) * 100;
+
+  const handleReplay = () => setReplayKey((k) => k + 1);
 
   return (
-    <div className="flex flex-col min-h-screen bg-canvas">
-      {/* Back link */}
-      <div className="px-6 pt-5 pb-2 flex-shrink-0">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Volver al inicio
-        </Link>
-      </div>
+    <div className="flex min-h-screen flex-col bg-canvas">
+      {/* Top bar — Home + breadcrumb */}
+      <header className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-6 py-3">
+        <span className="text-sm text-muted">{demoLabel}</span>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted/50" aria-hidden />
+        <span className="truncate text-sm font-medium text-ink">{actLabel}</span>
+        {actMeta && (
+          <span className="hidden truncate text-sm text-muted md:inline">· {actMeta}</span>
+        )}
+      </header>
 
-      {/* Two-column content area */}
-      <div className="flex min-h-0 flex-1 overflow-hidden px-6 gap-6 pb-20">
-        {/* Left column — narrow, explanation */}
-        <div className="w-80 flex-shrink-0 flex flex-col justify-start py-6">
+      {/* Two-column content */}
+      <div className="flex min-h-0 flex-1 overflow-hidden px-6 pb-20 pt-2 gap-6">
+        {/* Left — progress + explainer */}
+        <aside className="flex w-80 shrink-0 flex-col justify-start py-6">
+          {/* Progress */}
+          <div className="mb-6 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Progreso
+              </p>
+              <p className="text-[11px] tabular-nums text-muted">
+                {activeIndex + 1} / {steps.length}
+              </p>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full bg-brand transition-all duration-300 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={`left-${activeN}`}
@@ -83,24 +120,26 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="mb-6 flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-full bg-brand text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
-                  {activeStep.n}
-                </span>
-                <h2 className="text-xl font-bold text-ink leading-tight">
+              {/* Step header + replay */}
+              <div className="mb-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  Paso {activeStep.n} · {activeStep.nombre}
+                </p>
+                <h2 className="mt-1 text-xl font-bold leading-tight text-ink text-balance">
                   {activeStep.titulo}
                 </h2>
               </div>
+
               <div className="space-y-4">{activeStep.explicacion}</div>
             </motion.div>
           </AnimatePresence>
-        </div>
+        </aside>
 
-        {/* Right column — wide, visual (no page scroll; visuals manage their own overflow) */}
+        {/* Right — visual */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden py-6">
           <AnimatePresence mode="wait">
             <motion.div
-              key={`right-${activeN}`}
+              key={`right-${activeN}-${replayKey}`}
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
@@ -113,8 +152,13 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
         </div>
       </div>
 
-      {/* Step bar fixed at bottom */}
-      <StepBar steps={steps} active={activeN} onChange={setActiveN} />
+      <StepBar
+        steps={steps}
+        active={activeN}
+        onChange={setActiveN}
+        onReplay={handleReplay}
+        homeHref={homeHref}
+      />
     </div>
   );
 }

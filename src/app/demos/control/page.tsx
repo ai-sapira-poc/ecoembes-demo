@@ -520,21 +520,10 @@ const steps: Step[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ControlActoPage() {
   return (
-    <div className="min-h-screen">
-      {/* Page header bar */}
-      <div className="px-6 pt-4 pb-3 border-b border-line bg-white flex items-center gap-3">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand bg-brand-soft px-2.5 py-1 rounded-full">
-          Acto 2
-        </span>
-        <h1 className="text-sm font-semibold text-ink">
-          Control de Integridad BPO — Cuentas a Cobrar
-        </h1>
-        <span className="text-muted text-xs hidden md:inline ml-1">
-          {bpoMes.periodo} &middot; {formatNum(bpoMes.totalDeclaraciones)} declaraciones
-        </span>
-      </div>
-
-      <StepLayout steps={steps} />
-    </div>
+    <StepLayout
+      steps={steps}
+      actLabel="Acto 2 · Control de Integridad BPO"
+      actMeta={`${bpoMes.periodo} · ${formatNum(bpoMes.totalDeclaraciones)} declaraciones`}
+    />
   );
 }

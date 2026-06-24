@@ -157,7 +157,7 @@ stretch to fill leftover column height and leave dead white space below a table 
 - Right column: `flex min-h-0 flex-1 flex-col overflow-hidden` — no page-level scroll in the panel.
 - Step visual root: `flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto` — the column scrolls only if
   the stacked beats truly exceed the viewport (rare on laptop sizes).
-- Pin chrome that must stay visible first (`EstadoBar`, kickers): `shrink-0`.
+- Pin chrome that must stay visible first (kickers, section headers): `shrink-0`.
 
 **Card rules (apply to all Acto cards — extraction tables, validation lists, email threads, veredicto):**
 

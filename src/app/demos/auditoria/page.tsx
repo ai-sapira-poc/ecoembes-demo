@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
-import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
 import { CorrespondenciaThread, pickExchangePair } from "@/components/auditoria/CorrespondenciaThread";
 import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
 import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido";
@@ -46,22 +45,6 @@ const initials = dec.empresa
   .map((w) => w[0])
   .join("")
   .toUpperCase();
-
-// Agent-state stepper — reused across Acto 1 steps (inline, comfortable density)
-function EstadoBar({ estado }: { estado: EstadoAgente }) {
-  return (
-    <div className="rounded-xl border border-line bg-surface px-5 py-3">
-      <div className="flex items-center gap-4">
-        <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Estado del agente
-        </span>
-        <div className="min-w-0 flex-1">
-          <EstadoPipeline estadoAgente={estado} compact />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 Visual — Intake card + pipeline at "recibida"
@@ -292,14 +275,9 @@ function AnalisisVisual() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="shrink-0">
-        <EstadoBar estado="en_analisis" />
-      </FadeUp>
-
       <div className="flex shrink-0 flex-col gap-3">
         {/* Extracted data — hugs table height, no dead space below rows */}
         <FadeUp
-          delay={0.06}
           className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
         >
           <div className="border-b border-line px-4 py-2.5 flex items-center justify-between gap-3">
@@ -446,11 +424,7 @@ function ConsultaVisual() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="shrink-0">
-        <EstadoBar estado="consulta_enviada" />
-      </FadeUp>
-
-      <FadeUp delay={0.06} className="w-full shrink-0">
+      <FadeUp className="w-full shrink-0">
         <AnimatePresence mode="wait">
           {phase === "composing" ? (
             <motion.article
@@ -503,11 +477,7 @@ function DialogoVisual() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="shrink-0">
-        <EstadoBar estado="respuesta_recibida" />
-      </FadeUp>
-
-      <FadeUp delay={0.06} className="w-full shrink-0">
+      <FadeUp className="w-full shrink-0">
         <CorrespondenciaThread
           mensajes={exchange}
           empresaNombre={dec.empresa}
@@ -517,7 +487,7 @@ function DialogoVisual() {
         />
       </FadeUp>
 
-      <FadeUp delay={0.24} className="w-full shrink-0">
+      <FadeUp delay={0.12} className="w-full shrink-0">
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="border-b border-line px-5 py-3.5">
             <p className="text-sm font-semibold text-ink">Hallazgos confirmados</p>
@@ -658,10 +628,6 @@ function VeredictoVisual() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
       <FadeUp className="shrink-0">
-        <EstadoBar estado="no_apto" />
-      </FadeUp>
-
-      <FadeUp delay={0.06} className="shrink-0">
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="border-b border-line px-5 py-3.5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -703,7 +669,7 @@ function VeredictoVisual() {
         ))}
       </FadeUp>
 
-      <FadeUp delay={0.2} className="shrink-0">
+      <FadeUp delay={0.18} className="shrink-0">
         <Link
           href="/plataforma/auditoria"
           className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
@@ -923,21 +889,10 @@ const steps: Step[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AuditoriaActoPage() {
   return (
-    <div className="min-h-screen">
-      {/* Header kicker */}
-      <div className="px-6 pt-4 pb-2 border-b border-line bg-surface flex items-center gap-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-dark bg-brand-soft px-2.5 py-1 rounded-full">
-          Acto 1
-        </span>
-        <h1 className="text-base font-semibold text-ink">
-          Auditoría de Declaraciones SIG
-        </h1>
-        <span className="text-muted text-sm hidden md:inline">
-          — {dec.empresa} · Período {dec.periodo}
-        </span>
-      </div>
-
-      <StepLayout steps={steps} />
-    </div>
+    <StepLayout
+      steps={steps}
+      actLabel="Acto 1 · Auditoría de Declaraciones SIG"
+      actMeta={`${dec.empresa} · Período ${dec.periodo}`}
+    />
   );
 }
