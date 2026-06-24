@@ -4,121 +4,90 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { declaraciones } from "@/data";
 import type { EstadoAgente } from "@/data/types";
-import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
+import { EstadoBadge, ESTADO_FILTER_OPTIONS } from "@/components/auditoria/EstadoBadge";
+import { InlineFilter } from "@/components/ui/InlineFilter";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import { formatEUR } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import { Search, ChevronRight, MessageSquare } from "lucide-react";
+import { Search, ChevronRight, MessageSquare, Filter } from "lucide-react";
 
-const ESTADO_CHIPS: { estado: EstadoAgente | "todos"; label: string }[] = [
-  { estado: "todos",               label: "Todas" },
-  { estado: "recibida",            label: "Recibidas" },
-  { estado: "en_analisis",         label: "En análisis" },
-  { estado: "consulta_enviada",    label: "Consulta enviada" },
-  { estado: "respuesta_recibida",  label: "Respuesta recibida" },
-  { estado: "apto",                label: "Aptas" },
-  { estado: "no_apto",             label: "No aptas" },
-  { estado: "en_revision",         label: "En revisión" },
-];
+const SECTORS = [...new Set(declaraciones.map((d) => d.sector))].sort();
 
 export default function AuditoriaListPage() {
   const router = useRouter();
-  const [estadoFilter, setEstadoFilter] = useState<EstadoAgente | "todos">("todos");
+  const [estadoFilter, setEstadoFilter] = useState("");
+  const [sectorFilter, setSectorFilter] = useState("");
   const [search, setSearch] = useState("");
 
-  const counts = useMemo(() => {
-    const c: Partial<Record<EstadoAgente | "todos", number>> = { todos: declaraciones.length };
-    for (const d of declaraciones) {
-      if (d.estadoAgente) c[d.estadoAgente] = (c[d.estadoAgente] ?? 0) + 1;
-    }
-    return c;
-  }, []);
+  const hasFilters =
+    estadoFilter !== "" || sectorFilter !== "" || search.trim() !== "";
 
   const filtered = useMemo(() => {
     return declaraciones.filter((d) => {
-      if (estadoFilter !== "todos" && d.estadoAgente !== estadoFilter) return false;
+      if (estadoFilter && d.estadoAgente !== estadoFilter) return false;
+      if (sectorFilter && d.sector !== sectorFilter) return false;
       if (search.trim()) {
         const q = search.trim().toLowerCase();
-        if (!d.empresa.toLowerCase().includes(q) && !d.cif.toLowerCase().includes(q)) return false;
+        if (!d.empresa.toLowerCase().includes(q) && !d.cif.toLowerCase().includes(q)) {
+          return false;
+        }
       }
       return true;
     });
-  }, [estadoFilter, search]);
+  }, [estadoFilter, sectorFilter, search]);
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted mb-1">
-            Módulo Auditoría
-          </p>
-          <h1 className="text-xl font-bold text-ink">Carga de trabajo del agente</h1>
-          <p className="mt-0.5 text-xs text-muted">
-            {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
-          </p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold text-ink">Auditoría</h1>
+        <p className="mt-0.5 text-sm text-muted">
+          {hasFilters
+            ? `${filtered.length} de ${declaraciones.length} declaraciones`
+            : `${declaraciones.length} declaraciones`}
+        </p>
+      </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+      <div className="flex items-center rounded-xl border border-line bg-surface">
+        <div className="flex flex-1 items-center px-4 min-w-0">
+          <Search className="h-4 w-4 shrink-0 text-muted" />
           <input
             type="text"
             placeholder="Buscar por empresa o CIF…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-line rounded-lg bg-surface text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            className="w-full border-0 bg-transparent px-3 py-3.5 text-sm text-ink outline-none placeholder:text-muted"
+          />
+        </div>
+        <div className="hidden sm:block h-7 w-px bg-line shrink-0" />
+        <div className="flex items-center gap-1 px-2 sm:px-4 sm:pr-6 shrink-0">
+          <Filter className="hidden sm:block h-4 w-4 shrink-0 text-muted" />
+          <InlineFilter
+            label="Estado"
+            value={estadoFilter}
+            options={ESTADO_FILTER_OPTIONS}
+            onChange={setEstadoFilter}
+          />
+          <InlineFilter
+            label="Sector"
+            value={sectorFilter}
+            options={SECTORS}
+            onChange={setSectorFilter}
           />
         </div>
       </div>
 
-      {/* Filter chips */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-        {ESTADO_CHIPS.map(({ estado, label }) => {
-          const count = counts[estado] ?? 0;
-          const isActive = estadoFilter === estado;
-          return (
-            <button
-              key={estado}
-              onClick={() => setEstadoFilter(estado)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0",
-                isActive
-                  ? "bg-ink text-white"
-                  : "bg-surface text-ink-soft border border-line hover:border-brand/40 hover:text-ink"
-              )}
-            >
-              {label}
-              {count > 0 && (
-                <span
-                  className={cn(
-                    "tabular-nums text-[10px] font-semibold",
-                    isActive ? "text-white/70" : "text-muted"
-                  )}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Table */}
       <div className="rounded-xl border border-line bg-surface overflow-hidden">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted">
             <Search className="w-7 h-7 opacity-30" />
-            <p className="text-sm">No se encontraron declaraciones con los filtros aplicados.</p>
+            <p className="text-sm">No hay declaraciones con estos filtros.</p>
           </div>
         ) : (
           <Table>
             <THead>
               <tr>
                 <TH>Empresa</TH>
-                <TH>Sector</TH>
-                <TH className="text-center">Período</TH>
-                <TH>Canal</TH>
+                <TH className="hidden lg:table-cell">Sector</TH>
+                <TH className="text-center hidden md:table-cell">Período</TH>
                 <TH className="text-right">Importe DAE</TH>
                 <TH>Estado</TH>
                 <TH className="w-8" aria-label="Abrir" />
@@ -145,9 +114,10 @@ export default function AuditoriaListPage() {
                     </div>
                     <span className="font-mono text-[11px] text-muted">{d.cif}</span>
                   </TD>
-                  <TD className="text-muted">{d.sector}</TD>
-                  <TD className="text-center text-muted tabular-nums">{d.periodo ?? "—"}</TD>
-                  <TD className="text-muted">{d.canal ?? "—"}</TD>
+                  <TD className="hidden lg:table-cell text-muted">{d.sector}</TD>
+                  <TD className="hidden md:table-cell text-center text-muted tabular-nums">
+                    {d.periodo ?? "—"}
+                  </TD>
                   <TD className="text-right font-semibold text-ink tabular-nums">
                     {d.importeDaeEur != null ? formatEUR(d.importeDaeEur) : "—"}
                   </TD>
@@ -161,11 +131,6 @@ export default function AuditoriaListPage() {
           </Table>
         )}
       </div>
-      {filtered.length !== declaraciones.length && (
-        <p className="text-xs text-muted">
-          {filtered.length} de {declaraciones.length} declaraciones
-        </p>
-      )}
     </div>
   );
 }

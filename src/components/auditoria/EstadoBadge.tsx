@@ -19,6 +19,10 @@ const ESTADO_CONFIG: Record<EstadoAgente, { label: string; color: BadgeColor; do
   en_revision:        { label: "En revisión",         color: "warning", dotColor: "bg-warning" },
 };
 
+export const ESTADO_FILTER_OPTIONS = (
+  Object.entries(ESTADO_CONFIG) as [EstadoAgente, (typeof ESTADO_CONFIG)[EstadoAgente]][]
+).map(([value, { label }]) => ({ value, label }));
+
 export function EstadoBadge({ estado, className }: EstadoBadgeProps) {
   const { label, color, dotColor } = ESTADO_CONFIG[estado];
   return (
