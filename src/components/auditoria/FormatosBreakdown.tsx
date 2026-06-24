@@ -13,6 +13,19 @@ const DESTINO_CLASSES: Record<string, string> = {
   "Industrial": "bg-warning-soft text-warning",
 };
 
+const COLS = [
+  { key: "fmt", label: "Nº", align: "left" },
+  { key: "forma", label: "Formato", align: "left" },
+  { key: "envase", label: "Envase", align: "left" },
+  { key: "material", label: "Material", align: "left" },
+  { key: "color", label: "Color", align: "left" },
+  { key: "rigidez", label: "Rigidez", align: "left" },
+  { key: "gr", label: "g/ud", align: "right" },
+  { key: "uds", label: "Uds. totales", align: "right" },
+  { key: "destino", label: "Destino", align: "left" },
+  { key: "pv", label: "Punto Verde", align: "right" },
+] as const;
+
 export function FormatosBreakdown({ formatos, flaggedComponenteIds = [] }: FormatosBreakdownProps) {
   const flaggedSet = new Set(flaggedComponenteIds);
 
@@ -20,85 +33,86 @@ export function FormatosBreakdown({ formatos, flaggedComponenteIds = [] }: Forma
     return <p className="text-sm text-muted italic">No hay formatos declarados.</p>;
   }
 
+  const total = formatos.reduce(
+    (a, f) => a + f.componentes.reduce((s, c) => s + c.puntoVerdeDef, 0),
+    0
+  );
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+    <div className="overflow-x-auto rounded-lg border border-line">
+      <table className="w-full border-collapse text-xs tabular-nums">
         <thead>
-          <tr className="border-b border-line text-[11px] uppercase tracking-wider text-muted">
-            <th className="py-2 pl-1 pr-3 text-left font-semibold">Componente</th>
-            <th className="py-2 pr-3 text-left font-semibold">Material</th>
-            <th className="py-2 pr-3 text-left font-semibold hidden sm:table-cell">Color</th>
-            <th className="py-2 pr-3 text-right font-semibold whitespace-nowrap">g/ud</th>
-            <th className="py-2 pr-3 text-right font-semibold whitespace-nowrap hidden md:table-cell">Uds. totales</th>
-            <th className="py-2 pr-1 text-right font-semibold whitespace-nowrap">Punto Verde</th>
+          <tr className="bg-canvas text-[10px] uppercase tracking-wider text-muted">
+            {COLS.map((c) => (
+              <th
+                key={c.key}
+                className={cn(
+                  "border-b border-line px-3 py-2 font-semibold whitespace-nowrap",
+                  c.align === "right" ? "text-right" : "text-left"
+                )}
+              >
+                {c.label}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {formatos.map((fmt) => (
-            <FormatoGroup key={fmt.id} fmt={fmt} flaggedSet={flaggedSet} />
-          ))}
+          {formatos.map((fmt) =>
+            fmt.componentes.map((c, idx) => {
+              const flagged = flaggedSet.has(c.id);
+              const isFirst = idx === 0;
+              return (
+                <tr
+                  key={c.id}
+                  className={cn(
+                    isFirst && "border-t border-line",
+                    flagged ? "bg-warning-soft/60" : "hover:bg-canvas/50"
+                  )}
+                >
+                  <td className="px-3 py-1.5 text-muted">{isFirst ? fmt.id : ""}</td>
+                  <td className="px-3 py-1.5 font-medium text-ink max-w-[180px] truncate" title={fmt.nombre}>
+                    {isFirst ? fmt.nombre : ""}
+                  </td>
+                  <td className="px-3 py-1.5 text-ink-soft max-w-[180px] truncate" title={c.envase}>
+                    <span className="flex items-center gap-1.5">
+                      {flagged && <AlertTriangle className="h-3 w-3 shrink-0 text-warning" />}
+                      {c.envase}
+                    </span>
+                  </td>
+                  <td className={cn("px-3 py-1.5", flagged ? "font-semibold text-warning" : "text-ink-soft")}>
+                    {c.material}
+                  </td>
+                  <td className="px-3 py-1.5 text-muted">{c.color}</td>
+                  <td className="px-3 py-1.5 text-muted">{c.rigidez}</td>
+                  <td className="px-3 py-1.5 text-right text-ink-soft">{formatNum(c.grEnvase)}</td>
+                  <td className="px-3 py-1.5 text-right text-muted">{formatNum(c.unidadesTotales)}</td>
+                  <td className="px-3 py-1.5">
+                    {isFirst && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
+                          DESTINO_CLASSES[fmt.destino] ?? "bg-canvas text-muted ring-1 ring-line"
+                        )}
+                      >
+                        {fmt.destino}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-medium text-ink">{formatEUR2(c.puntoVerdeDef)}</td>
+                </tr>
+              );
+            })
+          )}
         </tbody>
+        <tfoot>
+          <tr className="border-t-2 border-line bg-canvas/70">
+            <td colSpan={9} className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Total Punto Verde declarado
+            </td>
+            <td className="px-3 py-2 text-right font-semibold text-ink">{formatEUR2(total)}</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
-  );
-}
-
-function FormatoGroup({ fmt, flaggedSet }: { fmt: Formato; flaggedSet: Set<string> }) {
-  return (
-    <>
-      {/* Group header — the formato */}
-      <tr className="bg-canvas/70">
-        <td colSpan={6} className="px-1 py-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-ink">
-              {fmt.id}. {fmt.nombre}
-            </span>
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-none",
-                DESTINO_CLASSES[fmt.destino] ?? "bg-canvas text-muted ring-1 ring-line"
-              )}
-            >
-              {fmt.destino}
-            </span>
-            <span className="ml-auto text-xs text-muted tabular-nums">
-              {formatNum(fmt.ventas)} uds. vendidas
-            </span>
-          </div>
-        </td>
-      </tr>
-
-      {/* Component rows */}
-      {fmt.componentes.map((c) => {
-        const flagged = flaggedSet.has(c.id);
-        return (
-          <tr
-            key={c.id}
-            className={cn(
-              "border-b border-line/60 last:border-0",
-              flagged ? "bg-warning-soft/60" : "hover:bg-canvas/50"
-            )}
-          >
-            <td className="py-2 pl-1 pr-3">
-              <span className="flex items-center gap-1.5">
-                {flagged && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />}
-                <span className="truncate text-ink-soft" title={c.envase}>{c.envase}</span>
-              </span>
-            </td>
-            <td className={cn("py-2 pr-3", flagged ? "font-medium text-warning" : "text-ink-soft")}>
-              {c.material}
-            </td>
-            <td className="py-2 pr-3 text-muted hidden sm:table-cell">{c.color}</td>
-            <td className="py-2 pr-3 text-right tabular-nums text-ink-soft">{formatNum(c.grEnvase)}</td>
-            <td className="py-2 pr-3 text-right tabular-nums text-muted hidden md:table-cell">
-              {formatNum(c.unidadesTotales)}
-            </td>
-            <td className="py-2 pr-1 text-right tabular-nums font-medium text-ink">
-              {formatEUR2(c.puntoVerdeDef)}
-            </td>
-          </tr>
-        );
-      })}
-    </>
   );
 }

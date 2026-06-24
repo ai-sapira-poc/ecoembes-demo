@@ -11,6 +11,7 @@ import { WhiteWipe } from "@/components/motion/WhiteWipe";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { declaraciones, formatEUR } from "@/data/index";
+import type { EstadoAgente } from "@/data/types";
 import {
   Mail,
   Paperclip,
@@ -40,6 +41,20 @@ const initials = dec.empresa
   .map((w) => w[0])
   .join("")
   .toUpperCase();
+
+// Compact agent-state bar — slim, reused across steps
+function EstadoBar({ estado }: { estado: EstadoAgente }) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-2">
+      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+        Estado del agente
+      </span>
+      <div className="flex-1">
+        <EstadoPipeline estadoAgente={estado} compact />
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 Visual — Intake card + pipeline at "recibida"
@@ -181,6 +196,8 @@ function AnalisisVisual() {
 
   return (
     <div className="space-y-5">
+      <EstadoBar estado="en_analisis" />
+
       {/* Extracted data — the clear table */}
       <div className="rounded-xl border border-line bg-surface overflow-hidden">
         <div className="px-5 py-3.5 border-b border-line flex items-center justify-between gap-3">
@@ -307,13 +324,7 @@ function ConsultaVisual() {
       )}
 
       <div className="space-y-5">
-        {/* Pipeline at "consulta enviada" */}
-        <div className="rounded-xl border border-line bg-surface p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-            Estado del agente
-          </p>
-          <EstadoPipeline estadoAgente="consulta_enviada" />
-        </div>
+        <EstadoBar estado="consulta_enviada" />
 
         {/* Context callout */}
         <FadeUp delay={0.1}>
@@ -351,13 +362,7 @@ function DialogoVisual() {
 
   return (
     <div className="space-y-5">
-      {/* Pipeline at "respuesta recibida" */}
-      <div className="rounded-xl border border-line bg-surface p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-          Estado del agente
-        </p>
-        <EstadoPipeline estadoAgente="respuesta_recibida" />
-      </div>
+      <EstadoBar estado="respuesta_recibida" />
 
       {/* Full thread */}
       <CorrespondenciaThread mensajes={thread} empresaNombre={dec.empresa} />
@@ -386,13 +391,7 @@ function DialogoVisual() {
 function VeredictoVisual() {
   return (
     <div className="space-y-5">
-      {/* Pipeline at terminal "no_apto" */}
-      <div className="rounded-xl border border-line bg-surface p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-          Estado del agente
-        </p>
-        <EstadoPipeline estadoAgente="no_apto" />
-      </div>
+      <EstadoBar estado="no_apto" />
 
       {/* Verdict */}
       <VeredictoCard

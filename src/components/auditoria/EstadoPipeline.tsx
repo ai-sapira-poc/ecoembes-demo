@@ -7,6 +7,7 @@ import type { EstadoAgente } from "@/data/types";
 
 export interface EstadoPipelineProps {
   estadoAgente: EstadoAgente;
+  compact?: boolean;
 }
 
 const STAGES = [
@@ -28,56 +29,53 @@ function getActiveStage(estado: EstadoAgente): number {
   }
 }
 
-export function EstadoPipeline({ estadoAgente }: EstadoPipelineProps) {
+export function EstadoPipeline({ estadoAgente, compact = false }: EstadoPipelineProps) {
   const active = getActiveStage(estadoAgente);
+  const dot = compact ? "w-5 h-5 text-[10px]" : "w-8 h-8 text-xs";
 
   return (
-    <div className="flex items-center w-full py-2">
+    <div className={cn("flex items-center w-full", compact ? "py-0" : "py-2")}>
       {STAGES.map((stage, i) => {
-        const isPast   = i < active;
+        const isPast = i < active;
         const isActive = i === active;
-        const isFuture = i > active;
 
         return (
           <div key={i} className="flex items-center flex-1 last:flex-none">
-            {/* Stage node */}
-            <div className="flex flex-col items-center gap-1.5">
+            <div className={cn("flex items-center gap-2", !compact && "flex-col gap-1.5")}>
               {isActive ? (
                 <motion.div
                   animate={{ scale: [1, 1.08, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-xs font-semibold shadow-[0_0_0_3px_rgba(26,168,75,0.18)]"
+                  className={cn(
+                    "rounded-full bg-brand text-white flex items-center justify-center font-semibold shadow-[0_0_0_3px_rgba(0,161,58,0.18)]",
+                    dot
+                  )}
                 >
                   {i + 1}
                 </motion.div>
               ) : isPast ? (
-                <div className="w-8 h-8 rounded-full bg-ok-soft text-ok flex items-center justify-center">
-                  <Check className="w-4 h-4" />
+                <div className={cn("rounded-full bg-ok-soft text-ok flex items-center justify-center", dot)}>
+                  <Check className={compact ? "w-3 h-3" : "w-4 h-4"} />
                 </div>
               ) : (
-                <div className="w-8 h-8 rounded-full bg-line text-muted flex items-center justify-center text-xs font-medium">
+                <div className={cn("rounded-full bg-line text-muted flex items-center justify-center font-medium", dot)}>
                   {i + 1}
                 </div>
               )}
               <span
                 className={cn(
-                  "hidden sm:block text-[11px] font-medium whitespace-nowrap",
-                  isActive ? "text-brand" : isPast ? "text-ok" : "text-muted"
+                  "font-medium whitespace-nowrap",
+                  compact ? "text-[11px]" : "hidden sm:block text-[11px]",
+                  isActive ? "text-brand-dark" : isPast ? "text-ok" : "text-muted"
                 )}
               >
                 {stage.label}
               </span>
             </div>
 
-            {/* Connector */}
             {i < STAGES.length - 1 && (
-              <div className="flex-1 mx-2 h-px">
-                <div
-                  className={cn(
-                    "h-px w-full",
-                    i < active ? "bg-ok" : "bg-line"
-                  )}
-                />
+              <div className={cn("flex-1 h-px", compact ? "mx-2" : "mx-2")}>
+                <div className={cn("h-px w-full", i < active ? "bg-ok" : "bg-line")} />
               </div>
             )}
           </div>
