@@ -8,11 +8,11 @@ export default function PlataformaLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0">
         <TopBar />
-        <main className="p-8 overflow-auto bg-canvas min-h-screen flex-1">
+        <main className="p-8 overflow-y-auto bg-canvas flex-1">
           <ToastProvider>{children}</ToastProvider>
         </main>
       </div>
