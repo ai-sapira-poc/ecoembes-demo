@@ -35,21 +35,22 @@ export function TopBar() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex items-center justify-between h-14 px-6 bg-surface border-b border-line shrink-0"
+      className="flex items-center justify-between h-14 px-4 md:px-6 bg-surface border-b border-line shrink-0"
     >
       {/* Left: section title */}
-      <h2 className="text-sm font-semibold text-ink tracking-[-0.01em]">{title}</h2>
+      <h2 className="truncate text-sm font-semibold text-ink tracking-[-0.01em]">{title}</h2>
 
       {/* Right: actions */}
-      <div className="flex items-center gap-1">
-        {/* Centro de ayuda */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Centro de ayuda — label hidden on mobile, icon-only */}
         <button
           type="button"
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-ink hover:bg-canvas transition-colors duration-150"
+          className="flex items-center gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-medium text-muted hover:text-ink hover:bg-canvas transition-colors duration-150"
           onClick={() => {/* no-op */}}
+          aria-label="Centro de ayuda"
         >
           <HelpCircle size={14} strokeWidth={1.8} />
-          Centro de ayuda
+          <span className="hidden sm:inline">Centro de ayuda</span>
         </button>
 
         {/* Bell with badge */}

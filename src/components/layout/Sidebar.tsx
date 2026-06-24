@@ -2,48 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileSearch, GitCompare, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/layout/Logo";
+import { navItems, isNavActive } from "@/components/layout/nav-items";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  {
-    label: "Dashboard",
-    href: "/plataforma",
-    icon: LayoutDashboard,
-    exact: true,
-  },
-  {
-    label: "Auditoría",
-    href: "/plataforma/auditoria",
-    icon: FileSearch,
-    exact: false,
-  },
-  {
-    label: "Control BPO",
-    href: "/plataforma/control",
-    icon: GitCompare,
-    exact: false,
-  },
-  {
-    label: "Revisión",
-    href: "/plataforma/revision",
-    icon: UserCheck,
-    exact: false,
-  },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
 
-  function isActive(href: string, exact: boolean): boolean {
-    if (exact) return pathname === href;
-    return pathname === href || pathname.startsWith(href + "/");
-  }
-
   return (
-    <aside className="flex flex-col w-56 min-h-screen bg-brand-dark text-white shrink-0 shadow-[2px_0_12px_-4px_rgba(10,32,20,0.22)]">
+    <aside className="hidden md:flex flex-col w-56 min-h-screen bg-brand-dark text-white shrink-0 shadow-[2px_0_12px_-4px_rgba(10,32,20,0.22)]">
       {/* Logo chip */}
       <div className="flex items-center justify-center px-5 pt-7 pb-6">
         <div className="bg-white rounded-xl px-3 py-2.5 shadow-[0_2px_8px_-2px_rgba(10,32,20,0.20)]">
@@ -56,8 +24,9 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex flex-col gap-0.5 px-3 flex-1 py-2">
-        {navItems.map(({ label, href, icon: Icon, exact }) => {
-          const active = isActive(href, exact);
+        {navItems.map((item) => {
+          const { label, href, icon: Icon } = item;
+          const active = isNavActive(pathname, item);
           return (
             <Link
               key={href}

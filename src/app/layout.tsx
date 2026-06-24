@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Nunito, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,14 @@ const nunitoSans = Nunito_Sans({
 export const metadata: Metadata = {
   title: "Ecoembes · Cada declaración, verificada",
   description: "Plataforma de verificación de declaraciones Ecoembes impulsada por Sapira AI",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // The product chrome is a fixed app shell; prevent the iOS rubber-band/zoom
+  // that would otherwise expose the canvas edges behind fixed bars.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
