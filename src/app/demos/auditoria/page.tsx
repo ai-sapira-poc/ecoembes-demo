@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
 import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
@@ -184,125 +185,224 @@ const validaciones005: ValidationRow[] = [
   },
 ];
 
+/** Skeleton that mirrors the SIG table layout while the agent extracts. */
+function ExtractionTableSkeleton() {
+  const colWidths = [28, 88, 72, 56, 40, 48, 36, 52, 44, 40];
+  return (
+    <div className="overflow-hidden rounded-lg border border-line">
+      <div className="flex gap-2 border-b border-line bg-canvas px-3 py-2.5">
+        {colWidths.map((w, i) => (
+          <Skeleton key={i} className="h-2.5 shrink-0 rounded-sm" style={{ width: w }} />
+        ))}
+      </div>
+      {[1, 2, 3, 4].map((row) => (
+        <div
+          key={row}
+          className="flex gap-2 border-b border-line px-3 py-2 last:border-0"
+        >
+          {colWidths.map((w, i) => (
+            <Skeleton
+              key={i}
+              className="h-3 shrink-0 rounded-sm"
+              style={{ width: i === 1 ? w + 24 : w }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ValidationRow({
+  v,
+  resolved,
+}: {
+  v: ValidationRow;
+  resolved: boolean;
+}) {
+  const status = resolved ? v.status : "pending";
+
+  return (
+    <li className="flex items-start gap-4 px-5 py-3.5">
+      <div className="mt-0.5 flex-shrink-0">
+        {status === "ok" && <CheckCircle2 className="w-4 h-4 text-ok" />}
+        {status === "flag" && <AlertTriangle className="w-4 h-4 text-warning" />}
+        {status === "pending" && (
+          <Loader2 className="w-4 h-4 text-muted animate-spin" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`text-sm font-medium ${
+            status === "flag" ? "text-warning" : status === "pending" ? "text-muted" : "text-ink"
+          }`}
+        >
+          {v.label}
+        </p>
+        <p
+          className={`text-xs mt-0.5 leading-relaxed text-pretty transition-opacity duration-300 ${
+            resolved ? "text-muted" : "text-muted/50"
+          }`}
+        >
+          {resolved ? v.detalle : "Comprobando…"}
+        </p>
+      </div>
+      <div className="ml-auto flex-shrink-0">
+        {status === "ok" && (
+          <span className="text-[11px] bg-ok-soft text-ok font-semibold px-2 py-0.5 rounded-full">
+            OK
+          </span>
+        )}
+        {status === "flag" && (
+          <span className="text-[11px] bg-warning-soft text-warning font-semibold px-2 py-0.5 rounded-full">
+            Alerta
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function AnalisisVisual() {
-  const [phase, setPhase] = useState<"skeleton" | "ready">("skeleton");
+  const [phase, setPhase] = useState<"extracting" | "table" | "validations">("extracting");
+  const [resolvedCount, setResolvedCount] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase("ready"), 1800);
-    return () => clearTimeout(t);
+    const toTable = setTimeout(() => setPhase("table"), 1500);
+    const toValidations = setTimeout(() => setPhase("validations"), 2200);
+    return () => {
+      clearTimeout(toTable);
+      clearTimeout(toValidations);
+    };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "validations") return;
+    if (resolvedCount >= validaciones005.length) return;
+    const t = setTimeout(() => setResolvedCount((n) => n + 1), 380);
+    return () => clearTimeout(t);
+  }, [phase, resolvedCount]);
 
   const nFormatos = dec.formatos?.length ?? 0;
   const nComponentes =
     dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0;
+  const allResolved = resolvedCount >= validaciones005.length;
 
   return (
     <div className="space-y-5">
-      <EstadoBar estado="en_analisis" />
+      <FadeUp>
+        <EstadoBar estado="en_analisis" />
+      </FadeUp>
 
-      {/* Extracted data — the clear table */}
-      <div className="rounded-xl border border-line bg-surface overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-line flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-ink">Declaración extraída</p>
-            <p className="text-xs text-muted mt-0.5">
-              Hoja SIG · {dec.empresa}
-            </p>
-          </div>
-          {phase === "skeleton" ? (
-            <span className="flex items-center gap-1.5 text-xs text-muted">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Extrayendo del adjunto…
-            </span>
-          ) : (
-            <span className="text-xs text-muted tabular-nums">
-              {nFormatos} formatos · {nComponentes} componentes
-            </span>
-          )}
-        </div>
-        <div className="p-5">
-          {phase === "skeleton" ? (
-            <div className="space-y-4">
-              {[1, 2].map((n) => (
-                <div key={n} className="space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-3/4" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <FormatosBreakdown
-              formatos={dec.formatos ?? []}
-              flaggedComponenteIds={["005-F2-C1"]}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Validation checklist — only once formatos are revealed */}
-      {phase === "ready" && (
-        <FadeUp delay={0.15}>
-          <div className="rounded-xl border border-line bg-surface overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-line">
-              <p className="text-sm font-semibold text-ink">
-                Validaciones automáticas — monográfico
-              </p>
+      {/* Extracted data — skeleton crossfades into table */}
+      <FadeUp delay={0.06}>
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-line flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">Declaración extraída</p>
               <p className="text-xs text-muted mt-0.5">
-                {dec.empresa} · Ejercicio {dec.ejercicio}
+                Hoja SIG · {dec.empresa}
               </p>
             </div>
-            <ul className="divide-y divide-line">
-              {validaciones005.map((v, i) => (
-                <li key={i} className="flex items-start gap-4 px-5 py-3.5">
-                  <div className="mt-0.5 flex-shrink-0">
-                    {v.status === "ok" && (
-                      <CheckCircle2 className="w-4 h-4 text-ok" />
-                    )}
-                    {v.status === "flag" && (
-                      <AlertTriangle className="w-4 h-4 text-warning" />
-                    )}
-                    {v.status === "pending" && (
-                      <Loader2 className="w-4 h-4 text-muted animate-spin" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className={`text-sm font-medium ${
-                        v.status === "flag" ? "text-warning" : "text-ink"
-                      }`}
-                    >
-                      {v.label}
-                    </p>
-                    <p className="text-xs text-muted mt-0.5 leading-relaxed text-pretty">
-                      {v.detalle}
-                    </p>
-                  </div>
-                  <div className="ml-auto flex-shrink-0">
-                    {v.status === "ok" && (
-                      <span className="text-[11px] bg-ok-soft text-ok font-semibold px-2 py-0.5 rounded-full">
-                        OK
-                      </span>
-                    )}
-                    {v.status === "flag" && (
-                      <span className="text-[11px] bg-warning-soft text-warning font-semibold px-2 py-0.5 rounded-full">
-                        Alerta
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="px-5 py-3 border-t border-warning/20 bg-warning-soft flex items-center gap-2">
-              <XCircle className="w-4 h-4 text-warning flex-shrink-0" />
-              <p className="text-xs text-warning font-medium">
-                2 alertas detectadas — el agente abre consulta formal con el cliente
-              </p>
-            </div>
+            <AnimatePresence mode="wait">
+              {phase === "extracting" ? (
+                <motion.span
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 text-xs text-muted"
+                >
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Extrayendo del adjunto…
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="ready"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-xs text-muted tabular-nums"
+                >
+                  {nFormatos} formatos · {nComponentes} componentes
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
-        </FadeUp>
-      )}
+          <div className="p-5">
+            <AnimatePresence mode="wait">
+              {phase === "extracting" ? (
+                <motion.div
+                  key="skeleton"
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <ExtractionTableSkeleton />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="table"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <FormatosBreakdown
+                    formatos={dec.formatos ?? []}
+                    flaggedComponenteIds={["005-F2-C1"]}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </FadeUp>
+
+      {/* Validation checklist — rows resolve one by one */}
+      <AnimatePresence>
+        {phase === "validations" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="rounded-xl border border-line bg-surface overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-line">
+                <p className="text-sm font-semibold text-ink">
+                  Validaciones automáticas — monográfico
+                </p>
+                <p className="text-xs text-muted mt-0.5">
+                  {dec.empresa} · Ejercicio {dec.ejercicio}
+                </p>
+              </div>
+              <ul className="divide-y divide-line">
+                {validaciones005.map((v, i) => (
+                  <ValidationRow key={v.label} v={v} resolved={resolvedCount > i} />
+                ))}
+              </ul>
+              <AnimatePresence>
+                {allResolved && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 py-3 border-t border-warning/20 bg-warning-soft flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-warning flex-shrink-0" />
+                      <p className="text-xs text-warning font-medium">
+                        2 alertas detectadas — el agente abre consulta formal con el cliente
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
