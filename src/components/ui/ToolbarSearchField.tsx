@@ -3,9 +3,14 @@
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** No brand ring/outline — toolbar search sits inside an already-bordered shell. */
+/**
+ * No brand ring/outline — toolbar search sits inside an already-bordered shell.
+ * The `chromeless-search` class is overridden in globals.css to defeat the
+ * unlayered global :focus-visible brand outline (Tailwind utilities are layered
+ * and lose to unlayered rules).
+ */
 export const chromelessSearchInputClass =
-  "w-full border-0 bg-transparent px-3 py-3.5 text-sm text-ink outline-none placeholder:text-muted focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0";
+  "chromeless-search w-full border-0 bg-transparent px-3 py-3.5 text-sm text-ink outline-none placeholder:text-muted focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0";
 
 interface ToolbarSearchFieldProps {
   value: string;

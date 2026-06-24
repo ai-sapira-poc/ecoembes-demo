@@ -71,6 +71,12 @@ html, body {
 ::selection { background: color-mix(in oklch, var(--color-brand) 22%, transparent); }
 :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
 
+/* Chromeless search inputs opt out of the global brand focus outline.
+   Unlayered + higher specificity so it beats the rule above (Tailwind's
+   focus-visible:outline-none is layered and would otherwise lose). */
+.chromeless-search:focus,
+.chromeless-search:focus-visible { outline: none; outline-offset: 0; }
+
 /* Quiet, on-brand scrollbar */
 * { scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
