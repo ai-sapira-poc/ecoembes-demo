@@ -2,52 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileSearch, GitCompare, UserCheck, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/layout/Logo";
+import { navItems, isNavActive } from "@/components/layout/nav-items";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-
-const navItems = [
-  {
-    label: "Dashboard",
-    href: "/plataforma",
-    icon: LayoutDashboard,
-    exact: true,
-  },
-  {
-    label: "Auditoría",
-    href: "/plataforma/auditoria",
-    icon: FileSearch,
-    exact: false,
-  },
-  {
-    label: "Control BPO",
-    href: "/plataforma/control",
-    icon: GitCompare,
-    exact: false,
-  },
-  {
-    label: "Revisión",
-    href: "/plataforma/revision",
-    icon: UserCheck,
-    exact: false,
-  },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  function isActive(href: string, exact: boolean): boolean {
-    if (exact) return pathname === href;
-    return pathname === href || pathname.startsWith(href + "/");
-  }
-
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-brand-dark text-white shrink-0 shadow-[2px_0_12px_-4px_rgba(10,32,20,0.22)] transition-[width] duration-200",
+        "hidden md:flex flex-col h-full bg-brand-dark text-white shrink-0 shadow-[2px_0_12px_-4px_rgba(10,32,20,0.22)] transition-[width] duration-200",
         collapsed ? "w-16" : "w-56"
       )}
     >
@@ -89,8 +58,9 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex flex-col gap-0.5 px-3 flex-1 overflow-y-auto py-2">
-        {navItems.map(({ label, href, icon: Icon, exact }) => {
-          const active = isActive(href, exact);
+        {navItems.map((item) => {
+          const { label, href, icon: Icon } = item;
+          const active = isNavActive(pathname, item);
           return (
             <Link
               key={href}

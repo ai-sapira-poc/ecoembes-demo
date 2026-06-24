@@ -18,13 +18,19 @@ export function TopBar() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex items-center justify-between h-14 px-6 bg-surface border-b border-line shrink-0 gap-4"
+      className="flex items-center justify-between h-14 px-4 md:px-6 bg-surface border-b border-line shrink-0 gap-3"
     >
       <Breadcrumbs />
 
-      <div className="flex items-center gap-1.5">
-        <CommandPalette />
-        <HelpPopover />
+      <div className="flex items-center gap-1.5 shrink-0">
+        {/* ⌘K search: desktop only (mobile navigates via the tab bar) */}
+        <div className="hidden md:block">
+          <CommandPalette />
+        </div>
+        {/* Help center: hidden on the smallest screens to save room */}
+        <div className="hidden sm:block">
+          <HelpPopover />
+        </div>
         <NotificationsPanel />
 
         <div className="w-px h-5 bg-line mx-1" />

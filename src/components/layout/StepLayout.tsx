@@ -81,7 +81,7 @@ export function StepLayout({
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       {/* Top bar — Home + breadcrumb */}
-      <header className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-6 py-3">
+      <header className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-4 md:px-6 py-3">
         <span className="text-sm text-muted">{demoLabel}</span>
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted/50" aria-hidden />
         <span className="truncate text-sm font-medium text-ink">{actLabel}</span>
@@ -90,10 +90,10 @@ export function StepLayout({
         )}
       </header>
 
-      {/* Two-column content */}
-      <div className="flex min-h-0 flex-1 overflow-hidden px-6 pb-20 pt-2 gap-6">
+      {/* Content — stacked + page-scroll on mobile, fixed two-column on desktop */}
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row md:overflow-hidden px-4 md:px-6 pb-28 md:pb-20 pt-2 gap-4 md:gap-6">
         {/* Left — progress + explainer */}
-        <aside className="flex w-80 shrink-0 flex-col justify-start py-6">
+        <aside className="flex w-full md:w-80 shrink-0 flex-col justify-start py-4 md:py-6">
           {/* Progress */}
           <div className="mb-6 space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -135,8 +135,9 @@ export function StepLayout({
           </AnimatePresence>
         </aside>
 
-        {/* Right — visual */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden py-6">
+        {/* Right — visual. On mobile it sizes to content (page scrolls);
+            on desktop it fills the column and scrolls internally. */}
+        <div className="flex min-h-[60vh] md:min-h-0 flex-1 flex-col md:overflow-hidden pb-6 md:py-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`right-${activeN}-${replayKey}`}

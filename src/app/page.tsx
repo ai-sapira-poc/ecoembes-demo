@@ -43,7 +43,7 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <Reveal className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
           <RevealItem className="px-6 py-4">
-            <Logo variant="horizontal-claim" tone="white" className="h-[72px] w-auto md:h-[84px]" />
+            <Logo variant="horizontal-claim" tone="white" className="h-[96px] w-auto md:h-[120px]" />
           </RevealItem>
 
           <RevealItem>

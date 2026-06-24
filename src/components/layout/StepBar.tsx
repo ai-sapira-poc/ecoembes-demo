@@ -40,8 +40,8 @@ export function StepBar({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-line bg-surface/95 px-6 py-3 backdrop-blur-sm">
-      <div className="flex items-center gap-4">
+    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-line bg-surface/95 px-4 md:px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
         {/* Prev + Next — grouped left, Radisson-style */}
         <div className="flex shrink-0 items-center gap-2">
           <Link
@@ -89,8 +89,8 @@ export function StepBar({
           </button>
         </div>
 
-        {/* Step chips — right-aligned trail */}
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
+        {/* Step chips — scrollable trail (left on mobile, right-aligned on desktop) */}
+        <div className="flex min-w-0 flex-1 items-center justify-start sm:justify-end gap-1.5 overflow-x-auto -mx-1 px-1">
           {steps.map((step) => {
             const isActive = step.n === active;
             return (
@@ -114,7 +114,7 @@ export function StepBar({
                 >
                   {step.n}
                 </span>
-                <span className="hidden sm:inline">{step.nombre}</span>
+                <span>{step.nombre}</span>
               </button>
             );
           })}
