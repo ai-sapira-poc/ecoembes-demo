@@ -93,13 +93,28 @@ export interface BpoMes {
   records: ConciliacionRecord[];
 }
 
+export interface RevisionPaso {
+  etapa: "Señal" | "Análisis" | "Conclusión" | "Escalado";
+  detalle: string;
+}
+
+export interface RevisionEvidencia {
+  fuente: string;
+  detalle: string;
+}
+
 export interface RevisionItem {
   id: string;
   origen: "auditoria" | "control";
+  prioridad: "alta" | "media";
+  creadoHace: string;
   titulo: string;
   resumen: string;
   razonamiento: string;
+  pasos: RevisionPaso[];
+  evidencia: RevisionEvidencia[];
   confianza: number;
+  decisionRequerida: string;
   accionSugerida: string;
   impactoEur: number;
 }

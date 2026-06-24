@@ -4,6 +4,8 @@ export const revisionItems: RevisionItem[] = [
   {
     id: "REV-001",
     origen: "auditoria",
+    prioridad: "alta",
+    creadoHace: "2 h",
     titulo: "Salto interanual anómalo — Brik · Zumos Naturales Ibéricos S.A.",
     resumen:
       "Las unidades de Brik declaradas para 2025 cayeron un 43% respecto a 2024 sin cambio " +
@@ -13,7 +15,41 @@ export const revisionItems: RevisionItem[] = [
       "variación (−43%) supera en 4,2 desviaciones estándar el comportamiento histórico del sector " +
       "Bebidas. No se registra descontinuación de línea ni cambio de formato en el ERP. Confianza " +
       "insuficiente para dictamen automático.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Caída del 43% en unidades Brik (2024 → 2025) sin evento comercial registrado.",
+      },
+      {
+        etapa: "Análisis",
+        detalle:
+          "La variación supera 4,2 σ del histórico del sector Bebidas; el ERP no muestra descontinuación ni cambio de formato.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 67 % — por debajo del umbral de dictamen autónomo.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Ticket abierto para validación humana antes de emitir dictamen.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Declaración 2025",
+        detalle: "1.440.000 unidades Brik declaradas para el período actual.",
+      },
+      {
+        fuente: "Histórico 2024",
+        detalle: "2.520.000 unidades Brik declaradas en el período comparable.",
+      },
+      {
+        fuente: "ERP comercial",
+        detalle: "Sin baja de referencia ni cambio de formato registrado.",
+      },
+    ],
     confianza: 0.67,
+    decisionRequerida: "Confirmar si el descenso responde a un cambio comercial real o a una reclasificación.",
     accionSugerida:
       "Contrastar con el equipo comercial si hubo cambio de formato, descontinuación de referencia " +
       "o reclasificación del material Brik a otro tipo de envase en el período.",
@@ -22,6 +58,8 @@ export const revisionItems: RevisionItem[] = [
   {
     id: "REV-002",
     origen: "auditoria",
+    prioridad: "media",
+    creadoHace: "4 h",
     titulo: "Envase no declarado — Film plástico · Cosmética Piel Viva S.L.",
     resumen:
       "El agente detecta film plástico de sellado (blister) en la ficha técnica del producto " +
@@ -30,7 +68,40 @@ export const revisionItems: RevisionItem[] = [
       "La ficha técnica de producto (Crema Facial Día SPF30, ref. CPV-2210) incluye un " +
       "blister de sellado de film plástico de 8 g/ud. La declaración cubre 2.160.000 unidades " +
       "de este SKU sin incluir dicho material. Regla aplicada: cruce ficha técnica × líneas SIG.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Blister de film plástico (8 g/ud.) en ficha técnica CPV-2210 ausente en la declaración SIG.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "2.160.000 uds. declaradas del SKU sin línea de material blister; regla ficha × SIG activada.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 76 % — material probablemente omitido, pero requiere confirmación de packaging.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Escalado a revisión humana por posible sustitución de envase no reflejada en SIG.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Ficha técnica CPV-2210",
+        detalle: "Blister de sellado de film plástico de 8 g/ud.",
+      },
+      {
+        fuente: "Declaración SIG",
+        detalle: "SKU declarado sin línea de material asociada al blister.",
+      },
+      {
+        fuente: "Regla aplicada",
+        detalle: "Cruce ficha técnica × líneas SIG para materiales secundarios.",
+      },
+    ],
     confianza: 0.76,
+    decisionRequerida: "Validar si el blister estuvo vigente en 2025 y debe incluirse retroactivamente.",
     accionSugerida:
       "Verificar con el equipo de packaging si el blister fue substituido durante 2025 o si " +
       "el material debe incluirse retroactivamente en la declaración.",
@@ -39,6 +110,8 @@ export const revisionItems: RevisionItem[] = [
   {
     id: "REV-003",
     origen: "control",
+    prioridad: "media",
+    creadoHace: "5 h",
     titulo: "CIF con dígito de control erróneo — ID 402 · Higiene Natura Iberia S.A.",
     resumen:
       "El registro 402 en SGA contiene el CIF de la empresa con un dígito de control " +
@@ -49,7 +122,40 @@ export const revisionItems: RevisionItem[] = [
       "en el sistema de origen 'A80127654'. El algoritmo de verificación del dígito de " +
       "control NIE/CIF indica que solo uno de los dos valores es válido. Esta discrepancia " +
       "no impide el cargo pero puede generar invalidez formal del documento de cobro.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "CIF en SGA (A80127653) difiere del sistema de origen (A80127654) en registro 402.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "Validación algorítmica NIE/CIF: solo uno de los dos valores es formalmente válido.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 71 % — discrepancia formal sin bloqueo de cobro, pero con riesgo de reclamación.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Corrección manual en SGA recomendada antes del cierre de período.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Sistema origen",
+        detalle: "CIF A80127654 asociado a Higiene Natura Iberia S.A.",
+      },
+      {
+        fuente: "SGA",
+        detalle: "Registro 402 cargado con CIF A80127653.",
+      },
+      {
+        fuente: "Validador NIF/CIF",
+        detalle: "Dígito de control inconsistente en uno de los valores.",
+      },
+    ],
     confianza: 0.71,
+    decisionRequerida: "Confirmar el NIF oficial y autorizar la corrección en SGA.",
     accionSugerida:
       "Corregir el CIF en SGA antes del cierre del período. Solicitar a la empresa " +
       "confirmación del NIF oficial mediante certificado de la AEAT.",
@@ -58,6 +164,8 @@ export const revisionItems: RevisionItem[] = [
   {
     id: "REV-004",
     origen: "control",
+    prioridad: "alta",
+    creadoHace: "1 d",
     titulo: "Declaración sin registro SGA — ID 158 · Distribuidora Central Peninsular S.A.",
     resumen:
       "La declaración 158 aparece en el sistema de origen pero no tiene contrapartida " +
@@ -67,7 +175,40 @@ export const revisionItems: RevisionItem[] = [
       "Central Peninsular S.A.') está marcado como recibido y procesado en el sistema " +
       "declarante. No existe ningún registro en SGA con ese identificador ni con el CIF " +
       "y periodo coincidentes. Podría ser un fallo de integración o un rechazo silencioso.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Declaración ID 158 presente en origen (Sept 2025) sin match en SGA por ID, CIF o período.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: "Estado en origen: recibido y procesado; logs de integración no muestran confirmación en SGA.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 58 % — posible fallo de integración o rechazo silencioso; 6.210 € en riesgo.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Revisión humana para trazar la carga en SGA y decidir reintento o escalado a IT.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Sistema origen",
+        detalle: "Declaración ID 158 recibida y procesada para Septiembre 2025.",
+      },
+      {
+        fuente: "Búsqueda SGA",
+        detalle: "Sin coincidencia por ID, CIF ni período.",
+      },
+      {
+        fuente: "Conciliación BPO",
+        detalle: "Importe pendiente de 6.210 € sin contrapartida operativa.",
+      },
+    ],
     confianza: 0.58,
+    decisionRequerida: "Decidir si se reintenta la carga, se corrige manualmente o se escala a IT.",
     accionSugerida:
       "Verificar los logs de integración entre el sistema de origen y SGA para el rango " +
       "temporal de Septiembre 2025. Comprobar si existió un rechazo de carga no notificado.",
@@ -76,6 +217,8 @@ export const revisionItems: RevisionItem[] = [
   {
     id: "REV-005",
     origen: "auditoria",
+    prioridad: "media",
+    creadoHace: "1 d",
     titulo: "Datos incompletos — Declaración DEC-009 · Distribuidora Central Peninsular S.A.",
     resumen:
       "La declaración de la distribuidora presenta omisión de flejes PVC y posibles " +
@@ -86,7 +229,40 @@ export const revisionItems: RevisionItem[] = [
       "flejes PVC pero la reconciliación del volumen de Papel/Cartón requiere acceso a " +
       "datos del sistema logístico (expediciones por referencia) que no están disponibles " +
       "en el conjunto de datos actual.",
+    pasos: [
+      {
+        etapa: "Señal",
+        detalle: "Omisión confirmada de flejes PVC; divergencia probable en Papel/Cartón vs. logística.",
+      },
+      {
+        etapa: "Análisis",
+        detalle: ">9,6 M referencias expedidas; datos logísticos por referencia no disponibles en el lote actual.",
+      },
+      {
+        etapa: "Conclusión",
+        detalle: "Confianza 62 % — hallazgo parcial seguro, volumen restante no verificable automáticamente.",
+      },
+      {
+        etapa: "Escalado",
+        detalle: "Solicitud de datos adicionales al cliente antes de dictamen final.",
+      },
+    ],
+    evidencia: [
+      {
+        fuente: "Declaración DEC-009",
+        detalle: "Omisión de flejes PVC detectada con alta certeza.",
+      },
+      {
+        fuente: "Sistema logístico",
+        detalle: "Faltan expediciones por referencia para cerrar Papel/Cartón.",
+      },
+      {
+        fuente: "Perfil declarante",
+        detalle: "Distribuidor multicliente con más de 9,6 M referencias expedidas.",
+      },
+    ],
     confianza: 0.62,
+    decisionRequerida: "Solicitar datos logísticos adicionales antes de emitir dictamen final.",
     accionSugerida:
       "Solicitar al cliente el desglose de referencias expedidas por tipo de envase " +
       "y el albarán de compra de flejes del ejercicio 2025.",

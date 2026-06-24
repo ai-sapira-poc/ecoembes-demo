@@ -28,13 +28,13 @@ export function PendingRevisionTable({ rows }: { rows: RevisionItem[] }) {
             className="group cursor-pointer"
           >
             <TD className="py-2">
-              <span className="block font-medium text-ink group-hover:text-brand transition-colors leading-tight line-clamp-1">
+              <span className="block font-medium text-ink group-hover:text-ink-soft transition-colors leading-tight line-clamp-1">
                 {item.titulo}
               </span>
               <span className="font-mono text-[11px] text-muted">{item.id}</span>
             </TD>
             <TD>
-              <Badge color={item.origen === "auditoria" ? "brand" : "ok"}>
+              <Badge color={item.origen === "auditoria" ? "info" : "warning"}>
                 {item.origen === "auditoria" ? "Auditoría" : "Control"}
               </Badge>
             </TD>
