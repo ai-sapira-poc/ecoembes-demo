@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
 import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
-import { CorrespondenciaThread } from "@/components/auditoria/CorrespondenciaThread";
+import { CorrespondenciaThread, pickExchangePair } from "@/components/auditoria/CorrespondenciaThread";
 import { VeredictoCard } from "@/components/auditoria/VeredictoCard";
 import { FindingsPanel } from "@/components/auditoria/FindingsPanel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -21,7 +21,6 @@ import {
   AlertTriangle,
   Loader2,
   XCircle,
-  Send,
 } from "lucide-react";
 
 // DEC-005 — Higiene Natura Iberia S.A.
@@ -408,41 +407,36 @@ function AnalisisVisual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 3 Visual — Composing skeleton → outbound consulta email
+// Step 3 Visual — Inbox-style outbound consulta (compose skeleton → sent)
 // ─────────────────────────────────────────────────────────────────────────────
 function ConsultaEmailSkeleton() {
   return (
-    <div className="mr-8 rounded-xl border border-line border-l-2 border-l-brand bg-surface p-5">
-      <div className="mb-3 flex items-center gap-2.5">
-        <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <Skeleton className="h-3 w-36" />
-          <Skeleton className="h-2.5 w-24" />
+    <>
+      <div className="flex items-start gap-3 px-5 pt-4">
+        <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-44" />
+          <Skeleton className="h-3 w-56" />
         </div>
       </div>
-      <Skeleton className="mb-3 h-2.5 w-2/3" />
-      <div className="space-y-2">
+      <div className="space-y-2 px-5 pt-3.5 pb-5">
+        <Skeleton className="h-4 w-4/5" />
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-11/12" />
-        <Skeleton className="h-3 w-4/5" />
+        <Skeleton className="h-3 w-3/4" />
       </div>
-    </div>
+    </>
   );
 }
 
 function ConsultaVisual() {
   const [phase, setPhase] = useState<"composing" | "sent">("composing");
-  const [showCallout, setShowCallout] = useState(false);
   const primerMensaje = (dec.correspondencia ?? []).slice(0, 1);
 
   useEffect(() => {
     const toSent = setTimeout(() => setPhase("sent"), 1400);
-    const toCallout = setTimeout(() => setShowCallout(true), 1900);
-    return () => {
-      clearTimeout(toSent);
-      clearTimeout(toCallout);
-    };
+    return () => clearTimeout(toSent);
   }, []);
 
   return (
@@ -451,86 +445,47 @@ function ConsultaVisual() {
         <EstadoBar estado="consulta_enviada" />
       </FadeUp>
 
-      <FadeUp delay={0.06} className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          <p className="text-sm font-semibold text-ink">Consulta al cliente</p>
-          <AnimatePresence mode="wait">
-            {phase === "composing" ? (
-              <motion.span
-                key="composing"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-1.5 text-xs text-muted"
-              >
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Redactando consulta…
-              </motion.span>
-            ) : (
-              <motion.span
-                key="sent"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="text-xs font-medium text-ink-soft"
-              >
-                Enviada · {dec.empresa}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-        <div className="p-3">
-          <AnimatePresence mode="wait">
-            {phase === "composing" ? (
-              <motion.div
-                key="skeleton"
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ConsultaEmailSkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="email"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <CorrespondenciaThread
-                  mensajes={primerMensaje}
-                  empresaNombre={dec.empresa}
-                  animateEntry={false}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <FadeUp delay={0.06} className="w-full shrink-0">
+        <AnimatePresence mode="wait">
+          {phase === "composing" ? (
+            <motion.article
+              key="skeleton"
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden rounded-xl border border-line bg-surface"
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-2.5">
+                <span className="flex items-center gap-2 text-xs text-muted">
+                  <Mail className="h-3.5 w-3.5" />
+                  Bandeja de salida · auditoría@ecoembes.es
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-muted">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Redactando…
+                </span>
+              </div>
+              <ConsultaEmailSkeleton />
+            </motion.article>
+          ) : (
+            <motion.div
+              key="email"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <CorrespondenciaThread
+                mensajes={primerMensaje}
+                empresaNombre={dec.empresa}
+                senderDomain={senderDomain}
+                bandejaLabel="Bandeja de salida · auditoría@ecoembes.es"
+                showThreadSummary={false}
+                layout="chat"
+                animateEntry={false}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </FadeUp>
-
-      <AnimatePresence>
-        {showCallout && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="shrink-0 rounded-xl border border-line bg-canvas px-4 py-3 flex items-start gap-3"
-          >
-            <Send className="mt-0.5 h-4 w-4 shrink-0 text-ink-soft" />
-            <div>
-              <p className="text-sm font-semibold text-ink">
-                El agente actúa como auditor: no asume el error, pregunta.
-              </p>
-              <p className="mt-1 text-sm text-ink-soft text-pretty">
-                Identifica la línea afectada, la tarifa detectada y el impacto. Solicita
-                confirmación o justificación documental — como haría un auditor humano.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -539,21 +494,29 @@ function ConsultaVisual() {
 // Step 4 Visual — Full thread + FindingsPanel
 // ─────────────────────────────────────────────────────────────────────────────
 function DialogoVisual() {
-  const thread = dec.correspondencia ?? [];
+  const exchange = pickExchangePair(dec.correspondencia ?? []);
 
   return (
-    <div className="space-y-5">
-      <EstadoBar estado="respuesta_recibida" />
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <FadeUp className="shrink-0">
+        <EstadoBar estado="respuesta_recibida" />
+      </FadeUp>
 
-      {/* Full thread */}
-      <CorrespondenciaThread mensajes={thread} empresaNombre={dec.empresa} />
+      <FadeUp delay={0.06} className="w-full shrink-0">
+        <CorrespondenciaThread
+          mensajes={exchange}
+          empresaNombre={dec.empresa}
+          senderDomain={senderDomain}
+          bandejaLabel="Expediente · trazabilidad de intercambios"
+          layout="chat"
+        />
+      </FadeUp>
 
-      {/* Findings */}
-      <FadeUp delay={0.3}>
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-line">
+      <FadeUp delay={0.24} className="w-full shrink-0">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="border-b border-line px-5 py-3.5">
             <p className="text-sm font-semibold text-ink">Hallazgos confirmados</p>
-            <p className="text-xs text-muted mt-0.5">
+            <p className="mt-0.5 text-xs text-muted">
               La respuesta del cliente confirma el error — el hallazgo queda validado
             </p>
           </div>
