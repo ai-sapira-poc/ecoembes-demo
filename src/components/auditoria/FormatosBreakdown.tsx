@@ -5,8 +5,6 @@ import { AlertTriangle } from "lucide-react";
 export interface FormatosBreakdownProps {
   formatos: Formato[];
   flaggedComponenteIds?: string[];
-  /** Tighter rows for split-view (e.g. step 2 with validations visible). */
-  compact?: boolean;
 }
 
 const DESTINO_CLASSES: Record<string, string> = {
@@ -28,14 +26,8 @@ const COLS = [
   { key: "pv", label: "Punto Verde", align: "right" },
 ] as const;
 
-export function FormatosBreakdown({
-  formatos,
-  flaggedComponenteIds = [],
-  compact = false,
-}: FormatosBreakdownProps) {
+export function FormatosBreakdown({ formatos, flaggedComponenteIds = [] }: FormatosBreakdownProps) {
   const flaggedSet = new Set(flaggedComponenteIds);
-  const cell = compact ? "px-2 py-0.5" : "px-3 py-1.5";
-  const headCell = compact ? "px-2 py-1" : "px-3 py-2";
 
   if (formatos.length === 0) {
     return <p className="text-sm text-muted italic">No hay formatos declarados.</p>;
@@ -46,21 +38,16 @@ export function FormatosBreakdown({
     0
   );
 
-  const visibleCols = compact
-    ? COLS.filter((c) => !["color", "rigidez", "gr", "uds", "destino"].includes(c.key))
-    : COLS;
-
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
-      <table className={cn("w-full border-collapse tabular-nums", compact ? "text-[11px]" : "text-xs")}>
+      <table className="w-full border-collapse text-xs tabular-nums">
         <thead>
           <tr className="bg-canvas text-[10px] uppercase tracking-wider text-muted sticky top-0 z-10 shadow-[0_1px_0_0_var(--color-line)]">
-            {visibleCols.map((c) => (
+            {COLS.map((c) => (
               <th
                 key={c.key}
                 className={cn(
-                  "border-b border-line font-semibold whitespace-nowrap",
-                  headCell,
+                  "border-b border-line px-3 py-2 font-semibold whitespace-nowrap",
                   c.align === "right" ? "text-right" : "text-left"
                 )}
               >
@@ -82,95 +69,36 @@ export function FormatosBreakdown({
                     flagged ? "bg-warning-soft/60" : "hover:bg-canvas/50"
                   )}
                 >
-                  {visibleCols.map((col) => {
-                    switch (col.key) {
-                      case "fmt":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-muted")}>
-                            {isFirst ? fmt.id : ""}
-                          </td>
-                        );
-                      case "forma":
-                        return (
-                          <td
-                            key={col.key}
-                            className={cn(cell, "font-medium text-ink max-w-[140px] truncate")}
-                            title={fmt.nombre}
-                          >
-                            {isFirst ? fmt.nombre : ""}
-                          </td>
-                        );
-                      case "envase":
-                        return (
-                          <td
-                            key={col.key}
-                            className={cn(cell, "text-ink-soft max-w-[120px] truncate")}
-                            title={c.envase}
-                          >
-                            <span className="flex items-center gap-1">
-                              {flagged && <AlertTriangle className="h-2.5 w-2.5 shrink-0 text-warning" />}
-                              {c.envase}
-                            </span>
-                          </td>
-                        );
-                      case "material":
-                        return (
-                          <td
-                            key={col.key}
-                            className={cn(cell, flagged ? "font-semibold text-warning" : "text-ink-soft")}
-                          >
-                            {c.material}
-                          </td>
-                        );
-                      case "color":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-muted")}>
-                            {c.color}
-                          </td>
-                        );
-                      case "rigidez":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-muted")}>
-                            {c.rigidez}
-                          </td>
-                        );
-                      case "gr":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-right text-ink-soft")}>
-                            {formatNum(c.grEnvase)}
-                          </td>
-                        );
-                      case "uds":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-right text-muted")}>
-                            {formatNum(c.unidadesTotales)}
-                          </td>
-                        );
-                      case "destino":
-                        return (
-                          <td key={col.key} className={cell}>
-                            {isFirst && (
-                              <span
-                                className={cn(
-                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
-                                  DESTINO_CLASSES[fmt.destino] ?? "bg-canvas text-muted ring-1 ring-line"
-                                )}
-                              >
-                                {fmt.destino}
-                              </span>
-                            )}
-                          </td>
-                        );
-                      case "pv":
-                        return (
-                          <td key={col.key} className={cn(cell, "text-right font-medium text-ink")}>
-                            {formatEUR2(c.puntoVerdeDef)}
-                          </td>
-                        );
-                      default:
-                        return null;
-                    }
-                  })}
+                  <td className="px-3 py-1.5 text-muted">{isFirst ? fmt.id : ""}</td>
+                  <td className="px-3 py-1.5 font-medium text-ink max-w-[180px] truncate" title={fmt.nombre}>
+                    {isFirst ? fmt.nombre : ""}
+                  </td>
+                  <td className="px-3 py-1.5 text-ink-soft max-w-[180px] truncate" title={c.envase}>
+                    <span className="flex items-center gap-1.5">
+                      {flagged && <AlertTriangle className="h-3 w-3 shrink-0 text-warning" />}
+                      {c.envase}
+                    </span>
+                  </td>
+                  <td className={cn("px-3 py-1.5", flagged ? "font-semibold text-warning" : "text-ink-soft")}>
+                    {c.material}
+                  </td>
+                  <td className="px-3 py-1.5 text-muted">{c.color}</td>
+                  <td className="px-3 py-1.5 text-muted">{c.rigidez}</td>
+                  <td className="px-3 py-1.5 text-right text-ink-soft">{formatNum(c.grEnvase)}</td>
+                  <td className="px-3 py-1.5 text-right text-muted">{formatNum(c.unidadesTotales)}</td>
+                  <td className="px-3 py-1.5">
+                    {isFirst && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
+                          DESTINO_CLASSES[fmt.destino] ?? "bg-canvas text-muted ring-1 ring-line"
+                        )}
+                      >
+                        {fmt.destino}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-medium text-ink">{formatEUR2(c.puntoVerdeDef)}</td>
                 </tr>
               );
             })
@@ -178,23 +106,10 @@ export function FormatosBreakdown({
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-line bg-canvas/70">
-            <td
-              colSpan={visibleCols.length - 1}
-              className={cn(
-                compact ? "px-2 py-1" : "px-3 py-2",
-                "text-right text-[10px] font-semibold uppercase tracking-wider text-muted"
-              )}
-            >
+            <td colSpan={9} className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">
               Total Punto Verde declarado
             </td>
-            <td
-              className={cn(
-                compact ? "px-2 py-1" : "px-3 py-2",
-                "text-right font-semibold text-ink"
-              )}
-            >
-              {formatEUR2(total)}
-            </td>
+            <td className="px-3 py-2 text-right font-semibold text-ink">{formatEUR2(total)}</td>
           </tr>
         </tfoot>
       </table>

@@ -298,11 +298,11 @@ function AnalisisVisual() {
         <FadeUp
           delay={0.06}
           className={cn(
-            "flex min-h-0 flex-col overflow-hidden rounded-xl border border-line bg-surface transition-[max-height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-            phase === "validations" ? "max-h-[10.5rem] shrink-0" : "flex-1"
+            "flex min-h-0 flex-col overflow-hidden rounded-xl border border-line bg-surface",
+            phase === "validations" ? "flex-[5]" : "flex-1"
           )}
         >
-          <div className="shrink-0 border-b border-line px-4 py-2 flex items-center justify-between gap-3">
+          <div className="shrink-0 border-b border-line px-4 py-2.5 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-ink">Declaración extraída</p>
               <p className="text-xs text-muted mt-0.5">
@@ -336,7 +336,7 @@ function AnalisisVisual() {
               )}
             </AnimatePresence>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto p-2">
+          <div className="min-h-0 flex-1 overflow-auto p-3">
             <AnimatePresence mode="wait">
               {phase === "extracting" ? (
                 <motion.div
@@ -356,7 +356,6 @@ function AnalisisVisual() {
                   <FormatosBreakdown
                     formatos={dec.formatos ?? []}
                     flaggedComponenteIds={["005-F2-C1"]}
-                    compact={phase === "validations"}
                   />
                 </motion.div>
               )}
@@ -364,7 +363,7 @@ function AnalisisVisual() {
           </div>
         </FadeUp>
 
-        {/* Validation checklist — natural height; no internal scroll in normal viewports */}
+        {/* Validation checklist — shares viewport; list scrolls if needed */}
         <AnimatePresence>
           {phase === "validations" && (
             <motion.div
@@ -372,9 +371,9 @@ function AnalisisVisual() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-surface"
+              className="flex min-h-0 flex-[4] flex-col overflow-hidden rounded-xl border border-line bg-surface"
             >
-              <div className="shrink-0 border-b border-line px-4 py-2">
+              <div className="shrink-0 border-b border-line px-4 py-2.5">
                 <p className="text-sm font-semibold text-ink">
                   Validaciones automáticas — monográfico
                 </p>
@@ -382,7 +381,7 @@ function AnalisisVisual() {
                   {dec.empresa} · Ejercicio {dec.ejercicio}
                 </p>
               </div>
-              <ul className="shrink-0 divide-y divide-line">
+              <ul className="min-h-0 flex-1 divide-y divide-line overflow-auto">
                 {validaciones005.map((v, i) => (
                   <ValidationRow key={v.label} v={v} resolved={resolvedCount > i} />
                 ))}
