@@ -78,7 +78,7 @@ export default function PlataformaPage() {
       <RevealItem>
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 items-stretch">
           {/* Hero metric — importe auditado */}
-          <div className="bg-surface rounded-xl border border-line p-6 flex flex-col justify-between min-h-[148px]">
+          <div className="bg-surface rounded-xl border border-line p-6 flex flex-col">
             <div className="flex items-start justify-between gap-3">
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted leading-none">
                 Importe total auditado
@@ -87,17 +87,23 @@ export default function PlataformaPage() {
                 <ShieldCheck className="text-brand-dark" size={16} />
               </span>
             </div>
-            <div>
-              <p className="text-4xl font-semibold text-ink tabular-nums leading-none mt-4">
+            {/* Number centered in the available space → balanced, no dead gap */}
+            <div className="flex-1 flex flex-col justify-center py-5">
+              <p className="text-[2.75rem] font-semibold text-ink tabular-nums leading-none">
                 {formatEUR(dashboardKpis.importeAuditadoEur)}
               </p>
-              <p className="text-sm text-muted mt-2">
+              <p className="text-sm text-ink-soft mt-2.5">
                 {formatNum(dashboardKpis.declaracionesAuditadas)} declaraciones · Ejercicio 2025 · todos los envasadores
               </p>
             </div>
-            <div className="mt-5 pt-4 border-t border-line flex items-center justify-between">
-              <span className="text-xs text-muted">Cobertura del agente</span>
-              <span className="text-sm font-semibold text-brand">100 % del importe</span>
+            <div className="pt-4 border-t border-line space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted">Cobertura del agente</span>
+                <span className="text-sm font-semibold text-brand">100 % del importe</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-line overflow-hidden">
+                <div className="h-full rounded-full bg-brand" style={{ width: "100%" }} />
+              </div>
             </div>
           </div>
 

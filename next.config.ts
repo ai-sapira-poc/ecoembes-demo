@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Hide the Next.js dev overlay indicator so it never sits over the UI in demos/screenshots.
+  devIndicators: false,
 };
 
 export default nextConfig;

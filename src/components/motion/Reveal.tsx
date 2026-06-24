@@ -21,14 +21,21 @@ export const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: easeOut } },
 };
 
-/** Wraps a group; children using <RevealItem> animate in sequence. */
+/**
+ * Wraps a group; children using <RevealItem> animate in sequence.
+ *
+ * Animates on mount (not on scroll). A scroll-triggered `whileInView` reveal is
+ * fragile here: the scroll container is <main>, not the window, and a page taller
+ * than ~5× the viewport can never reach the in-view threshold — so it would ship
+ * blank. Mount-triggered reveal always fires regardless of page length.
+ */
 export function Reveal({
   children,
   className,
-  once = true,
 }: {
   children: ReactNode;
   className?: string;
+  /** Deprecated/no-op — kept for call-site compatibility. */
   once?: boolean;
 }) {
   return (
@@ -36,8 +43,7 @@ export function Reveal({
       className={className}
       variants={containerVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once, amount: 0.2 }}
+      animate="visible"
     >
       {children}
     </motion.div>

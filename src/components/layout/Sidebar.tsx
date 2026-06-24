@@ -24,7 +24,7 @@ export function Sidebar() {
       <div
         className={cn(
           "flex items-center pt-7 pb-6",
-          collapsed ? "justify-center px-2" : "justify-between px-5"
+          collapsed ? "justify-center px-2" : "px-5"
         )}
       >
         <div
@@ -39,18 +39,6 @@ export function Sidebar() {
             <Logo variant="horizontal" className="h-8 w-auto" />
           )}
         </div>
-
-        {/* Toggle button — visible in expanded state, placed inline */}
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            aria-label="Contraer menú"
-            aria-expanded={true}
-            className="text-white/50 hover:text-white/90 transition-colors duration-150 p-1 rounded-md hover:bg-white/8"
-          >
-            <PanelLeftClose size={16} strokeWidth={1.8} />
-          </button>
-        )}
       </div>
 
       {/* Divider */}
@@ -109,28 +97,30 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Footer — collapse toggle is anchored here in BOTH states so it never jumps */}
       <div
         className={cn(
-          "py-5 border-t border-white/10",
-          collapsed ? "px-2 flex items-center justify-center" : "px-5"
+          "py-4 border-t border-white/10",
+          collapsed ? "px-2 flex justify-center" : "px-4 flex items-center justify-between gap-2"
         )}
       >
-        {collapsed ? (
-          /* Toggle button in footer when collapsed */
-          <button
-            onClick={() => setCollapsed(false)}
-            aria-label="Expandir menú"
-            aria-expanded={false}
-            className="text-white/50 hover:text-white/90 transition-colors duration-150 p-1 rounded-md hover:bg-white/8"
-          >
-            <PanelLeftOpen size={16} strokeWidth={1.8} />
-          </button>
-        ) : (
-          <p className="text-[9px] text-white/35 text-center tracking-[0.18em] uppercase font-medium">
+        {!collapsed && (
+          <p className="text-[9px] text-white/35 tracking-[0.18em] uppercase font-medium">
             Powered by Sapira
           </p>
         )}
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+          aria-expanded={!collapsed}
+          className="text-white/50 hover:text-white/90 transition-colors duration-150 p-1.5 rounded-md hover:bg-white/8 shrink-0"
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={16} strokeWidth={1.8} />
+          ) : (
+            <PanelLeftClose size={16} strokeWidth={1.8} />
+          )}
+        </button>
       </div>
     </aside>
   );
