@@ -24,7 +24,7 @@ const actos = [
 export default function LandingPage() {
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden">
-      {/* Cinematic photographic background */}
+      {/* Cinematic photographic background — deep green */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/brand/landing-bg.avif"
@@ -32,23 +32,25 @@ export default function LandingPage() {
           fill
           priority
           sizes="100vw"
-          className="animate-ken-burns object-cover [filter:saturate(0.55)_brightness(1.06)]"
+          className="animate-ken-burns object-cover [filter:brightness(0.72)_saturate(1.1)]"
         />
-        {/* Frosted veil — keeps the photo subtle, content on near-white */}
-        <div className="absolute inset-0 bg-canvas/82" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-white/70" />
+        {/* Green wash — keeps the foliage visible, darkens for legible light text */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a3a1f]/80 via-[#0a3a1f]/55 to-[#04160c]/88" />
+        <div className="absolute inset-0 [background:radial-gradient(ellipse_at_50%_38%,transparent_42%,rgba(4,18,10,0.55)_100%)]" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <Reveal className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
           <RevealItem>
-            <Logo variant="full" className="opacity-95" />
+            <div className="rounded-2xl bg-white px-7 py-5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]">
+              <Logo variant="full" />
+            </div>
           </RevealItem>
 
           <RevealItem>
-            <h1 className="text-balance text-5xl font-medium leading-[1.05] tracking-tight text-ink md:text-6xl">
-              Cada declaración, <span className="text-brand">verificada</span>.
+            <h1 className="text-balance text-5xl font-medium leading-[1.05] tracking-tight text-white md:text-6xl">
+              Auditorías <span className="text-brand-soft">automatizadas</span>.
             </h1>
           </RevealItem>
 
@@ -57,18 +59,18 @@ export default function LandingPage() {
             <SectionLabel>Demo completa</SectionLabel>
             <Link
               href="/login"
-              className="group flex items-center gap-4 rounded-2xl bg-white/70 p-5 text-left ring-1 ring-white/60 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-[0_18px_40px_-18px_rgba(20,32,26,0.35)]"
+              className="group flex items-center gap-4 rounded-2xl bg-white/[0.08] p-5 text-left ring-1 ring-white/15 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/[0.14] hover:ring-white/25"
             >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-dark">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
                 <LayoutDashboard className="h-5 w-5" />
               </span>
               <span className="flex flex-col">
-                <span className="font-semibold text-ink">Plataforma integrada</span>
-                <span className="text-sm text-muted">
+                <span className="font-semibold text-white">Plataforma integrada</span>
+                <span className="text-sm text-white/65">
                   Experiencia completa con navegación lateral.
                 </span>
               </span>
-              <ArrowRight className="ml-auto h-5 w-5 text-muted transition-all group-hover:translate-x-1 group-hover:text-brand" />
+              <ArrowRight className="ml-auto h-5 w-5 text-white/60 transition-all group-hover:translate-x-1 group-hover:text-white" />
             </Link>
           </RevealItem>
 
@@ -80,20 +82,18 @@ export default function LandingPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="group flex flex-col gap-3 rounded-2xl bg-white/70 p-5 text-left ring-1 ring-white/60 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-[0_18px_40px_-18px_rgba(20,32,26,0.35)]"
+                  className="group flex flex-col gap-3 rounded-2xl bg-white/[0.08] p-5 text-left ring-1 ring-white/15 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/[0.14] hover:ring-white/25"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand-dark">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 text-white">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
                       {label}
                     </span>
                   </div>
-                  <span className="font-semibold leading-snug text-ink group-hover:text-brand-dark">
-                    {title}
-                  </span>
-                  <span className="text-sm leading-relaxed text-muted">{desc}</span>
+                  <span className="font-semibold leading-snug text-white">{title}</span>
+                  <span className="text-sm leading-relaxed text-white/65">{desc}</span>
                 </Link>
               ))}
             </div>
@@ -103,7 +103,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 flex items-center justify-center py-5">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted/80">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
           Powered by Sapira
         </span>
       </footer>
@@ -113,7 +113,7 @@ export default function LandingPage() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
       {children}
     </p>
   );
