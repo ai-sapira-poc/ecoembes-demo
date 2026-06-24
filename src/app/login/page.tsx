@@ -72,11 +72,6 @@ export default function LoginPage() {
               Entrar
             </Button>
           </div>
-
-          {/* Demo note */}
-          <p className="text-[10px] text-muted text-center leading-relaxed -mt-1">
-            Acceso de demostración — sin validación real de credenciales
-          </p>
         </div>
       </FadeUp>
     </main>
