@@ -1,99 +1,115 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { ArrowRight, ShieldCheck, GitCompareArrows } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { DemoFooter } from "@/components/layout/Footer";
+import { MeshBackground } from "@/components/layout/MeshBackground";
+import { Reveal, RevealItem } from "@/components/motion/Reveal";
+
+const actos = [
+  {
+    href: "/demos/auditoria",
+    label: "Acto 1",
+    icon: ShieldCheck,
+    title: "Auditoría de Declaraciones",
+    desc: "Un agente que analiza cada declaración, dialoga con el cliente y emite veredicto.",
+  },
+  {
+    href: "/demos/control",
+    label: "Acto 2",
+    icon: GitCompareArrows,
+    title: "Control de Integridad — Cuentas a Cobrar",
+    desc: "Conciliación del 100% de las declaraciones frente al muestreo manual del 1,6%.",
+  },
+];
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-brand-soft via-white to-brand-soft">
-      {/* Ken-Burns background layer */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-brand-soft/60 via-white to-brand-soft/80"
-        animate={{
-          scale: [1, 1.08, 1.04, 1],
-          x: [0, 12, -8, 0],
-          y: [0, -8, 10, 0],
-        }}
-        transition={{
-          duration: 28,
-          ease: "easeInOut",
-          repeat: Infinity,
-          repeatType: "loop",
-        }}
-        style={{ transformOrigin: "center center" }}
-      />
+    <main className="relative flex min-h-screen flex-col overflow-hidden">
+      <MeshBackground />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center gap-8 px-6 pb-20 pt-8 max-w-3xl w-full text-center">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-14">
+      <Reveal className="flex w-full max-w-3xl flex-col items-center gap-9 text-center">
         {/* Logo */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <Logo variant="full" />
-        </div>
+        <RevealItem>
+          <div className="rounded-2xl bg-white/70 px-7 py-5 shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)] ring-1 ring-white/60 backdrop-blur-sm">
+            <Logo variant="full" />
+          </div>
+        </RevealItem>
+
+        {/* Kicker */}
+        <RevealItem>
+          <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-brand-dark">
+            Plataforma de auditoría inteligente
+          </p>
+        </RevealItem>
 
         {/* Headline */}
-        <div className="flex flex-col items-center gap-3">
-          <h1 className="text-5xl font-extrabold tracking-tight text-ink leading-tight">
+        <RevealItem className="-mt-4 flex flex-col items-center gap-4">
+          <h1 className="text-balance text-5xl font-medium leading-[1.05] tracking-tight text-ink md:text-6xl">
             Cada declaración,{" "}
-            <span className="text-brand-dark">verificada.</span>
+            <span className="text-brand">verificada</span>.
           </h1>
-          <p className="text-lg text-muted max-w-xl">
-            Del muestreo manual al control del 100% — sin esfuerzo adicional.
+          <p className="max-w-xl text-pretty text-lg leading-relaxed text-ink-soft">
+            Ecoembes mueve millones en cuotas sobre declaraciones responsables. Hoy se
+            revisa una muestra. Sapira verifica el 100%, deja evidencia y solo escala lo
+            que un humano debe decidir.
           </p>
-        </div>
+        </RevealItem>
 
-        {/* Plataforma CTA */}
-        <div className="w-full max-w-sm">
+        {/* Primary CTA */}
+        <RevealItem className="w-full max-w-md">
           <Link
             href="/login"
-            className="group flex flex-col items-center gap-1 bg-brand hover:bg-brand-dark transition-colors rounded-xl px-8 py-5 shadow-lg shadow-brand/20"
+            className="group flex items-center justify-between gap-4 rounded-2xl bg-brand px-7 py-5 text-left shadow-[0_12px_30px_-10px_rgba(26,168,75,0.55)] transition-colors hover:bg-brand-dark"
           >
-            <span className="text-white font-semibold text-lg">Plataforma</span>
-            <span className="text-white/70 text-sm">Entrar a la plataforma →</span>
+            <span className="flex flex-col">
+              <span className="text-lg font-semibold text-white">Entrar a la plataforma</span>
+              <span className="text-sm text-white/75">Experiencia integrada completa</span>
+            </span>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-white/15 transition-transform group-hover:translate-x-1">
+              <ArrowRight className="h-5 w-5 text-white" />
+            </span>
           </Link>
-        </div>
+        </RevealItem>
 
-        {/* Demos paso a paso */}
-        <div className="w-full flex flex-col items-center gap-3">
-          <p className="text-xs uppercase tracking-widest text-muted font-medium">
-            Demos paso a paso
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-            <Link
-              href="/demos/auditoria"
-              className="group flex flex-col gap-2 bg-white hover:bg-brand-soft border border-black/8 hover:border-brand/30 transition-all rounded-xl px-6 py-5 shadow-sm text-left"
-            >
-              <span className="text-xs font-semibold text-brand uppercase tracking-wider">
-                Acto 1
-              </span>
-              <span className="font-semibold text-ink group-hover:text-brand-dark transition-colors">
-                Auditoría de Declaraciones
-              </span>
-              <span className="text-sm text-muted">
-                Verificación automática de cuotas SIG, tarifas y coherencia documental.
-              </span>
-            </Link>
-
-            <Link
-              href="/demos/control"
-              className="group flex flex-col gap-2 bg-white hover:bg-brand-soft border border-black/8 hover:border-brand/30 transition-all rounded-xl px-6 py-5 shadow-sm text-left"
-            >
-              <span className="text-xs font-semibold text-brand uppercase tracking-wider">
-                Acto 2
-              </span>
-              <span className="font-semibold text-ink group-hover:text-brand-dark transition-colors">
-                Control de Integridad — Cuentas a Cobrar
-              </span>
-              <span className="text-sm text-muted">
-                Conciliación del 100% frente al muestreo manual del 1,6%.
-              </span>
-            </Link>
+        {/* Actos */}
+        <RevealItem className="w-full">
+          <div className="mb-3 flex items-center gap-3 px-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+              Demos guiados paso a paso
+            </span>
+            <span className="h-px flex-1 bg-line" />
           </div>
-        </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {actos.map(({ href, label, icon: Icon, title, desc }) => (
+              <Link
+                key={href}
+                href={href}
+                className="group flex flex-col gap-3 rounded-2xl bg-white/70 p-5 text-left ring-1 ring-line backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:ring-brand/30 hover:shadow-[0_14px_34px_-16px_rgba(20,32,26,0.3)]"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand-dark">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
+                    {label}
+                  </span>
+                </div>
+                <span className="font-semibold leading-snug text-ink group-hover:text-brand-dark">
+                  {title}
+                </span>
+                <span className="text-sm leading-relaxed text-muted">{desc}</span>
+                <span className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
+                  Ver demo <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </RevealItem>
+      </Reveal>
       </div>
 
-      <DemoFooter />
+      <DemoFooter fixed={false} />
     </main>
   );
 }

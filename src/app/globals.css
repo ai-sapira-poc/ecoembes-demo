@@ -1,18 +1,107 @@
 @import "tailwindcss";
 
+/*
+  Ecoembes demo — design tokens.
+  Chrome is intentionally near-achromatic; the Ecoembes green is reserved for
+  CTAs, active states, the coverage hero and status — so the brand pops instead
+  of competing. (See docs/DESIGN.md.)
+*/
 @theme {
+  /* Brand — official Ecoembes green */
   --color-brand: #1aa84b;
   --color-brand-dark: #0f7c36;
   --color-brand-darker: #0a5827;
   --color-brand-soft: #e8f5ec;
+  --color-brand-tint: #f3faf5;
+
+  /* Accent (data-viz contrast) */
   --color-accent: #1f7a8c;
-  --color-ink: #1a2520;
-  --color-muted: #6b7770;
+
+  /* Neutrals — faintest green tint so white surfaces read as "Ecoembes white" */
+  --color-ink: #14201a;
+  --color-ink-soft: #3b4742;
+  --color-muted: #5d6b64;
   --color-surface: #ffffff;
-  --color-canvas: #f6f8f4;
+  --color-canvas: #f5f8f5;
+  --color-line: #e6ece8;
+
+  /* Semantic */
   --color-danger: #d6453d;
+  --color-danger-soft: #fbeae9;
   --color-warning: #e08a1e;
-  --color-ok: #2f9e44;
+  --color-warning-soft: #fcf2e2;
+  --color-ok: #1f9d52;
+  --color-ok-soft: #e6f5ec;
+  --color-info: #2f6f99;
+  --color-info-soft: #e8f1f8;
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Semantic z-index scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-toast: 1400;
 }
 
-html, body { background: var(--color-canvas); color: var(--color-ink); }
+html, body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* Selection + focus polish */
+::selection { background: color-mix(in oklch, var(--color-brand) 22%, transparent); }
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+/* Quiet, on-brand scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 9999px; border: 2px solid var(--color-canvas); }
+*::-webkit-scrollbar-thumb:hover { background: #d2dbd5; }
+
+/* ---- Keyframes ---------------------------------------------------------- */
+
+/* Cinematic, near-subliminal zoom for hero imagery (Radisson-style). */
+@keyframes ken-burns {
+  0%   { transform: scale(1)    translate(0, 0); }
+  50%  { transform: scale(1.08) translate(-1%, -0.5%); }
+  100% { transform: scale(1)    translate(0, 0); }
+}
+
+/* Drifting mesh blobs — bespoke animated background (no stock photo). */
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(6%, 4%, 0) scale(1.12); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50%      { transform: translate3d(-7%, 5%, 0) scale(0.95); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(5%, -6%, 0) scale(1.1); }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Soft pulse for "live"/processing indicators */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+.animate-ken-burns { animation: ken-burns 26s ease-in-out infinite; }
+
+/* Respect reduced motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
