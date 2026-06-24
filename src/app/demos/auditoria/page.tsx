@@ -175,33 +175,29 @@ function AnalisisVisual() {
     return () => clearTimeout(t);
   }, []);
 
+  const nFormatos = dec.formatos?.length ?? 0;
+  const nComponentes =
+    dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0;
+
   return (
     <div className="space-y-5">
-      {/* Pipeline */}
-      <div className="rounded-xl border border-line bg-surface p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-          Estado del agente
-        </p>
-        <EstadoPipeline estadoAgente="en_analisis" />
-      </div>
-
-      {/* Formatos breakdown with skeleton */}
+      {/* Extracted data — the clear table */}
       <div className="rounded-xl border border-line bg-surface overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
-          <p className="text-sm font-semibold text-ink">
-            Formatos y componentes declarados
-          </p>
+        <div className="px-5 py-3.5 border-b border-line flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-ink">Declaración extraída</p>
+            <p className="text-xs text-muted mt-0.5">
+              Hoja SIG · {dec.empresa}
+            </p>
+          </div>
           {phase === "skeleton" ? (
             <span className="flex items-center gap-1.5 text-xs text-muted">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Extrayendo formatos…
+              Extrayendo del adjunto…
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 text-xs text-ok font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {dec.formatos?.length ?? 0} formatos,{" "}
-              {dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0}{" "}
-              componentes
+            <span className="text-xs text-muted tabular-nums">
+              {nFormatos} formatos · {nComponentes} componentes
             </span>
           )}
         </div>
