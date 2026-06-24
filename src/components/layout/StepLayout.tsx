@@ -83,7 +83,7 @@ export function StepLayout({ steps }: { steps: Step[] }): JSX.Element {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="flex items-center gap-2 mb-3">
+              <div className="mb-6 flex items-center gap-2.5">
                 <span className="w-7 h-7 rounded-full bg-brand text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
                   {activeStep.n}
                 </span>
