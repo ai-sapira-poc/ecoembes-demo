@@ -1,33 +1,30 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface LogoProps {
   variant?: "full" | "mark";
+  /** "color" = official green-on-white JPG (use on light surfaces). "white" = transparent logo recolored white (use on dark/green surfaces). */
+  tone?: "color" | "white";
   className?: string;
 }
 
-export function Logo({ variant = "full", className }: LogoProps) {
-  if (variant === "mark") {
-    return (
-      <Image
-        src="/brand/ecoembes-logo.jpg"
-        alt="Ecoembes"
-        width={60}
-        height={70}
-        className={className}
-        priority
-      />
-    );
-  }
+const SIZES = {
+  full: { width: 132, height: 154 },
+  mark: { width: 60, height: 70 },
+} as const;
 
-  // variant === "full"
+export function Logo({ variant = "full", tone = "color", className }: LogoProps) {
+  const { width, height } = SIZES[variant];
+  const src = tone === "white" ? "/brand/ecoembes-logo-transparent.png" : "/brand/ecoembes-logo.jpg";
+
   return (
     <Image
-      src="/brand/ecoembes-logo.jpg"
-      alt="Ecoembes · Cada declaración, verificada"
-      width={120}
-      height={140}
-      className={className}
+      src={src}
+      alt="Ecoembes"
+      width={width}
+      height={height}
       priority
+      className={cn(tone === "white" && "[filter:brightness(0)_invert(1)]", className)}
     />
   );
 }

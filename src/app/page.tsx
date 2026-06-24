@@ -43,9 +43,7 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <Reveal className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
           <RevealItem>
-            <div className="rounded-2xl bg-white px-7 py-5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]">
-              <Logo variant="full" />
-            </div>
+            <Logo variant="full" tone="white" className="drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" />
           </RevealItem>
 
           <RevealItem>
@@ -98,15 +96,14 @@ export default function LandingPage() {
               ))}
             </div>
           </RevealItem>
+
+          <RevealItem className="-mt-3">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">
+              Powered by Sapira
+            </span>
+          </RevealItem>
         </Reveal>
       </div>
-
-      {/* Footer */}
-      <footer className="relative z-10 flex items-center justify-center py-5">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
-          Powered by Sapira
-        </span>
-      </footer>
     </main>
   );
 }
