@@ -8,6 +8,8 @@ import type { EmailMensaje } from "@/data/types";
 export interface CorrespondenciaThreadProps {
   mensajes: EmailMensaje[];
   empresaNombre: string;
+  /** When false, parent handles entry motion (e.g. AnimatePresence crossfade). */
+  animateEntry?: boolean;
 }
 
 function initials(name: string): string {
@@ -24,7 +26,11 @@ function formatDate(iso: string): string {
   });
 }
 
-export function CorrespondenciaThread({ mensajes, empresaNombre }: CorrespondenciaThreadProps) {
+export function CorrespondenciaThread({
+  mensajes,
+  empresaNombre,
+  animateEntry = true,
+}: CorrespondenciaThreadProps) {
   if (mensajes.length === 0) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-5 py-4">
@@ -41,9 +47,13 @@ export function CorrespondenciaThread({ mensajes, empresaNombre }: Correspondenc
         return (
           <motion.div
             key={msg.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={animateEntry ? { opacity: 0, y: 16 } : false}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.15 }}
+            transition={
+              animateEntry
+                ? { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.15 }
+                : { duration: 0 }
+            }
             className={cn(
               "rounded-xl border border-line p-5",
               isAgent

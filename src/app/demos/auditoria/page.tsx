@@ -8,7 +8,6 @@ import { EstadoPipeline } from "@/components/auditoria/EstadoPipeline";
 import { CorrespondenciaThread } from "@/components/auditoria/CorrespondenciaThread";
 import { VeredictoCard } from "@/components/auditoria/VeredictoCard";
 import { FindingsPanel } from "@/components/auditoria/FindingsPanel";
-import { WhiteWipe } from "@/components/motion/WhiteWipe";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { declaraciones, formatEUR } from "@/data/index";
@@ -409,51 +408,130 @@ function AnalisisVisual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 3 Visual — WhiteWipe beat + CorrespondenciaThread (first message only)
+// Step 3 Visual — Composing skeleton → outbound consulta email
 // ─────────────────────────────────────────────────────────────────────────────
+function ConsultaEmailSkeleton() {
+  return (
+    <div className="mr-8 rounded-xl border border-line border-l-2 border-l-brand bg-surface p-5">
+      <div className="mb-3 flex items-center gap-2.5">
+        <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Skeleton className="h-3 w-36" />
+          <Skeleton className="h-2.5 w-24" />
+        </div>
+      </div>
+      <Skeleton className="mb-3 h-2.5 w-2/3" />
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-11/12" />
+        <Skeleton className="h-3 w-4/5" />
+      </div>
+    </div>
+  );
+}
+
 function ConsultaVisual() {
-  const [showWipe, setShowWipe] = useState(true);
+  const [phase, setPhase] = useState<"composing" | "sent">("composing");
+  const [showCallout, setShowCallout] = useState(false);
   const primerMensaje = (dec.correspondencia ?? []).slice(0, 1);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowWipe(false), 1600);
-    return () => clearTimeout(t);
+    const toSent = setTimeout(() => setPhase("sent"), 1400);
+    const toCallout = setTimeout(() => setShowCallout(true), 1900);
+    return () => {
+      clearTimeout(toSent);
+      clearTimeout(toCallout);
+    };
   }, []);
 
   return (
-    <>
-      {showWipe && (
-        <WhiteWipe label="Redactando consulta al cliente…" duration={1500} />
-      )}
-
-      <div className="space-y-5">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <FadeUp className="shrink-0">
         <EstadoBar estado="consulta_enviada" />
+      </FadeUp>
 
-        {/* Context callout */}
-        <FadeUp delay={0.1}>
-          <div className="rounded-xl border border-brand/20 bg-brand-tint px-5 py-3.5 flex items-start gap-3">
-            <Send className="w-4 h-4 text-brand mt-0.5 flex-shrink-0" />
+      <FadeUp delay={0.06} className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+          <p className="text-sm font-semibold text-ink">Consulta al cliente</p>
+          <AnimatePresence mode="wait">
+            {phase === "composing" ? (
+              <motion.span
+                key="composing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-1.5 text-xs text-muted"
+              >
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Redactando consulta…
+              </motion.span>
+            ) : (
+              <motion.span
+                key="sent"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="text-xs font-medium text-ink-soft"
+              >
+                Enviada · {dec.empresa}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="p-3">
+          <AnimatePresence mode="wait">
+            {phase === "composing" ? (
+              <motion.div
+                key="skeleton"
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <ConsultaEmailSkeleton />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="email"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <CorrespondenciaThread
+                  mensajes={primerMensaje}
+                  empresaNombre={dec.empresa}
+                  animateEntry={false}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </FadeUp>
+
+      <AnimatePresence>
+        {showCallout && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="shrink-0 rounded-xl border border-line bg-canvas px-4 py-3 flex items-start gap-3"
+          >
+            <Send className="mt-0.5 h-4 w-4 shrink-0 text-ink-soft" />
             <div>
-              <p className="text-sm font-semibold text-brand-dark">
+              <p className="text-sm font-semibold text-ink">
                 El agente actúa como auditor: no asume el error, pregunta.
               </p>
-              <p className="text-sm text-ink-soft mt-1 text-pretty">
-                Ante la discrepancia de tarifa, el agente redacta y envía un correo formal
-                solicitando justificación — exactamente como haría un auditor humano.
+              <p className="mt-1 text-sm text-ink-soft text-pretty">
+                Identifica la línea afectada, la tarifa detectada y el impacto. Solicita
+                confirmación o justificación documental — como haría un auditor humano.
               </p>
             </div>
-          </div>
-        </FadeUp>
-
-        {/* First message only */}
-        <FadeUp delay={0.25}>
-          <CorrespondenciaThread
-            mensajes={primerMensaje}
-            empresaNombre={dec.empresa}
-          />
-        </FadeUp>
-      </div>
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
