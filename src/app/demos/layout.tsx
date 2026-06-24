@@ -1,5 +1,3 @@
-import { DemoFooter } from "@/components/layout/Footer";
-
 export default function DemosLayout({
   children,
 }: {
@@ -8,7 +6,6 @@ export default function DemosLayout({
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
       <main className="flex-1">{children}</main>
-      <DemoFooter />
     </div>
   );
 }
