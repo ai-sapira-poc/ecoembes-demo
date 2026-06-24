@@ -12,11 +12,9 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { declaraciones, formatEUR } from "@/data/index";
 import {
-  Inbox,
-  CalendarDays,
-  Building2,
-  Hash,
-  CreditCard,
+  Mail,
+  Paperclip,
+  FileSpreadsheet,
   CheckCircle2,
   AlertTriangle,
   Loader2,
@@ -29,114 +27,96 @@ import {
 // 3-message correspondencia thread · tarifa error hallazgo
 const dec = declaraciones.find((d) => d.id === "DEC-005")!;
 
+const senderDomain = "higienenatura.es";
+const fechaLarga = new Date(dec.fechaRecepcion).toLocaleDateString("es-ES", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const initials = dec.empresa
+  .split(" ")
+  .filter((w) => /[A-Za-zÁÉÍÓÚÑ]/.test(w))
+  .slice(0, 2)
+  .map((w) => w[0])
+  .join("")
+  .toUpperCase();
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 Visual — Intake card + pipeline at "recibida"
 // ─────────────────────────────────────────────────────────────────────────────
 function IntakeVisual() {
   return (
     <FadeUp>
-      <div className="space-y-4">
-        {/* Pipeline tracker */}
-        <div className="rounded-xl border border-line bg-surface p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted mb-4">
-            Estado del agente
-          </p>
-          <EstadoPipeline estadoAgente="recibida" />
-        </div>
-
-        {/* Declaration intake card */}
-        <div className="rounded-xl border border-line bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.1)] overflow-hidden">
-          {/* Email-like header */}
-          <div className="flex items-center gap-3 px-5 py-3.5 border-b border-line bg-canvas">
-            <Inbox className="w-4 h-4 text-brand flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-ink truncate">
-                Nueva declaración SIG recibida — {dec.empresa}
-              </p>
-              <p className="text-[11px] text-muted">
-                {dec.canal} ·{" "}
-                {new Date(dec.fechaRecepcion).toLocaleDateString("es-ES", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-soft text-brand-dark flex-shrink-0">
-              Nueva
+      <div className="mx-auto max-w-xl space-y-3">
+        {/* The incoming email */}
+        <article className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+            <span className="flex items-center gap-2 text-xs text-muted">
+              <Mail className="h-3.5 w-3.5" />
+              Bandeja de auditoría · declaraciones@ecoembes
             </span>
+            <span className="text-[11px] text-muted">{fechaLarga}</span>
           </div>
 
-          {/* Metadata grid */}
-          <div className="p-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="flex items-start gap-2.5">
-              <Building2 className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  Empresa
-                </p>
-                <p className="text-sm text-ink font-medium mt-0.5">{dec.empresa}</p>
-              </div>
+          {/* Sender */}
+          <div className="flex items-start gap-3 px-5 pt-4">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas text-[11px] font-semibold text-ink-soft ring-1 ring-line">
+              {initials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-ink">
+                Dpto. de Cumplimiento · {dec.empresa}
+              </p>
+              <p className="truncate text-xs text-muted">
+                cumplimiento@{senderDomain}
+              </p>
             </div>
-            <div className="flex items-start gap-2.5">
-              <Hash className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  CIF
+          </div>
+
+          {/* Subject + body */}
+          <div className="px-5 pt-3.5">
+            <p className="text-sm font-semibold text-ink">
+              Declaración Anual de Envases — Período {dec.periodo} ({dec.ejercicio})
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              Buenos días. Adjuntamos la declaración SIG correspondiente al período{" "}
+              {dec.periodo}. Quedamos a su disposición para cualquier aclaración.
+            </p>
+          </div>
+
+          {/* Attachment */}
+          <div className="px-5 pb-5 pt-4">
+            <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-3.5 py-2.5">
+              <FileSpreadsheet className="h-5 w-5 shrink-0 text-ink-soft" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">
+                  DAE_{dec.empresa.split(" ")[0]}_P{dec.periodo}.xlsx
                 </p>
-                <p className="text-sm font-mono text-ink mt-0.5">{dec.cif}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <CalendarDays className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  Período
-                </p>
-                <p className="text-sm text-ink mt-0.5">
-                  Período {dec.periodo} · {dec.ejercicio}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <CreditCard className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  Importe DAE
-                </p>
-                <p className="text-sm font-semibold text-ink tabular-nums mt-0.5">
+                <p className="text-[11px] text-muted">
+                  Hoja SIG · importe declarado{" "}
                   {formatEUR(dec.importeDaeEur ?? dec.cuotaDeclaradaEur)}
                 </p>
               </div>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <Building2 className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  Sector
-                </p>
-                <p className="text-sm text-ink mt-0.5">{dec.sector}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5">
-              <Inbox className="w-4 h-4 text-muted mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                  Canal
-                </p>
-                <p className="text-sm text-ink mt-0.5">{dec.canal}</p>
-              </div>
+              <Paperclip className="h-4 w-4 shrink-0 text-muted" />
             </div>
           </div>
+        </article>
 
-          <div className="px-5 pb-4">
-            <div className="rounded-lg bg-brand-soft px-4 py-2.5 flex items-center gap-2">
-              <Loader2 className="w-4 h-4 text-brand animate-spin flex-shrink-0" />
-              <p className="text-sm text-brand-dark font-medium">
-                El agente ha recibido la declaración e inicia el análisis automático…
-              </p>
-            </div>
-          </div>
+        {/* Agent pickup — the only green accent on this step */}
+        <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
+            <span
+              className="h-2 w-2 rounded-full bg-brand"
+              style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
+            />
+          </span>
+          <p className="flex-1 text-sm text-ink-soft">
+            El agente recibe el correo, extrae el adjunto e{" "}
+            <strong className="font-semibold text-ink">inicia el análisis</strong>.
+          </p>
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
+            En curso
+          </span>
         </div>
       </div>
     </FadeUp>
@@ -475,14 +455,14 @@ const steps: Step[] = [
     explicacion: (
       <>
         <p>
-          <strong className="text-ink">{dec.empresa}</strong> presenta su
-          declaración SIG del período {dec.periodo} a través de la{" "}
-          <em>{dec.canal}</em>.
+          <strong className="text-ink">{dec.empresa}</strong> envía su
+          declaración SIG del período {dec.periodo} por correo, con la hoja DAE
+          adjunta.
         </p>
         <p>
-          En el proceso tradicional, esta declaración entraría en una bandeja de
-          entrada compartida y esperaría turno para una revisión manual — días,
-          a veces semanas.
+          En el proceso tradicional, ese correo entraría en una bandeja
+          compartida y esperaría turno para una revisión manual — días, a veces
+          semanas.
         </p>
         <p>
           Con el agente, la recepción desencadena inmediatamente el análisis
