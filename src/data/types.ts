@@ -117,6 +117,7 @@ export interface RevisionItem {
   decisionRequerida: string;
   accionSugerida: string;
   impactoEur: number;
+  resolucion?: "aprobado" | "rechazado" | "solicitar_datos" | null;
 }
 
 export interface DashboardKpis {
