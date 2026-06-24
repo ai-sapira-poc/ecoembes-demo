@@ -33,17 +33,17 @@ function buildExpedienteLog(item: Declaracion): LogEntry[] {
   const entries: LogEntry[] = [];
   const corr = item.correspondencia ?? [];
 
-  entries.push({
-    id: `${item.id}-recv`,
-    fecha: item.fechaRecepcion,
-    label: "Declaración recibida",
-    detail: [
-      item.canal,
-      item.importeDaeEur != null ? formatEUR(item.importeDaeEur) : null,
-    ]
-      .filter(Boolean)
-      .join(" · "),
-  });
+    entries.push({
+      id: `${item.id}-recv`,
+      fecha: item.fechaRecepcion,
+      label: "Presentada en plataforma",
+      detail: [
+        item.canal,
+        item.importeDaeEur != null ? formatEUR(item.importeDaeEur) : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    });
 
   if (item.estadoAgente && item.estadoAgente !== "recibida") {
     entries.push({

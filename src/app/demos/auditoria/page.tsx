@@ -18,6 +18,7 @@ import {
   Mail,
   Paperclip,
   FileSpreadsheet,
+  LayoutDashboard,
   CheckCircle2,
   AlertTriangle,
   Loader2,
@@ -38,91 +39,188 @@ const fechaLarga = new Date(dec.fechaRecepcion).toLocaleDateString("es-ES", {
   month: "long",
   year: "numeric",
 });
-const initials = dec.empresa
-  .split(" ")
-  .filter((w) => /[A-Za-zÁÉÍÓÚÑ]/.test(w))
-  .slice(0, 2)
-  .map((w) => w[0])
-  .join("")
-  .toUpperCase();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 1 Visual — Intake card + pipeline at "recibida"
+// Step 1 Visual — Platform submission + agent fetch animation
 // ─────────────────────────────────────────────────────────────────────────────
+function PlatformFetchSkeleton() {
+  return (
+    <>
+      <div className="space-y-2 px-5 pt-4">
+        <Skeleton className="h-3 w-36" />
+        <Skeleton className="h-4 w-4/5" />
+      </div>
+      <div className="mx-5 mt-3 space-y-2 rounded-lg border border-line bg-canvas px-4 py-3">
+        <Skeleton className="h-4 w-3/5" />
+        <Skeleton className="h-3 w-2/5" />
+      </div>
+      <div className="px-5 py-4">
+        <Skeleton className="h-[3.25rem] w-full rounded-lg" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 border-t border-line px-5 py-3.5">
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    </>
+  );
+}
+
+function PlatformSubmissionCard() {
+  return (
+    <>
+      <div className="px-5 pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+          Presentación registrada
+        </p>
+        <p className="mt-1 text-sm font-semibold text-ink">
+          Declaración SIG · Período {dec.periodo} ({dec.ejercicio})
+        </p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+        className="mx-5 mt-3 rounded-lg border border-line bg-canvas px-4 py-3"
+      >
+        <p className="text-sm font-semibold text-ink">{dec.empresa}</p>
+        <p className="mt-0.5 text-xs text-muted">
+          <span className="font-mono">{dec.cif}</span> · {dec.sector}
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+        className="px-5 py-4"
+      >
+        <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-3.5 py-2.5">
+          <FileSpreadsheet className="h-5 w-5 shrink-0 text-ink-soft" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-ink">
+              DAE_{dec.empresa.split(" ")[0]}_P{dec.periodo}.xlsx
+            </p>
+            <p className="text-[11px] text-muted">
+              Hoja SIG · importe declarado{" "}
+              {formatEUR(dec.importeDaeEur ?? dec.cuotaDeclaradaEur)}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.dl
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+        className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs"
+      >
+        <div>
+          <dt className="text-muted">Estado en plataforma</dt>
+          <dd className="mt-0.5 font-medium text-ink">Presentada</dd>
+        </div>
+        <div>
+          <dt className="text-muted">Referencia</dt>
+          <dd className="mt-0.5 font-mono text-ink">{dec.id}</dd>
+        </div>
+      </motion.dl>
+    </>
+  );
+}
+
 function IntakeVisual() {
+  const [phase, setPhase] = useState<"fetching" | "ready">("fetching");
+
+  useEffect(() => {
+    const toReady = setTimeout(() => setPhase("ready"), 1200);
+    return () => clearTimeout(toReady);
+  }, []);
+
   return (
     <FadeUp>
-      <div className="mx-auto max-w-xl space-y-3">
-        {/* The incoming email */}
+      <div className="mx-auto w-full max-w-xl space-y-3">
         <article className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
-              <Mail className="h-3.5 w-3.5" />
-              Bandeja de auditoría · declaraciones@ecoembes
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              {dec.canal ?? "PLATAFORMA 2.0"} · Declaraciones de envases
             </span>
-            <span className="text-[11px] text-muted">{fechaLarga}</span>
+            <AnimatePresence mode="wait">
+              {phase === "fetching" ? (
+                <motion.span
+                  key="fetching"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 text-[11px] text-muted"
+                >
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Recuperando ficha…
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="ready"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-[11px] text-muted"
+                >
+                  {fechaLarga}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Sender */}
-          <div className="flex items-start gap-3 px-5 pt-4">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas text-[11px] font-semibold text-ink-soft ring-1 ring-line">
-              {initials}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-ink">
-                Dpto. de Cumplimiento · {dec.empresa}
-              </p>
-              <p className="truncate text-xs text-muted">
-                cumplimiento@{senderDomain}
-              </p>
-            </div>
-          </div>
-
-          {/* Subject + body */}
-          <div className="px-5 pt-3.5">
-            <p className="text-sm font-semibold text-ink">
-              Declaración Anual de Envases — Período {dec.periodo} ({dec.ejercicio})
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Buenos días. Adjuntamos la declaración SIG correspondiente al período{" "}
-              {dec.periodo}. Quedamos a su disposición para cualquier aclaración.
-            </p>
-          </div>
-
-          {/* Attachment */}
-          <div className="px-5 pb-5 pt-4">
-            <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-3.5 py-2.5">
-              <FileSpreadsheet className="h-5 w-5 shrink-0 text-ink-soft" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">
-                  DAE_{dec.empresa.split(" ")[0]}_P{dec.periodo}.xlsx
-                </p>
-                <p className="text-[11px] text-muted">
-                  Hoja SIG · importe declarado{" "}
-                  {formatEUR(dec.importeDaeEur ?? dec.cuotaDeclaradaEur)}
-                </p>
-              </div>
-              <Paperclip className="h-4 w-4 shrink-0 text-muted" />
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            {phase === "fetching" ? (
+              <motion.div
+                key="skeleton"
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <PlatformFetchSkeleton />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <PlatformSubmissionCard />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </article>
 
-        {/* Agent pickup — the only green accent on this step */}
-        <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
-            <span
-              className="h-2 w-2 rounded-full bg-brand"
-              style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
-            />
-          </span>
-          <p className="flex-1 text-sm text-ink-soft">
-            El agente recibe el correo, extrae el adjunto e{" "}
-            <strong className="font-semibold text-ink">inicia el análisis</strong>.
-          </p>
-          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
-            En curso
-          </span>
-        </div>
+        <AnimatePresence>
+          {phase === "ready" && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5"
+            >
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
+                <span
+                  className="h-2 w-2 rounded-full bg-brand"
+                  style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
+                />
+              </span>
+              <p className="flex-1 text-sm text-ink-soft">
+                El agente detecta la presentación, recupera la ficha de la empresa y el SIG desde
+                plataforma e{" "}
+                <strong className="font-semibold text-ink">inicia el análisis</strong>.
+              </p>
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
+                En curso
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </FadeUp>
   );
@@ -688,31 +786,33 @@ function VeredictoVisual() {
 const steps: Step[] = [
   {
     n: 1,
-    nombre: "Recepción",
-    titulo: "La declaración llega",
+    nombre: "Presentación",
+    titulo: "Subida en plataforma",
     explicacion: (
       <>
         <StepAsideSection title="Qué ocurre">
           <p>
-            <strong className="text-ink">{dec.empresa}</strong> envía la declaración SIG del
-            período {dec.periodo} por correo, con la hoja DAE adjunta.
+            <strong className="text-ink">{dec.empresa}</strong> presenta la declaración SIG del
+            período {dec.periodo} en{" "}
+            <strong className="text-ink">{dec.canal ?? "PLATAFORMA 2.0"}</strong>. La ficha de
+            empresa, el adjunto y los metadatos ya están en el sistema.
           </p>
         </StepAsideSection>
         <StepAsideSection title="Proceso tradicional">
           <StepAsideList
             items={[
-              "El correo entra en una bandeja compartida.",
-              "Espera turno para revisión manual — días o semanas.",
-              "El análisis no empieza hasta que un auditor lo recoge.",
+              "La presentación queda registrada y espera turno de auditoría.",
+              "El auditor recupera manualmente ficha, histórico y SIG.",
+              "El análisis no empieza hasta que alguien recoge el expediente.",
             ]}
           />
         </StepAsideSection>
         <StepAsideSection title="Con el agente">
           <StepAsideList
             items={[
-              "La recepción dispara el análisis al instante.",
-              "El adjunto se extrae y normaliza sin intervención humana.",
-              "El expediente queda abierto desde el primer minuto.",
+              "Detecta la nueva presentación en plataforma al instante.",
+              "Recupera ficha de empresa, declaración e histórico sin intervención humana.",
+              "Abre el expediente y lanza el análisis en el mismo minuto.",
             ]}
           />
         </StepAsideSection>
