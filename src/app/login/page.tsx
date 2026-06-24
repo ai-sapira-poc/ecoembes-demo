@@ -24,7 +24,7 @@ export default function LoginPage() {
 
           {/* Logo */}
           <div className="flex items-center justify-center">
-            <Logo variant="full" className="h-14 w-auto" />
+            <Logo variant="horizontal-claim" className="h-12 w-auto" />
           </div>
 
           {/* Heading */}

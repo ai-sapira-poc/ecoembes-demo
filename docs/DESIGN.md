@@ -5,21 +5,89 @@ near-achromatic; the Ecoembes green is reserved for CTAs, active states, the cov
 status. Motion is part of the build, never decoration. If a screen could be mistaken for a generic
 AI-generated dashboard, it has failed.
 
+**Brand source of truth:** `assets/ecoembes-brand-manual.pdf` (Manual de Marca, Sep 2024).
+Official logo downloads live in `assets/` and are copied to `demo/public/brand/` for the app.
+
+---
+
 ## Brand & color
 
-- Official Ecoembes green: `brand` `#1AA84B`, `brand-dark` `#0F7C36`, `brand-darker` `#0A5827`,
-  `brand-soft` `#E8F5EC`, `brand-tint` `#F3FAF5`. Accent (viz contrast) `accent` `#1F7A8C`.
-- Neutrals carry a faint green tint: `ink` `#14201A`, `ink-soft` `#3B4742`, `muted` `#5D6B64`,
-  `surface` `#FFFFFF`, `canvas` `#F5F8F5`, `line` `#E6ECE8`.
-- Semantic (+`-soft` tints): `danger` `#D6453D`, `warning` `#E08A1E`, `ok` `#1F9D52`, `info` `#2F6F99`.
+### Official palette (manual §2.15)
+
+| Token | Hex | Use |
+|-------|-----|-----|
+| `brand` | `#00A13A` | Primary Ecoembes green (PANTONE 347C) |
+| `brand-dark` | `#008532` | Sidebar, hover states, darker surfaces |
+| `brand-darker` | `#006428` | Deep overlays, pressed states |
+| `brand-soft` | `#E6F7EC` | Soft fills, selected rows |
+| `brand-tint` | `#F0FAF3` | Page canvas tint |
+| `surface` | `#FFFFFF` | Cards, topbar — functional brand white |
+| `accent` | `#1F7A8C` | Data-viz contrast only (not in the manual) |
+
+Neutrals carry a faint green tint: `ink` `#14201A`, `ink-soft` `#3B4742`, `muted` `#5D6B64`,
+`canvas` `#F5F8F5`, `line` `#E6ECE8`.
+
+Semantic (+ `-soft` tints): `danger` `#D6453D`, `warning` `#E08A1E`, `ok` `#1F9D52`, `info` `#2F6F99`.
+
+### Usage rules
+
 - **Reserve the brand.** Sidebars/topbars/tables/cards are white/neutral. Green appears on the
   active nav item, primary buttons, the coverage meter, links, and `ok` status — so it pops.
 - Status pills use the `bg-{semantic}-soft text-{semantic-dark}` pattern, never raw saturated fills.
 - Body text must hit ≥4.5:1. Don't use `muted` for long body copy on tinted backgrounds — use `ink-soft`.
+- Prefer `var(--color-brand)` in charts and CSS; hard-code `#00A13A` only where a library requires a literal hex.
 
-## Typography
+---
 
-- One family: **Inter** (`--font-inter`), already loaded. Weight is the system, not family variety.
+## Logo (manual §2.2–2.14)
+
+Use `@/components/layout/Logo` — never inline `<img>` or CSS-recolored assets.
+
+### Variants
+
+| Prop | Asset | When |
+|------|-------|------|
+| `horizontal-claim` + `color` | `ecoembes-logo-color.png` | **Primary lockup** — login, light hero surfaces |
+| `horizontal-claim` + `white` | `ecoembes-logo-white.png` | Dark or brand-color backgrounds (landing) |
+| `horizontal` + `color` | `ecoembes-logo-header.png` | Compact nav — sidebar white chip, tight headers |
+| `mark` | `ecoembes-symbol.png` | Favicon, icon-only contexts |
+
+Legacy alias: `variant="full"` → `horizontal-claim`.
+
+### Do
+
+- Use the **official negative PNG** on dark/color backgrounds (`tone="white"`).
+- Use the **color positive PNG** on white/light surfaces (`tone="color"`).
+- Give the logo **clear space** before adjacent type or UI (manual §2.11).
+- Respect **minimum digital width**: 128px for `horizontal-claim`, 92px for `horizontal`.
+
+### Don't (manual §2.13 — refuse and rewrite)
+
+- CSS filters to fake white/color (`brightness`, `invert`, etc.).
+- Drop shadows, glows, or any effect on the logo.
+- Stretch or crop — always scale proportionally (`h-* w-auto`).
+- Color logo on complex dark photos; white logo on complex light photos.
+- Substitute unofficial JPGs, vertical lockups, or hand-drawn marks.
+
+### Surface map
+
+```
+Landing (dark photo)     → horizontal-claim, tone="white"
+Login (white card)       → horizontal-claim, tone="color"
+Sidebar (white chip)     → horizontal, tone="color"
+App icon / favicon       → mark (src/app/icon.png)
+```
+
+---
+
+## Typography (manual §2.16–2.17)
+
+- **Primary:** Nunito (`--font-nunito`) — Light 300, Regular 400, Bold 600/700.
+- **Complementary (sparingly):** Nunito Sans (`--font-nunito-sans`) for dense UI or tables if needed.
+- Default body: `font-[var(--font-nunito)]`.
+
+### Scale
+
 - Hero/display: `text-5xl md:text-6xl font-medium tracking-tight text-balance` — **medium, not bold**
   at the largest size (the key editorial tell). Emphasis via a single brand-colored word, never gradient text.
 - Page title (inner): `text-2xl font-semibold text-ink`.
@@ -28,6 +96,14 @@ AI-generated dashboard, it has failed.
 - Body: `text-sm text-ink-soft leading-relaxed`; meta `text-xs text-muted`. Long prose `text-pretty`,
   headings `text-balance`. Cap line length ~70ch.
 - Monospace for IDs/CIFs/codes: `font-mono text-xs text-muted`.
+
+### Voice (manual §1.4)
+
+Ecoembes tone is **integrador, abierto, entusiasta, empático, moderno**. Copy should feel warm and
+purpose-led — not cold SaaS jargon. Prefer lines like *"Cada declaración, verificada."* over generic
+"automation platform" language.
+
+---
 
 ## Motion (use the shared primitives in `@/components/motion/Reveal`)
 
@@ -41,6 +117,8 @@ AI-generated dashboard, it has failed.
 - Never spring/bounce/elastic for UI. Always provide a reduced-motion path (globals.css already
   zeroes durations under `prefers-reduced-motion`).
 
+---
+
 ## Surfaces, spacing, shadow
 
 - Content padding `p-8` (`px-12 py-6` for wide shells). Vary spacing for rhythm; don't uniformly pad.
@@ -50,8 +128,10 @@ AI-generated dashboard, it has failed.
 - Shadows: directional and soft, e.g. `shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]`. **Never** pair a
   1px border with a wide soft glow as decoration; pick one. No omnidirectional/colored glow.
 - Glass (sparingly, for elevated cards over the mesh): `bg-white/70 backdrop-blur-sm ring-1 ring-line`.
-- Background: `MeshBackground` (drifting green blobs) on landing/login/Acto canvases; plain `bg-canvas`
-  in the platform shell content area.
+- Background: `MeshBackground` (drifting green blobs) on landing/login/Acto canvases; cinematic photo +
+  brand-green wash on the landing hero; plain `bg-canvas` in the platform shell content area.
+
+---
 
 ## Component conventions
 
@@ -59,14 +139,19 @@ AI-generated dashboard, it has failed.
   (hooks, framer-motion, recharts, onClick).
 - Reuse `@/components/ui/*` primitives (Button, Card, Badge, SeverityBadge, ConfidenceBadge, StatCard,
   Skeleton, Table). Extend via `className` + `cn`, don't fork.
-- Recharts: stroke/fill use the brand `#1AA84B` (or `var(--color-brand)`), not the old olive.
+- Recharts: stroke/fill use `#00A13A` (or `var(--color-brand)`), not legacy approximations.
+
+---
 
 ## Banned (AI-slop tells — refuse and rewrite)
 
 - Gradient text; glassmorphism as default; colored side-stripe borders; identical icon+title+text card
   grids repeated endlessly; tiny uppercase eyebrow above *every* section; `01/02/03` numbered markers as
   scaffolding; over-rounded cards; 1px-border + wide-glow "ghost cards"; repeating-linear-gradient stripes;
-  hand-drawn/sketchy SVGs. Text must never overflow its container at any breakpoint.
+  hand-drawn/sketchy SVGs; CSS-filtered or unofficial logos. Text must never overflow its container at
+  any breakpoint.
+
+---
 
 ## The story must lead
 

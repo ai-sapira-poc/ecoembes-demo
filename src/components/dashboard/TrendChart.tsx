@@ -39,8 +39,8 @@ export function TrendChart({ data, className }: TrendChartProps) {
         <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradImporte" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1AA84B" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="#1AA84B" stopOpacity={0.01} />
+              <stop offset="0%" stopColor="#00A13A" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="#00A13A" stopOpacity={0.01} />
             </linearGradient>
             <linearGradient id="gradDeclaraciones" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#1F7A8C" stopOpacity={0.18} />
@@ -91,11 +91,11 @@ export function TrendChart({ data, className }: TrendChartProps) {
             yAxisId="importe"
             type="monotone"
             dataKey="importeEur"
-            stroke="#1AA84B"
+            stroke="#00A13A"
             strokeWidth={2}
             fill="url(#gradImporte)"
             dot={false}
-            activeDot={{ r: 4, fill: "#1AA84B", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "#00A13A", strokeWidth: 0 }}
           />
           <Area
             yAxisId="declaraciones"

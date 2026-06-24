@@ -15,7 +15,7 @@ export function MeshBackground({ className = "" }: { className?: string }) {
         className="absolute -left-[10%] -top-[15%] h-[55vw] w-[55vw] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle at 50% 50%, rgba(26,168,75,0.30), rgba(26,168,75,0) 70%)",
+            "radial-gradient(circle at 50% 50%, rgba(0,161,58,0.28), rgba(0,161,58,0) 70%)",
           animation: "drift-a 24s ease-in-out infinite",
         }}
       />
@@ -31,7 +31,7 @@ export function MeshBackground({ className = "" }: { className?: string }) {
         className="absolute bottom-[-18%] left-[25%] h-[50vw] w-[50vw] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle at 50% 50%, rgba(15,124,54,0.20), rgba(15,124,54,0) 70%)",
+            "radial-gradient(circle at 50% 50%, rgba(0,133,50,0.18), rgba(0,133,50,0) 70%)",
           animation: "drift-c 27s ease-in-out infinite",
         }}
       />

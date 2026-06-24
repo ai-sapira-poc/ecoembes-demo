@@ -7,12 +7,12 @@
   of competing. (See docs/DESIGN.md.)
 */
 @theme {
-  /* Brand — official Ecoembes green */
-  --color-brand: #1aa84b;
-  --color-brand-dark: #0f7c36;
-  --color-brand-darker: #0a5827;
-  --color-brand-soft: #e8f5ec;
-  --color-brand-tint: #f3faf5;
+  /* Brand — official Ecoembes green (manual §2.15: PANTONE 347C / #00A13A) */
+  --color-brand: #00a13a;
+  --color-brand-dark: #008532;
+  --color-brand-darker: #006428;
+  --color-brand-soft: #e6f7ec;
+  --color-brand-tint: #f0faf3;
 
   /* Accent (data-viz contrast) */
   --color-accent: #1f7a8c;

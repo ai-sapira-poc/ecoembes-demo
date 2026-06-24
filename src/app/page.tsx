@@ -35,15 +35,15 @@ export default function LandingPage() {
           className="animate-ken-burns object-cover [filter:brightness(0.72)_saturate(1.1)]"
         />
         {/* Green wash — keeps the foliage visible, darkens for legible light text */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a3a1f]/80 via-[#0a3a1f]/55 to-[#04160c]/88" />
-        <div className="absolute inset-0 [background:radial-gradient(ellipse_at_50%_38%,transparent_42%,rgba(4,18,10,0.55)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#004d1c]/82 via-[#006b28]/58 to-[#002912]/90" />
+        <div className="absolute inset-0 [background:radial-gradient(ellipse_at_50%_38%,transparent_42%,rgba(0,41,18,0.55)_100%)]" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <Reveal className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
-          <RevealItem>
-            <Logo variant="full" tone="white" className="drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" />
+          <RevealItem className="px-6 py-4">
+            <Logo variant="horizontal-claim" tone="white" className="h-[72px] w-auto md:h-[84px]" />
           </RevealItem>
 
           <RevealItem>

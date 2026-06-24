@@ -12,7 +12,7 @@ import {
 const MANUAL_PCT = (37367 / 2338519) * 100; // ~1.598…
 
 const agentData = [
-  { name: "Agente IA", value: 100, color: "#1AA84B" },
+  { name: "Agente IA", value: 100, color: "#00A13A" },
   { name: "Sin cobertura", value: 0, color: "#E6ECE8" },
 ];
 

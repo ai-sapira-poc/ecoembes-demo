@@ -47,7 +47,7 @@ export function Sidebar() {
       {/* Logo chip */}
       <div className="flex items-center justify-center px-5 pt-7 pb-6">
         <div className="bg-white rounded-xl px-3 py-2.5 shadow-[0_2px_8px_-2px_rgba(10,32,20,0.20)]">
-          <Logo variant="mark" className="h-9 w-auto" />
+          <Logo variant="horizontal" className="h-8 w-auto" />
         </div>
       </div>
 
