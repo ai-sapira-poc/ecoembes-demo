@@ -2,72 +2,33 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Settings, LogOut, HelpCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, LogOut, Settings } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const titleMap: Record<string, string> = {
-  "/plataforma": "Dashboard",
-  "/plataforma/auditoria": "Auditoría de Declaraciones",
-  "/plataforma/control": "Control de Integridad",
-  "/plataforma/revision": "Revisión Humana",
-};
-
-function getSectionTitle(pathname: string): string {
-  if (titleMap[pathname]) return titleMap[pathname];
-  for (const key of Object.keys(titleMap)) {
-    if (key !== "/plataforma" && pathname.startsWith(key + "/")) {
-      return titleMap[key];
-    }
-  }
-  return "Plataforma";
-}
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { CommandPalette } from "@/components/layout/CommandPalette";
+import { NotificationsPanel } from "@/components/layout/NotificationsPanel";
+import { HelpPopover } from "@/components/layout/HelpPopover";
 
 export function TopBar() {
-  const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const title = getSectionTitle(pathname);
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex items-center justify-between h-14 px-6 bg-surface border-b border-line shrink-0"
+      className="flex items-center justify-between h-14 px-6 bg-surface border-b border-line shrink-0 gap-4"
     >
-      {/* Left: section title */}
-      <h2 className="text-sm font-semibold text-ink tracking-[-0.01em]">{title}</h2>
+      <Breadcrumbs />
 
-      {/* Right: actions */}
-      <div className="flex items-center gap-1">
-        {/* Centro de ayuda */}
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-ink hover:bg-canvas transition-colors duration-150"
-          onClick={() => {/* no-op */}}
-        >
-          <HelpCircle size={14} strokeWidth={1.8} />
-          Centro de ayuda
-        </button>
+      <div className="flex items-center gap-1.5">
+        <CommandPalette />
+        <HelpPopover />
+        <NotificationsPanel />
 
-        {/* Bell with badge */}
-        <button
-          type="button"
-          className="relative flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-ink hover:bg-canvas transition-colors duration-150"
-          aria-label="Notificaciones"
-        >
-          <Bell size={16} strokeWidth={1.8} />
-          <span className="absolute top-1 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white leading-none pointer-events-none">
-            3
-          </span>
-        </button>
-
-        {/* Separator */}
         <div className="w-px h-5 bg-line mx-1" />
 
-        {/* Avatar dropdown — uses fixed positioning to escape overflow clipping */}
         <div className="relative">
           <button
             type="button"
@@ -82,22 +43,14 @@ export function TopBar() {
             <ChevronDown
               size={12}
               strokeWidth={2}
-              className={cn(
-                "text-muted transition-transform duration-150",
-                dropdownOpen && "rotate-180"
-              )}
+              className={cn("text-muted transition-transform duration-150", dropdownOpen && "rotate-180")}
             />
           </button>
 
           <AnimatePresence>
             {dropdownOpen && (
               <>
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 z-[1000]"
-                  onClick={() => setDropdownOpen(false)}
-                />
-                {/* Dropdown — fixed so it escapes overflow clipping */}
+                <div className="fixed inset-0 z-[1000]" onClick={() => setDropdownOpen(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: -4, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -109,14 +62,14 @@ export function TopBar() {
                     <p className="text-xs font-semibold text-ink truncate">Auditor Ecoembes</p>
                     <p className="text-[10px] text-muted truncate mt-0.5">auditor@ecoembes.es</p>
                   </div>
-                  <button
-                    type="button"
+                  <Link
+                    href="/plataforma/configuracion"
                     onClick={() => setDropdownOpen(false)}
                     className="flex w-full items-center gap-2.5 px-4 py-2 text-xs text-ink-soft hover:bg-canvas transition-colors duration-100 mt-0.5"
                   >
                     <Settings size={13} strokeWidth={1.8} className="text-muted" />
                     Configuración
-                  </button>
+                  </Link>
                   <div className="my-0.5 border-t border-line" />
                   <Link
                     href="/"
