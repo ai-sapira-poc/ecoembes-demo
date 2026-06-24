@@ -24,7 +24,7 @@ export function StepAsideSection({
 }) {
   return (
     <section className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-dark">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
         {title}
       </p>
       <div className="space-y-2 text-sm text-ink-soft leading-relaxed">{children}</div>
@@ -38,7 +38,7 @@ export function StepAsideList({ items }: { items: React.ReactNode[] }) {
     <ul className="space-y-1.5">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2.5">
-          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand" aria-hidden />
+          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-muted" aria-hidden />
           <span className="text-pretty">{item}</span>
         </li>
       ))}

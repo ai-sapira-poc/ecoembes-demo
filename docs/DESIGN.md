@@ -136,9 +136,10 @@ purpose-led — not cold SaaS jargon. Prefer lines like *"Cada declaración, ver
 Use `StepAsideSection`, `StepAsideList`, and `StepAsideMeta` from `@/components/layout/StepLayout`
 for all Acto step explainers — not long prose paragraphs.
 
-- **Section title:** `text-[11px] uppercase tracking-[0.14em] text-brand-dark` — one kicker per beat
+- **Section title:** `text-[11px] uppercase tracking-[0.14em] text-muted` — one kicker per beat
   (e.g. "Qué hace el agente", "Validaciones del monográfico", "Hallazgo en este caso").
-- **Body:** `text-sm text-ink-soft`; use `<StepAsideList>` for enumerations (checks, steps, consequences).
+- **Body:** `text-sm text-ink-soft`; use `<StepAsideList>` for enumerations — neutral `bg-muted` bullets,
+  no brand green in the left rail (green stays on the visual / active states).
 - **Meta footnote:** `<StepAsideMeta>` for figures (importe declarado, confianza) — separated by `border-t`.
 - Stack sections with `space-y-4` in the left column; 2–4 sections per step is the target density.
 
