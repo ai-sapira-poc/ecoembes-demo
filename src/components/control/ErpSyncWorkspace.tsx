@@ -47,11 +47,9 @@ function ImportProgress({ onDone }: { onDone: () => void }) {
   const count = useMotionValue(0);
   const label = useTransform(count, (x) => `${Math.round(x).toLocaleString("es-ES")} / ${formatNum(TOTAL)}`);
   const width = useTransform(count, [0, TOTAL], ["0%", "100%"]);
-  const run = useRef(false);
-
   useEffect(() => {
-    if (run.current) return;
-    run.current = true;
+    // No ref guard: in React 19 Strict Mode the effect mounts → cleanup stops
+    // the animation → remounts; a guard would skip the restart and freeze at 0.
     const controls = animate(count, TOTAL, {
       duration: 1.6,
       delay: 0.2,

@@ -21,7 +21,7 @@ import type { RevisionItem } from "@/data/types";
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-type Estado = "no_cargada" | "importe_distinto" | "duplicada";
+type Estado = "no_cargada" | "importe_distinto" | "duplicada" | "cif_erroneo";
 type Resolucion = "resuelto" | "escalado" | null;
 
 interface StateMeta {
@@ -31,11 +31,14 @@ interface StateMeta {
   recordIds: string[];
 }
 
-// The 3 narrative states, each mapped to its control revision ticket(s).
+// The narrative states, each mapped to its control revision ticket(s).
+// The first three are the headline states; the CIF case is the 6th discrepancy
+// so the queue total stays at 6 — matching the cierre grid and the BPO punchline.
 const STATES: StateMeta[] = [
   { estado: "no_cargada", label: "No cargada", icon: FileQuestion, recordIds: ["045", "158"] },
   { estado: "importe_distinto", label: "Importe distinto", icon: Scale, recordIds: ["103", "430"] },
   { estado: "duplicada", label: "Duplicada", icon: Copy, recordIds: ["299"] },
+  { estado: "cif_erroneo", label: "CIF erróneo", icon: AlertTriangle, recordIds: ["402"] },
 ];
 
 interface HitlCaseFlowProps {
