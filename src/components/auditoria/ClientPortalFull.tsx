@@ -207,7 +207,10 @@ function ChatPane({
       </header>
 
       {/* Thread */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-4 py-4">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-4 py-4 [scrollbar-gutter:stable]"
+      >
         <p className="mx-auto mb-4 w-fit rounded-full bg-canvas px-3 py-1 text-[11px] text-muted">
           Conversación segura con su agente de soporte
         </p>
@@ -224,12 +227,15 @@ function ChatPane({
             </motion.div>
           ))}
 
-          <AnimatePresence>
+          {/* popLayout: the typing bubble is removed from flow the instant the
+              message lands, so its space can't collapse and shift the thread. */}
+          <AnimatePresence mode="popLayout">
             {typing && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="flex items-end justify-start gap-2"
               >
                 <span className="mb-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-dark ring-1 ring-brand/15">
