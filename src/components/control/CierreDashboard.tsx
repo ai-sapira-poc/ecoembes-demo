@@ -8,8 +8,10 @@ import {
   useTransform,
   animate,
 } from "framer-motion";
-import { ArrowRight, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle, ClipboardCheck, Layers, ShieldCheck } from "lucide-react";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { StatCard } from "@/components/ui/StatCard";
 import { formatEUR, formatNum, formatPct } from "@/lib/utils";
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -62,11 +64,11 @@ function CoverageTieBack({ manualPct, manualEur, importeTotalEur }: { manualPct:
   }, [agentWidth]);
 
   return (
-    <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-      <p className="border-b border-line px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-        Cobertura del control
-      </p>
-      <div className="space-y-4 px-5 py-4">
+    <Card className="shrink-0">
+      <CardHeader>
+        <CardTitle>Cobertura del control</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <div>
           <div className="mb-1.5 flex items-baseline justify-between text-xs">
             <span className="font-semibold uppercase tracking-[0.12em] text-muted">Cierre manual previo</span>
@@ -93,8 +95,8 @@ function CoverageTieBack({ manualPct, manualEur, importeTotalEur }: { manualPct:
           De <strong className="font-semibold text-ink">{formatPct(manualPct)}</strong> verificado manualmente a{" "}
           <strong className="font-semibold text-brand-dark">100 %</strong> — sin muestreo, con evidencia por registro.
         </p>
-      </div>
-    </article>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -121,8 +123,8 @@ export function CierreDashboard({
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
       <FadeUp>
         {/* Hero */}
-        <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+        <Card className="shrink-0 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-6 py-3">
             <span className="flex items-center gap-2 text-xs text-muted">
               <ShieldCheck className="h-3.5 w-3.5" />
               Control de Integridad BPO · Cierre {periodo}
@@ -150,21 +152,35 @@ export function CierreDashboard({
               <p className="mt-0.5 text-[11px] text-muted">no detectado antes</p>
             </div>
           </div>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs sm:grid-cols-4">
-            {[
-              { k: "Conciliados", v: formatNum(totalDeclaraciones) },
-              { k: "Cierre autónomo", v: formatNum(cierreAutonomo) },
-              { k: "Cola humana", v: `${hitlCount} casos` },
-              { k: "Cobertura", v: "100 %" },
-            ].map((m) => (
-              <div key={m.k}>
-                <dt className="text-muted">{m.k}</dt>
-                <dd className="mt-0.5 font-medium tabular-nums text-ink">{m.v}</dd>
-              </div>
-            ))}
-          </dl>
-        </article>
+        </Card>
       </FadeUp>
+
+      {/* KPI grid — platform StatCards */}
+      <Reveal className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-4">
+        <RevealItem>
+          <StatCard label="Conciliados" value={formatNum(totalDeclaraciones)} icon={Layers} />
+        </RevealItem>
+        <RevealItem>
+          <StatCard
+            label="Cierre autónomo"
+            value={formatNum(cierreAutonomo)}
+            icon={CheckCircle}
+            valueTone="ok"
+          />
+        </RevealItem>
+        <RevealItem>
+          <StatCard
+            label="Incidencias"
+            value={formatNum(discrepancias)}
+            sub={formatEUR(importeEnRiesgoEur)}
+            icon={AlertTriangle}
+            valueTone="danger"
+          />
+        </RevealItem>
+        <RevealItem>
+          <StatCard label="Cobertura" value="100 %" icon={ShieldCheck} valueTone="ok" />
+        </RevealItem>
+      </Reveal>
 
       <FadeUp delay={0.08}>
         <CoverageTieBack manualPct={manualPct} manualEur={manualEur} importeTotalEur={importeTotalEur} />
@@ -173,34 +189,34 @@ export function CierreDashboard({
       {/* Resolved vs pending + traza */}
       <Reveal className="grid shrink-0 gap-3 sm:grid-cols-2">
         <RevealItem>
-          <article className="h-full overflow-hidden rounded-xl border border-line bg-surface">
-            <p className="border-b border-line px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Resolución del cierre
-            </p>
-            <div className="space-y-3 px-5 py-4">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Resolución del cierre</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <Bar label="Cierre autónomo" value={cierreAutonomo} total={totalDeclaraciones} tone="brand" />
               <Bar label="Revisión humana" value={hitlCount} total={totalDeclaraciones} tone="warning" />
               <p className="pt-1 text-xs text-ink-soft">
                 <strong className="font-semibold text-ink">{formatNum(cierreAutonomo)}</strong> registros cerrados
                 sin intervención · el humano sólo revisa los <strong className="font-semibold text-ink">{hitlCount}</strong> dudosos.
               </p>
-            </div>
-          </article>
+            </CardContent>
+          </Card>
         </RevealItem>
         <RevealItem>
-          <article className="h-full overflow-hidden rounded-xl border border-line bg-surface">
-            <p className="border-b border-line px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Traza del cierre
-            </p>
-            <div className="divide-y divide-line">
+          <Card className="h-full overflow-hidden">
+            <CardHeader>
+              <CardTitle>Traza del cierre</CardTitle>
+            </CardHeader>
+            <div className="divide-y divide-line border-t border-line">
               {TRAZA.map((t) => (
-                <div key={t.ts} className="flex items-start gap-3 px-5 py-2 text-xs">
+                <div key={t.ts} className="flex items-start gap-3 px-6 py-2 text-xs">
                   <span className="shrink-0 font-mono text-muted">{t.ts}</span>
                   <span className="leading-relaxed text-ink-soft">{t.msg}</span>
                 </div>
               ))}
             </div>
-          </article>
+          </Card>
         </RevealItem>
       </Reveal>
 
@@ -208,7 +224,7 @@ export function CierreDashboard({
       <div className="grid shrink-0 gap-2 sm:grid-cols-2">
         <Link
           href="/plataforma/control"
-          className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+          className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-tint/60 hover:text-brand"
         >
           <ShieldCheck className="h-4 w-4 shrink-0" />
           Informe de control
@@ -216,7 +232,7 @@ export function CierreDashboard({
         </Link>
         <Link
           href="/plataforma/revision"
-          className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+          className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-tint/60 hover:text-brand"
         >
           <ClipboardCheck className="h-4 w-4 shrink-0" />
           {hitlCount} casos en revisión humana

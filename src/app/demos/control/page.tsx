@@ -3,6 +3,8 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, CheckCircle, ClipboardCheck, Layers } from "lucide-react";
+import { StatCard } from "@/components/ui/StatCard";
 import {
   StepLayout,
   StepAsideSection,
@@ -78,28 +80,27 @@ function ConciliacionVisual() {
 
       <AnimatePresence>
         {done && (
-          <motion.article
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: EASE_OUT }}
-            className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
+            className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-4"
           >
-            <div className="grid grid-cols-2 gap-px border-line bg-line sm:grid-cols-4">
-              {[
-                { value: formatNum(bpoMes.totalDeclaraciones), label: "conciliados" },
-                { value: formatNum(AUTO_DICTAMEN_COUNT), label: "sin incidencia" },
-                { value: String(DISCREPANCY_COUNT), label: "incidencias" },
-                { value: String(HITL_COUNT), label: "en cola HITL" },
-              ].map(({ value, label }) => (
-                <div key={label} className="bg-surface px-4 py-3 text-center">
-                  <p className="text-lg font-semibold tabular-nums text-ink">{value}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.article>
+            <StatCard label="Conciliados" value={formatNum(bpoMes.totalDeclaraciones)} icon={Layers} />
+            <StatCard
+              label="Sin incidencia"
+              value={formatNum(AUTO_DICTAMEN_COUNT)}
+              icon={CheckCircle}
+              valueTone="ok"
+            />
+            <StatCard
+              label="Incidencias"
+              value={String(DISCREPANCY_COUNT)}
+              icon={AlertTriangle}
+              valueTone="danger"
+            />
+            <StatCard label="En cola HITL" value={String(HITL_COUNT)} icon={ClipboardCheck} valueTone="warning" />
+          </motion.div>
         )}
       </AnimatePresence>
 
