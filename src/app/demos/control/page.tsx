@@ -7,9 +7,6 @@ import { AlertTriangle, CheckCircle, ClipboardCheck, Layers } from "lucide-react
 import { StatCard } from "@/components/ui/StatCard";
 import {
   StepLayout,
-  StepAsideSection,
-  StepAsideList,
-  StepAsideMeta,
   type Step,
 } from "@/components/layout/StepLayout";
 import { ReconciliationTable } from "@/components/control/ReconciliationTable";
@@ -142,27 +139,19 @@ const steps: Step[] = [
     titulo: "Sincronización con el ERP",
     explicacion: (
       <>
-        <StepAsideSection title="Qué ocurre">
-          <p>
-            A final de mes, el agente sincroniza con el ERP (
-            <strong className="text-ink">{bpoErpMeta.sistema}</strong>) e importa{" "}
-            <strong className="text-ink">{formatNum(bpoMes.totalDeclaraciones)} declaraciones</strong>{" "}
-            por un total de <strong className="text-ink">{formatEUR(bpoMes.importeTotalEur)}</strong>.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="Con el agente">
-          <StepAsideList
-            items={[
-              `Conector directo ${bpoErpMeta.conector} sobre ${bpoErpMeta.modulo}.`,
-              "Importa el cierre completo, sin exportaciones manuales.",
-              "Desglosa por material, sector y estado al instante.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideMeta>
-          Período: <span className="font-medium not-italic text-ink">{bpoErpMeta.periodo}</span> ·{" "}
-          {bpoErpMeta.lotes} lotes importados
-        </StepAsideMeta>
+        <p className="text-sm text-ink-soft leading-relaxed">
+          A final de mes, el agente sincroniza con{" "}
+          <span className="font-semibold text-ink">{bpoErpMeta.sistema}</span> vía{" "}
+          {bpoErpMeta.conector} e importa{" "}
+          <span className="font-semibold text-ink">{formatNum(bpoMes.totalDeclaraciones)} declaraciones</span>{" "}
+          por un total de{" "}
+          <span className="font-semibold text-ink">{formatEUR(bpoMes.importeTotalEur)}</span>.
+          Sin exportaciones manuales, sin intervención del equipo.
+        </p>
+        <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+          El cierre completo queda desglosado por material, sector y estado en el momento de la
+          importación, listo para iniciar la conciliación caso a caso.
+        </p>
       </>
     ),
     visual: <ErpSyncWorkspace />,
@@ -173,25 +162,21 @@ const steps: Step[] = [
     titulo: "Conciliación caso a caso",
     explicacion: (
       <>
-        <StepAsideSection title="Qué hace el agente">
-          <p>
-            Concilia cada registro <strong className="text-ink">campo a campo</strong>: importe
-            declarado vs ERP vs calculado, peso, tarifa y material — con una puntuación de confianza
-            por caso.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="Enrutamiento automático">
-          <StepAsideList
-            items={[
-              `Sin incidencia y confianza ≥ ${CONFIDENCE_THRESHOLD * 100} % → cierre autónomo (${formatNum(AUTO_DICTAMEN_COUNT)} registros).`,
-              `Cualquier discrepancia → cola de revisión humana (${HITL_COUNT} casos).`,
-              "El mismo cruce se repite en los 437 registros del cierre.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideMeta>
-          Umbral autónomo: {CONFIDENCE_THRESHOLD * 100} % · {HITL_COUNT} casos escalados
-        </StepAsideMeta>
+        <p className="text-sm text-ink-soft leading-relaxed">
+          El agente concilia cada registro{" "}
+          <span className="font-semibold text-ink">campo a campo</span>: importe declarado frente
+          al ERP frente al calculado, con peso, tarifa y material. Cada caso recibe una puntuación
+          de confianza.
+        </p>
+        <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+          Sin incidencia y confianza ≥ {CONFIDENCE_THRESHOLD * 100} %: cierre autónomo —{" "}
+          <span className="font-semibold text-ink">{formatNum(AUTO_DICTAMEN_COUNT)} registros</span>{" "}
+          resueltos sin tocar. Cualquier discrepancia va directa a la cola de revisión humana.
+        </p>
+        <div className="mt-4 rounded-lg border border-line bg-canvas px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Interactúa</p>
+          <p className="mt-1 text-xs text-ink-soft">Observa cómo el agente recorre los registros uno a uno hasta completar el cierre.</p>
+        </div>
       </>
     ),
     visual: <ConciliacionVisual />,
@@ -202,34 +187,16 @@ const steps: Step[] = [
     titulo: "Revisión humana caso a caso",
     explicacion: (
       <>
-        <StepAsideSection title="El humano sólo decide lo dudoso">
-          <p>
-            El agente resuelve {formatNum(AUTO_DICTAMEN_COUNT)} registros solo. Los{" "}
-            <strong className="text-ink">{HITL_COUNT} casos dudosos</strong> llegan a un revisor con
-            evidencia y acción sugerida.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="Tres estados, caso a caso">
-          <StepAsideList
-            items={[
-              "No cargada — la declaración no tiene registro en SGA.",
-              "Importe distinto — el importe en SGA no cuadra con el origen.",
-              "Duplicada — doble carga con riesgo de doble cobro.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideSection title="Cada caso muestra">
-          <StepAsideList
-            items={[
-              "La evidencia que el agente reunió.",
-              "La acción que sugiere.",
-              "Cómo lo resuelve o escala el humano.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideMeta>
-          {HITL_COUNT} casos · confianza 55 – 78 % · {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
-        </StepAsideMeta>
+        <p className="text-sm text-ink-soft leading-relaxed">
+          El agente resuelve {formatNum(AUTO_DICTAMEN_COUNT)} registros por sí solo. Solo los{" "}
+          <span className="font-semibold text-ink">{HITL_COUNT} casos con incidencia</span> llegan
+          al revisor — cada uno con la evidencia que el agente reunió y la acción que sugiere.
+        </p>
+        <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+          Los estados posibles son: declaración no cargada en SGA, importe distinto al origen, o
+          carga duplicada con riesgo de doble cobro. El revisor resuelve o escala cada caso con
+          un clic — sin tener que reconstruir el contexto desde cero.
+        </p>
       </>
     ),
     visual: <HitlCaseFlow items={CONTROL_HITL} />,
@@ -240,35 +207,19 @@ const steps: Step[] = [
     titulo: "Fase de cierre",
     explicacion: (
       <>
-        <StepAsideSection title="Resultado del cierre">
-          <p>
-            El agente concilia el <strong className="text-ink">100 %</strong> del volumen, cierra{" "}
-            <strong className="text-ink">{formatNum(AUTO_DICTAMEN_COUNT)} registros</strong> de forma
-            autónoma y detecta <strong className="text-ink">{DISCREPANCY_COUNT} incidencias</strong> por{" "}
-            <strong className="text-ink">{formatEUR(IMPORTE_EN_RIESGO)}</strong>.
-          </p>
-        </StepAsideSection>
-        <StepAsideSection title="La historia de la cobertura">
-          <StepAsideList
-            items={[
-              `Antes: ${formatPct(MANUAL_PCT)} verificado (${formatEUR(bpoMes.importeMuestreadoEur)}).`,
-              "Ahora: 100 % conciliado, con evidencia por registro.",
-              "Las 6 incidencias estaban todas fuera de la muestra manual.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideSection title="La plataforma real">
-          <StepAsideList
-            items={[
-              "Informe de control en /plataforma/control.",
-              "Cola HITL unificada en /plataforma/revision.",
-              "Trazabilidad completa con firma digital.",
-            ]}
-          />
-        </StepAsideSection>
-        <StepAsideMeta>
-          {bpoMes.periodo} · {DISCREPANCY_COUNT} incidencias · {formatEUR(IMPORTE_EN_RIESGO)} en riesgo
-        </StepAsideMeta>
+        <p className="text-sm text-ink-soft leading-relaxed">
+          El agente concilia el{" "}
+          <span className="font-semibold text-ink">100 % del volumen</span>:{" "}
+          {formatNum(AUTO_DICTAMEN_COUNT)} registros cerrados de forma autónoma,{" "}
+          {DISCREPANCY_COUNT} incidencias detectadas por{" "}
+          <span className="font-semibold text-ink">{formatEUR(IMPORTE_EN_RIESGO)}</span>. Antes
+          solo se verificaba el {formatPct(MANUAL_PCT)} manualmente — y las{" "}
+          {DISCREPANCY_COUNT} incidencias estaban todas fuera de esa muestra.
+        </p>
+        <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+          El informe de control queda disponible en plataforma con evidencia por registro y
+          trazabilidad completa. El humano solo decide lo que el agente escaló.
+        </p>
       </>
     ),
     visual: (

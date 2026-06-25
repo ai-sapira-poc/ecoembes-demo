@@ -133,15 +133,20 @@ purpose-led — not cold SaaS jargon. Prefer lines like *"Cada declaración, ver
 
 ### Acto sidebar copy (left rail)
 
-Use `StepAsideSection`, `StepAsideList`, and `StepAsideMeta` from `@/components/layout/StepLayout`
-for all Acto step explainers — not long prose paragraphs.
+Follow the Radisson prose model: **2–4 short flowing paragraphs per step**, not stacked section blocks.
 
-- **Section title:** `text-[11px] uppercase tracking-[0.14em] text-muted` — one kicker per beat
-  (e.g. "Qué hace el agente", "Validaciones del monográfico", "Hallazgo en este caso").
-- **Body:** `text-sm text-ink-soft`; use `<StepAsideList>` for enumerations — neutral `bg-muted` bullets,
-  no brand green in the left rail (green stays on the visual / active states).
-- **Meta footnote:** `<StepAsideMeta>` for figures (importe declarado, confianza) — separated by `border-t`.
-- Stack sections with `space-y-4` in the left column; 2–4 sections per step is the target density.
+- **Paragraphs:** `<p className="text-sm text-ink-soft leading-relaxed">` with `mt-3` on subsequent
+  paragraphs. Opening line sets the scene; a follow-up names what the agent does, with one key phrase
+  emphasized via `<span className="font-semibold text-ink">…</span>`. Never gradient or colored text.
+- **No `StepAsideMeta` footers** — the figure footnotes (importe declarado, confianza, período) add
+  no value as footnotes. If a number is genuinely meaningful, weave it into a sentence; otherwise cut it.
+- **Collapse dual-section structure** — "Proceso tradicional" vs "Con el agente" becomes flowing prose
+  that implies the contrast. Don't keep two bulleted sections.
+- **`StepAsideList` sparingly** — only for a true short list (max ~3 items, one line each). Prefer `<p>`.
+- **Optional Interact hint:** one restrained box per step, only where the visual is genuinely interactive.
+  Use `rounded-lg border border-line bg-canvas px-3 py-2.5` with a `text-[10px] font-semibold uppercase
+  tracking-[0.14em] text-muted` label "Interactúa". No brand green in the left rail.
+- Voice: warm, purpose-led Ecoembes tone (es-ES), conversational. Cap line length ~70ch; concise sentences.
 
 Reference: Acto 1 steps in `src/app/demos/auditoria/page.tsx`.
 
