@@ -79,7 +79,7 @@ export function StepLayout({
   const handleReplay = () => setReplayKey((k) => k + 1);
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div className="flex min-h-screen flex-col bg-canvas md:h-dvh md:max-h-dvh md:min-h-0 md:overflow-hidden">
       {/* Top bar — Home + breadcrumb */}
       <header className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-4 md:px-6 py-3">
         <span className="text-sm text-muted">{demoLabel}</span>
@@ -150,7 +150,7 @@ export function StepLayout({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.3 }}
-              className="flex min-h-0 flex-1 flex-col"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto"
             >
               {activeStep.visual}
             </motion.div>
