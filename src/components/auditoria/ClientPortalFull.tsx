@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, FileText, X, Send, ArrowRight } from "lucide-react";
+import { ShieldCheck, FileText, X, Send, ArrowRight, Sparkles } from "lucide-react";
 import type { ChatMensaje, Hallazgo } from "@/data/types";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { formatEUR } from "@/lib/utils";
@@ -35,37 +35,32 @@ export interface ClientPortalFullProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Chat bubble + conversation pane
+// Chat bubble + conversation pane — modelled on Nuzoa's PantallaVisitaChat,
+// mapped to our tokens (dark header, soft-tint client bubble, reserve-the-green).
 // ─────────────────────────────────────────────────────────────────────────────
-function Bubble({ msg }: { msg: ChatMensaje }) {
+function Bubble({ msg, agente }: { msg: ChatMensaje; agente: string }) {
   const isAgente = msg.de === "agente";
-  return (
-    <div className={cn("flex w-full gap-2.5", isAgente ? "justify-start" : "justify-end")}>
-      {isAgente && (
-        <span className="grid h-7 w-7 shrink-0 place-items-center self-end rounded-full bg-brand-soft text-[10px] font-semibold text-brand-dark ring-1 ring-brand/15">
-          {initials(msg.autor)}
-        </span>
-      )}
-      <div className={cn("flex max-w-[78%] flex-col", isAgente ? "items-start" : "items-end")}>
-        <div
-          className={cn(
-            "rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
-            isAgente
-              ? "rounded-bl-sm bg-canvas text-ink-soft ring-1 ring-line"
-              : "rounded-br-sm bg-brand text-white"
-          )}
-        >
-          {msg.texto}
+
+  if (isAgente) {
+    return (
+      <div className="flex justify-start">
+        <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-canvas px-3.5 py-2.5 shadow-sm">
+          <p className="mb-0.5 flex items-center gap-1 text-[11px] font-bold text-brand-dark">
+            <Sparkles className="h-3 w-3" /> {agente.split("·")[0].trim()}
+          </p>
+          <p className="text-[13.5px] leading-snug text-ink-soft">{msg.texto}</p>
+          <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
         </div>
-        <p className={cn("mt-1 text-[10px] text-muted", isAgente ? "text-left" : "text-right")}>
-          {msg.autor.split("·")[0].trim()} · {msg.hora}
-        </p>
       </div>
-      {!isAgente && (
-        <span className="grid h-7 w-7 shrink-0 place-items-center self-end rounded-full bg-surface text-[10px] font-semibold text-ink-soft ring-1 ring-line">
-          {initials(msg.autor)}
-        </span>
-      )}
+    );
+  }
+
+  return (
+    <div className="flex justify-end">
+      <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-brand-soft px-3.5 py-2.5 text-ink shadow-sm">
+        <p className="text-[13.5px] leading-snug">{msg.texto}</p>
+        <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
+      </div>
     </div>
   );
 }
@@ -73,6 +68,12 @@ function Bubble({ msg }: { msg: ChatMensaje }) {
 function nowHora(): string {
   return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
+
+// Canned, on-topic agent replies (frontend-only — no API). Cycled per client turn.
+const respuestasAgente = [
+  "Perfecto. Os dejo el borrador de la declaración complementaria ya cumplimentado con la tarifa PEAD correcta; solo tenéis que validarlo desde el portal.",
+  "Genial. Si te surge cualquier duda con la corrección, sigo por aquí para ayudarte. Tenéis hasta el 30 de junio, con margen de sobra.",
+];
 
 function ChatPane({
   mensajes,
@@ -87,8 +88,10 @@ function ChatPane({
   const [shown, setShown] = useState(1);
   const [extra, setExtra] = useState<ChatMensaje[]>([]);
   const [draft, setDraft] = useState("");
+  const [agenteEscribiendo, setAgenteEscribiendo] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seq = useRef(0);
+  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (shown >= mensajes.length) return;
@@ -96,88 +99,108 @@ function ChatPane({
     return () => clearTimeout(t);
   }, [shown, mensajes.length]);
 
-  const scriptedDone = shown >= mensajes.length;
-  const typing = !scriptedDone;
+  useEffect(() => () => {
+    if (replyTimer.current) clearTimeout(replyTimer.current);
+  }, []);
+
+  const scriptedTyping = shown < mensajes.length;
+  const typing = scriptedTyping || agenteEscribiendo;
   const visible = [...mensajes.slice(0, shown), ...extra];
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    if (el) el.scrollTop = el.scrollHeight;
   }, [shown, extra.length, typing]);
 
   const handleSend = () => {
     const texto = draft.trim();
-    if (!texto) return;
+    if (!texto || scriptedTyping) return;
     seq.current += 1;
+    const turno = seq.current;
     setExtra((prev) => [
       ...prev,
-      {
-        id: `live-${seq.current}`,
-        de: "cliente",
-        autor: declarante,
-        texto,
-        hora: nowHora(),
-      },
+      { id: `cli-${turno}`, de: "cliente", autor: declarante, texto, hora: nowHora() },
     ]);
     setDraft("");
+
+    // Scripted, on-topic agent reply (no network).
+    setAgenteEscribiendo(true);
+    if (replyTimer.current) clearTimeout(replyTimer.current);
+    replyTimer.current = setTimeout(() => {
+      const reply = respuestasAgente[(turno - 1) % respuestasAgente.length];
+      setExtra((prev) => [
+        ...prev,
+        { id: `ag-${turno}`, de: "agente", autor: agente, texto: reply, hora: nowHora() },
+      ]);
+      setAgenteEscribiendo(false);
+    }, 950);
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-surface">
-      {/* Agent header */}
-      <div className="flex shrink-0 items-center gap-2.5 border-b border-line px-5 py-3.5">
-        <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand-dark">
+    <div className="flex h-full min-h-0 flex-col bg-surface">
+      {/* Agent header — dark bar (our restrained equivalent of Nuzoa's navy) */}
+      <header className="flex shrink-0 items-center gap-2.5 bg-brand-darker px-4 py-3.5 text-white">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-[12px] font-bold">
           {initials(agente)}
-          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-ok" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-ink">{agente.split("·")[0].trim()}</p>
-          <p className="flex items-center gap-1.5 text-[11px] text-ok">
+          <p className="truncate text-[14px] font-bold leading-tight">
+            {agente.split("·")[0].trim()}
+          </p>
+          <p className="flex items-center gap-1.5 text-[11.5px] text-white/75">
             <span
-              className="h-1.5 w-1.5 rounded-full bg-ok"
+              className="h-1.5 w-1.5 rounded-full bg-white/90"
               style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
             />
-            Agente de caso asignado · en línea
+            Agente de caso · en línea
           </p>
+        </div>
+      </header>
+
+      {/* Thread */}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-4 py-4">
+        <p className="mx-auto mb-4 w-fit rounded-full bg-canvas px-3 py-1 text-[11px] text-muted">
+          Conversación segura con tu agente de caso
+        </p>
+
+        <div className="space-y-2">
+          {visible.map((m) => (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Bubble msg={m} agente={agente} />
+            </motion.div>
+          ))}
+
+          <AnimatePresence>
+            {typing && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-start"
+              >
+                <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-canvas px-4 py-3 shadow-sm">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full bg-muted/70"
+                      style={{ animation: `soft-pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-5 py-5">
-        {visible.map((m) => (
-          <motion.div
-            key={m.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Bubble msg={m} />
-          </motion.div>
-        ))}
-
-        <AnimatePresence>
-          {typing && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1.5 pl-10"
-            >
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-muted/60"
-                  style={{ animation: `soft-pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Composer */}
-      <div className="shrink-0 border-t border-line px-4 py-3">
-        <div className="flex items-end gap-2 rounded-xl border border-line bg-canvas px-3 py-2 focus-within:ring-2 focus-within:ring-brand/40">
+      {/* Composer footer */}
+      <div className="shrink-0 border-t border-line bg-surface px-3 py-2.5">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={draft}
@@ -188,18 +211,18 @@ function ChatPane({
                 handleSend();
               }
             }}
-            placeholder="Escribe un mensaje a tu agente…"
+            placeholder="Escribe un mensaje…"
             aria-label="Mensaje para el agente de caso"
-            className="min-w-0 flex-1 bg-transparent py-1 text-sm text-ink placeholder:text-muted focus:outline-none"
+            className="h-10 min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 text-[13.5px] text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
           />
           <button
             type="button"
             onClick={handleSend}
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || scriptedTyping}
             aria-label="Enviar mensaje"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand text-white transition-all duration-150 hover:bg-brand-dark active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-all duration-150 hover:bg-brand-dark active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-[18px] w-[18px]" />
           </button>
         </div>
       </div>
