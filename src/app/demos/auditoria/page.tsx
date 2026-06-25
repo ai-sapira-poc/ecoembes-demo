@@ -341,11 +341,16 @@ function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
 const declarantePortal005 = "Carlos Ruiz · Higiene Natura Iberia";
 
 function RevisionAccionVisual() {
-  const [stage, setStage] = useState<"operator" | "wiping" | "portal">("operator");
+  const [stage, setStage] = useState<"operator" | "portal">("operator");
+  const [wiping, setWiping] = useState(false);
 
   const handleSend = () => {
-    setStage("wiping");
-    setTimeout(() => setStage("portal"), 1400);
+    setWiping(true);
+    // Swap to the portal while the white cover is fully opaque, then lift the
+    // cover once the portal has mounted — so the operator panel is never
+    // revealed mid-transition (which read as a re-render before the redirect).
+    setTimeout(() => setStage("portal"), 700);
+    setTimeout(() => setWiping(false), 1400);
   };
 
   return (
@@ -392,14 +397,14 @@ function RevisionAccionVisual() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {stage === "wiping" && (
+        {wiping && (
           <motion.div
             aria-hidden
             className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-white"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 1.4, times: [0, 0.25, 0.7, 1], ease: "easeInOut" }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
           >
             <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-muted">
               <Link2 className="h-4 w-4" />
