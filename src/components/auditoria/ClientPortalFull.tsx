@@ -18,8 +18,18 @@ import type { ChatMensaje, Hallazgo, Formato } from "@/data/types";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { Logo } from "@/components/layout/Logo";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
-import { formatEUR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+// es-ES Intl only groups at 5+ digits by default, so 4-digit amounts like
+// 8568 render as "8568 €". Force grouping so they read "8.568 €" like the
+// larger cuotas. (Local — does not alter the shared formatEUR used elsewhere.)
+const eurGrouped = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+  useGrouping: "always",
+});
+const formatEurGrouped = (n: number) => eurGrouped.format(n);
 
 const severidadDot: Record<Hallazgo["severidad"], string> = {
   alta: "bg-danger",
@@ -351,7 +361,7 @@ function LandingBody({
   const delta = cuotaCalculadaEur - cuotaDeclaradaEur;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 py-6 md:px-8 md:py-8">
+    <div className="w-full px-5 py-6 md:px-8 md:py-8">
       {/* Welcome + status */}
       <section className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -387,14 +397,14 @@ function LandingBody({
           <div className="min-w-0">
             <p className="text-[11px] text-muted">Cuota declarada</p>
             <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink-soft line-through decoration-muted/50">
-              {formatEUR(cuotaDeclaradaEur)}
+              {formatEurGrouped(cuotaDeclaradaEur)}
             </p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
           <div className="min-w-0">
             <p className="text-[11px] text-muted">Cuota corregida</p>
             <p className="mt-0.5 text-lg font-semibold tabular-nums text-brand-dark">
-              {formatEUR(cuotaCalculadaEur)}
+              {formatEurGrouped(cuotaCalculadaEur)}
             </p>
           </div>
           {delta !== 0 && (
@@ -402,7 +412,7 @@ function LandingBody({
               <p className="text-[11px] text-muted">Diferencia</p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums text-warning">
                 {delta > 0 ? "+" : ""}
-                {formatEUR(delta)}
+                {formatEurGrouped(delta)}
               </p>
             </div>
           )}
@@ -453,7 +463,7 @@ function LandingBody({
                     {h.descripcion}
                   </p>
                   <p className="mt-2 text-sm font-semibold tabular-nums text-brand-dark">
-                    Impacto en la cuota: {formatEUR(h.impactoEur)}
+                    Impacto en la cuota: {formatEurGrouped(h.impactoEur)}
                   </p>
                 </div>
               </li>
@@ -542,9 +552,9 @@ export function ClientPortalFull({
         </button>
       </header>
 
-      {/* Body: landing (scrolls) + right-docked chat panel */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        {/* Landing — reflows narrower when the chat is docked (md+) */}
+      {/* Body: full-width landing; chat is a floating widget over it */}
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        {/* Landing — always full width; never reflows for the chat */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
           <LandingBody
             empresa={empresa}
@@ -559,13 +569,32 @@ export function ClientPortalFull({
           />
         </div>
 
+        {/* Floating chat FAB (live-chat widget) — shown when the window is closed */}
+        <AnimatePresence>
+          {!chatOpen && (
+            <motion.button
+              key="fab"
+              type="button"
+              onClick={() => setChatOpen(true)}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute bottom-5 right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_30px_-8px_rgba(10,88,39,0.6)] transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+              aria-label="Chatear con tu agente de soporte"
+            >
+              <MessageSquare className="h-6 w-6" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Floating chat window (md+) / full-height sheet over a scrim (mobile) */}
         <AnimatePresence>
           {chatOpen && (
             <>
-              {/* Mobile scrim behind the full-height sheet */}
               <motion.div
                 key="scrim"
-                className="absolute inset-0 z-10 bg-ink/20 md:hidden"
+                className="absolute inset-0 z-20 bg-ink/20 md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -573,14 +602,13 @@ export function ClientPortalFull({
                 onClick={() => setChatOpen(false)}
                 aria-hidden
               />
-              {/* Docked panel (md+) / full-height sheet (mobile) */}
               <motion.aside
                 key="chat"
-                className="absolute inset-y-0 right-0 z-20 flex w-full flex-col border-l border-line bg-surface shadow-[-12px_0_30px_-16px_rgba(20,32,26,0.35)] sm:w-[24rem] md:static md:z-auto md:w-[24rem] md:shrink-0 md:shadow-none lg:w-[26rem]"
-                initial={{ x: "100%", opacity: 0.6 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: "100%", opacity: 0.6 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 z-30 flex flex-col overflow-hidden bg-surface md:inset-auto md:bottom-5 md:right-5 md:h-[560px] md:max-h-[80%] md:w-[380px] md:rounded-2xl md:border md:border-line md:shadow-[0_20px_50px_-12px_rgba(20,32,26,0.45)]"
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 aria-label="Conversación con el agente de soporte"
               >
                 <ChatPane
