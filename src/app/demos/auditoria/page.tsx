@@ -56,6 +56,13 @@ const fechaLarga = new Date(dec.fechaRecepcion).toLocaleDateString("es-ES", {
   year: "numeric",
 });
 
+// Fecha de emisión del requerimiento de subsanación (portal del declarante).
+const fechaRequerimiento = new Date("2025-04-15").toLocaleDateString("es-ES", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 Visual — Platform submission + agent fetch animation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -665,6 +672,8 @@ function RevisionAccionVisual() {
               empresa={dec.empresa}
               declaracionId={dec.id}
               periodo={dec.periodo}
+              ejercicio={dec.ejercicio}
+              emitidoEl={fechaRequerimiento}
               cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
               cuotaCalculadaEur={dec.cuotaCalculadaEur}
               hallazgos={dec.hallazgos}

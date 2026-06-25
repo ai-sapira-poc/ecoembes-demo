@@ -15,6 +15,7 @@ import {
 import type { ChatMensaje, Hallazgo, Formato } from "@/data/types";
 import { Logo } from "@/components/layout/Logo";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
+import { cn } from "@/lib/utils";
 
 // es-ES Intl only groups at 5+ digits by default, so 4-digit amounts like
 // 8568 render as "8568 €". Force grouping so they read "8.568 €" like the
@@ -37,6 +38,9 @@ export interface ClientPortalFullProps {
   empresa: string;
   declaracionId: string;
   periodo: number | undefined;
+  ejercicio: number;
+  /** Fecha de emisión del requerimiento, formateada (es-ES). */
+  emitidoEl: string;
   cuotaDeclaradaEur: number;
   cuotaCalculadaEur: number;
   hallazgos: Hallazgo[];
@@ -168,9 +172,14 @@ function ChatPane({
   onMinimize: () => void;
 }) {
   // Staged reveal of the scripted conversation, then live composer appends.
+  // Comfortable reading pace: ~2.2s per message, with the typing indicator on
+  // for the last ~1.3s before each new message appears.
+  const REVEAL_MS = 2200;
+  const TYPING_LEAD_MS = 1300;
   const [shown, setShown] = useState(1);
   const [extra, setExtra] = useState<ChatMensaje[]>([]);
   const [draft, setDraft] = useState("");
+  const [scriptedTypingNext, setScriptedTypingNext] = useState(false);
   const [agenteEscribiendo, setAgenteEscribiendo] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seq = useRef(0);
@@ -178,8 +187,15 @@ function ChatPane({
 
   useEffect(() => {
     if (shown >= mensajes.length) return;
-    const t = setTimeout(() => setShown((n) => n + 1), 1100);
-    return () => clearTimeout(t);
+    // Show the typing indicator for the lead-in before the next message lands.
+    const typeAt = setTimeout(() => setScriptedTypingNext(true), REVEAL_MS - TYPING_LEAD_MS);
+    const revealAt = setTimeout(() => setShown((n) => n + 1), REVEAL_MS);
+    return () => {
+      clearTimeout(typeAt);
+      clearTimeout(revealAt);
+      // Reset the lead-in indicator for the next message (runs before re-run).
+      setScriptedTypingNext(false);
+    };
   }, [shown, mensajes.length]);
 
   useEffect(() => () => {
@@ -187,7 +203,7 @@ function ChatPane({
   }, []);
 
   const scriptedTyping = shown < mensajes.length;
-  const typing = scriptedTyping || agenteEscribiendo;
+  const typing = (scriptedTyping && scriptedTypingNext) || agenteEscribiendo;
   const visible = [...mensajes.slice(0, shown), ...extra];
 
   useEffect(() => {
@@ -216,7 +232,7 @@ function ChatPane({
         { id: `ag-${turno}`, de: "agente", autor: agente, texto: reply, hora: nowHora() },
       ]);
       setAgenteEscribiendo(false);
-    }, 950);
+    }, TYPING_LEAD_MS);
   };
 
   return (
@@ -325,95 +341,129 @@ function ChatPane({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Landing body — the self-service portal page for this declaración.
+// Landing body — an official "Requerimiento de subsanación" notice for the
+// declaración. Formal administrative register (es-ES, "usted"), document-grade.
 // ─────────────────────────────────────────────────────────────────────────────
+function DatoFila({
+  label,
+  children,
+  emphasis,
+}: {
+  label: string;
+  children: ReactNode;
+  emphasis?: "brand" | "warning";
+}) {
+  return (
+    <div className="flex flex-col gap-0.5 px-4 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
+      <dt className="text-xs text-muted sm:w-52 sm:shrink-0">{label}</dt>
+      <dd
+        className={cn(
+          "text-sm tabular-nums",
+          emphasis === "brand"
+            ? "font-semibold text-brand-dark"
+            : emphasis === "warning"
+              ? "font-bold text-warning"
+              : "text-ink"
+        )}
+      >
+        {children}
+      </dd>
+    </div>
+  );
+}
+
 function LandingBody({
+  declaracionId,
   periodo,
+  ejercicio,
+  emitidoEl,
   cuotaDeclaradaEur,
   cuotaCalculadaEur,
-  hallazgos,
   formatos,
   flaggedComponenteIds,
-  onOpenChat,
 }: {
+  declaracionId: string;
   periodo: number | undefined;
+  ejercicio: number;
+  emitidoEl: string;
   cuotaDeclaradaEur: number;
   cuotaCalculadaEur: number;
-  hallazgos: Hallazgo[];
   formatos: Formato[];
   flaggedComponenteIds?: string[];
-  onOpenChat: () => void;
 }) {
   const delta = cuotaCalculadaEur - cuotaDeclaradaEur;
-  const principal = hallazgos[0];
-  const periodoTxt = periodo != null ? `del período ${periodo}` : "presentada";
+  const periodoRef = periodo != null ? `Período ${periodo}` : "Período —";
 
   return (
     <div className="w-full px-5 py-7 md:px-10 md:py-9">
-      {/* 1 — Lede: status + plain-language situation */}
-      <section className="max-w-2xl">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
+      {/* 1 — Notice header */}
+      <section className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b border-line pb-5">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold leading-tight text-ink text-balance md:text-2xl">
+            Requerimiento de subsanación
+          </h2>
+          <p className="mt-2 font-mono text-xs leading-relaxed text-muted">
+            Expediente {declaracionId} · Declaración SIG · {periodoRef} · Ejercicio {ejercicio}
+          </p>
+          <p className="mt-0.5 font-mono text-xs text-muted">Emitido el {emitidoEl}</p>
+        </div>
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-warning/30 bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
           <AlertTriangle className="h-3.5 w-3.5" />
           Requiere subsanación
         </span>
-        <h2 className="mt-3 text-2xl font-bold leading-tight text-ink text-balance">
-          Hemos revisado su declaración SIG {periodoTxt} y hay una incidencia que conviene
-          corregir.
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft text-pretty">
-          Es un ajuste sencillo. A continuación tiene el detalle de la incidencia, el efecto
-          sobre su cuota y los formatos declarados. Su agente de soporte puede ayudarle a
-          presentar la corrección.
+      </section>
+
+      {/* 2 — Formal statement */}
+      <section className="mt-5 max-w-2xl">
+        <p className="text-sm leading-relaxed text-ink-soft text-pretty">
+          En la revisión de su declaración SIG correspondiente al {periodoRef.toLowerCase()} se ha
+          identificado una discrepancia en la tarifa aplicada a uno de los formatos declarados. A
+          continuación se detallan los hechos y la subsanación requerida.
         </p>
       </section>
 
-      {/* 2 — The incidence in focus */}
-      {principal && (
-        <section className="mt-8">
-          <h3 className="text-base font-semibold text-ink">{principal.tipo}</h3>
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft text-pretty">
-            {principal.descripcion}
-          </p>
+      {/* 3 — Detalle de la incidencia (official finding, definition block) */}
+      <section className="mt-8">
+        <h3 className="text-sm font-semibold text-ink">Detalle de la incidencia</h3>
+        <dl className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+          <DatoFila label="Formato afectado">
+            <span className="font-sans">Envase Gel Ducha PEAD 400 ml</span>{" "}
+            <span className="text-muted">(línea 005-L4)</span>
+          </DatoFila>
+          <DatoFila label="Material declarado">
+            <span className="font-sans">PEAD</span>
+          </DatoFila>
+          <DatoFila label="Tarifa aplicada">
+            <span className="font-sans">Madera</span> — 0,0490 €/kg
+          </DatoFila>
+          <DatoFila label="Tarifa vigente (correcta)" emphasis="brand">
+            <span className="font-sans">PEAD</span> — 0,3890 €/kg
+          </DatoFila>
+          <DatoFila label="Unidades declaradas">360.000 ud · 25.200 kg</DatoFila>
+          <DatoFila label="Diferencia de tarifa">0,3400 €/kg</DatoFila>
+          <DatoFila label="Impacto en la cuota" emphasis="warning">
+            +{formatEurGrouped(delta)}
+          </DatoFila>
+        </dl>
+      </section>
 
-          <div className="mt-4 flex flex-wrap items-stretch gap-3">
-            <div className="rounded-xl border border-line bg-surface px-4 py-3">
-              <p className="text-xs text-muted">Tarifa aplicada</p>
-              <p className="mt-0.5 text-sm font-semibold text-ink-soft">Madera</p>
-              <p className="text-sm tabular-nums text-ink-soft">0,049 €/kg</p>
-            </div>
-            <div className="flex items-center text-muted" aria-hidden>
-              <ArrowRight className="h-4 w-4" />
-            </div>
-            <div className="rounded-xl border border-brand/30 bg-brand-soft/40 px-4 py-3">
-              <p className="text-xs text-muted">Tarifa correcta</p>
-              <p className="mt-0.5 text-sm font-semibold text-brand-dark">PEAD</p>
-              <p className="text-sm font-semibold tabular-nums text-brand-dark">0,389 €/kg</p>
-            </div>
-            <div className="flex flex-col justify-center sm:ml-auto sm:text-right">
-              <p className="text-xs text-muted">Impacto en la cuota</p>
-              <p className="text-xl font-bold tabular-nums text-warning">
-                +{formatEurGrouped(principal.impactoEur)}
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 3 — Cuota summary: one compact figure row */}
-      <section className="mt-8 border-t border-line pt-5">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2 text-sm">
+      {/* 4 — Efecto sobre la cuota */}
+      <section className="mt-8">
+        <h3 className="text-sm font-semibold text-ink">Efecto sobre la cuota</h3>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-2 text-sm">
           <span className="text-muted">Cuota declarada</span>
           <span className="font-semibold tabular-nums text-ink-soft line-through decoration-muted/40">
             {formatEurGrouped(cuotaDeclaradaEur)}
           </span>
           <ArrowRight className="h-4 w-4 self-center text-muted" aria-hidden />
-          <span className="text-muted">corregida</span>
+          <span className="text-muted">Cuota corregida</span>
           <span className="font-semibold tabular-nums text-ink">
             {formatEurGrouped(cuotaCalculadaEur)}
           </span>
           {delta !== 0 && (
-            <span className="ml-1 inline-flex items-baseline gap-1.5">
+            <span className="inline-flex items-baseline gap-1.5">
               <span className="text-muted">·</span>
+              <span className="text-muted">Diferencia</span>
               <span className="font-semibold tabular-nums text-warning">
                 {delta > 0 ? "+" : ""}
                 {formatEurGrouped(delta)}
@@ -423,10 +473,10 @@ function LandingBody({
         </div>
       </section>
 
-      {/* 4 — Formatos declarados (real tabular data, full width) */}
+      {/* 5 — Declaración presentada (real tabular data, full width) */}
       {formatos.length > 0 && (
         <section className="mt-8">
-          <h3 className="text-base font-semibold text-ink">Formatos declarados</h3>
+          <h3 className="text-sm font-semibold text-ink">Declaración presentada</h3>
           <p className="mt-1 text-sm text-muted">La línea afectada aparece resaltada.</p>
           <div className="mt-3">
             <FormatosBreakdown
@@ -437,19 +487,14 @@ function LandingBody({
         </section>
       )}
 
-      {/* 5 — Action */}
-      <section className="mt-9 flex flex-col items-start gap-2">
-        <button
-          type="button"
-          onClick={onOpenChat}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-dark active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-        >
-          <MessageSquare className="h-4 w-4" />
-          Chatear con tu agente de soporte
-        </button>
-        <p className="text-xs text-muted">
-          Le atiende un agente de soporte que le acompaña paso a paso para presentar la
-          corrección.
+      {/* 6 — Subsanación requerida */}
+      <section className="mt-8 border-t border-line pt-6">
+        <h3 className="text-sm font-semibold text-ink">Subsanación requerida</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft text-pretty">
+          Para regularizar su declaración deberá presentar una declaración complementaria del{" "}
+          {periodoRef.toLowerCase()} aplicando la tarifa vigente de PEAD en la línea indicada. El
+          plazo de subsanación finaliza el 30 de junio de 2025. Su agente asignado ha preparado el
+          borrador correspondiente.
         </p>
       </section>
     </div>
@@ -458,17 +503,19 @@ function LandingBody({
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Portal — fills the Step 3 right column (not an overlay): the left prose rail
-// and the StepBar navigation stay visible. Opens as a self-service landing for
-// the declaración; the chat is a floating widget (CTA + bottom-right FAB) over
-// the full-width landing. Volver (ArrowLeft) / Esc returns to the operator.
+// and the StepBar navigation stay visible. Opens as an official "Requerimiento
+// de subsanación" notice; the chat opens as a floating window over the
+// full-width landing from the single "Chatear con su agente asignado" button.
+// Volver (ArrowLeft) / Esc returns to the operator (Esc closes the chat first).
 // ─────────────────────────────────────────────────────────────────────────────
 export function ClientPortalFull({
   empresa,
   declaracionId,
   periodo,
+  ejercicio,
+  emitidoEl,
   cuotaDeclaradaEur,
   cuotaCalculadaEur,
-  hallazgos,
   formatos,
   flaggedComponenteIds,
   mensajes,
@@ -524,17 +571,18 @@ export function ClientPortalFull({
         {/* Landing — always full width; never reflows for the chat */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
           <LandingBody
+            declaracionId={declaracionId}
             periodo={periodo}
+            ejercicio={ejercicio}
+            emitidoEl={emitidoEl}
             cuotaDeclaradaEur={cuotaDeclaradaEur}
             cuotaCalculadaEur={cuotaCalculadaEur}
-            hallazgos={hallazgos}
             formatos={formatos}
             flaggedComponenteIds={flaggedComponenteIds}
-            onOpenChat={() => setChatOpen(true)}
           />
         </div>
 
-        {/* Floating chat FAB (live-chat widget) — shown when the window is closed */}
+        {/* Floating chat FAB — the single trigger; shown when the chat is closed */}
         <AnimatePresence>
           {!chatOpen && (
             <motion.button
@@ -546,14 +594,15 @@ export function ClientPortalFull({
               exit={{ opacity: 0, scale: 0.85 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               className="absolute bottom-5 right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_30px_-8px_rgba(10,88,39,0.6)] transition-colors hover:bg-brand-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-              aria-label="Chatear con tu agente de soporte"
+              aria-label="Chatear con su agente asignado"
             >
               <MessageSquare className="h-6 w-6" />
             </motion.button>
           )}
         </AnimatePresence>
 
-        {/* Floating chat window (md+) / full-height sheet over a scrim (mobile) */}
+        {/* Floating chat window (md+) / full-height sheet over a scrim (mobile).
+            Opened from the floating chat button; collapses back to it on close. */}
         <AnimatePresence>
           {chatOpen && (
             <>
