@@ -224,3 +224,33 @@ export interface CasoConciliacion {
   importeCalculadoEur: number;
   confianza: number;
 }
+
+// APPENDED (wt-auditoria) — deeper Acto 1 analysis + client portal.
+// Append-only; do not reorder the canonical types above.
+// ============================================================
+
+/** A single deep check the auditor agent runs against a declaration. */
+export interface AnalisisCheck {
+  id: string;
+  /** What the agent verified, e.g. "Cruce de tarifas por material". */
+  titulo: string;
+  /** The concrete thing the agent compared — short imperative phrase. */
+  comprobacion: string;
+  /** Evidence consulted (catalogue, ficha técnica, benchmark…). */
+  evidencia: string;
+  /** Computed economic delta in EUR (0 when the check is clean). */
+  deltaEur: number;
+  /** Per-check confidence 0–1. */
+  confianza: number;
+  estado: "ok" | "alerta";
+}
+
+/** A staged chat turn between the client and their assigned case agent. */
+export interface ChatMensaje {
+  id: string;
+  de: "agente" | "cliente";
+  /** Display name of the speaker. */
+  autor: string;
+  texto: string;
+  hora: string;
+}

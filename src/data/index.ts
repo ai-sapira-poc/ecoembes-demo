@@ -98,3 +98,12 @@ export {
   bpoCaso,
   BPO_CONFIANZA_BY_ID,
 } from "@/data/mock/bpo";
+// APPENDED (wt-auditoria) — deeper Acto 1 analysis + client portal data
+// ─────────────────────────────────────────────────────────────
+export type { AnalisisCheck, ChatMensaje } from "@/data/types";
+export {
+  analisisChecks005,
+  impactoAnalisis005,
+  chatPortal005,
+  agenteCaso005,
+} from "@/data/mock/declaraciones";

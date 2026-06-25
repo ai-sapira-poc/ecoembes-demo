@@ -5,18 +5,26 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, StepAsideSection, StepAsideList, StepAsideMeta, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
-import { CorrespondenciaThread, pickExchangePair } from "@/components/auditoria/CorrespondenciaThread";
+import { CorrespondenciaThread } from "@/components/auditoria/CorrespondenciaThread";
 import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
 import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido";
-import { FindingsPanel } from "@/components/auditoria/FindingsPanel";
+import { FindingsPanel, type FindingDecision } from "@/components/auditoria/FindingsPanel";
+import { AnalisisChecks } from "@/components/auditoria/AnalisisChecks";
+import { ClientPortalChat } from "@/components/auditoria/ClientPortalChat";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp } from "@/components/motion/Reveal";
-import { declaraciones, formatEUR } from "@/data/index";
+import {
+  declaraciones,
+  formatEUR,
+  analisisChecks005,
+  impactoAnalisis005,
+  chatPortal005,
+  agenteCaso005,
+} from "@/data/index";
 import { cn } from "@/lib/utils";
 import type { Declaracion, EstadoAgente } from "@/data/types";
 import {
   Mail,
-  Paperclip,
   FileSpreadsheet,
   LayoutDashboard,
   CheckCircle2,
@@ -26,6 +34,10 @@ import {
   ArrowRight,
   MessageSquare,
   ChevronDown,
+  Link2,
+  Send,
+  ShieldCheck,
+  FileText,
 } from "lucide-react";
 
 // DEC-005 — Higiene Natura Iberia S.A.
@@ -229,47 +241,6 @@ function IntakeVisual() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 2 Visual — Skeleton → FormatosBreakdown + validation checklist
 // ─────────────────────────────────────────────────────────────────────────────
-type ValidationStatus = "ok" | "flag" | "pending";
-
-interface ValidationRow {
-  label: string;
-  detalle: string;
-  status: ValidationStatus;
-}
-
-const validaciones005: ValidationRow[] = [
-  {
-    label: "Integridad del envase",
-    detalle:
-      "Componentes de envase presentes en todos los formatos declarados — estructura completa",
-    status: "ok",
-  },
-  {
-    label: "Coherencia de pesos",
-    detalle:
-      "kgTotales = unidades × pesoUnitarioG / 1.000 — todas las líneas cuadran",
-    status: "ok",
-  },
-  {
-    label: "Materiales y atributos",
-    detalle:
-      "Materiales reconocidos en el catálogo Ecoembes 2025 — sin referencias desconocidas",
-    status: "ok",
-  },
-  {
-    label: "Cruce de tarifas por material",
-    detalle:
-      "Línea 005-L4 (Gel Ducha PEAD 400ml): tarifa aplicada 0,049 €/kg (Madera) ≠ tarifa PEAD vigente 0,389 €/kg — diferencia 0,340 €/kg sobre 25.200 kg",
-    status: "flag",
-  },
-  {
-    label: "Análisis de infradeclaración",
-    detalle:
-      "Cuota resultante infra-calculada en €8.568 por el error de tarifa detectado — requiere corrección",
-    status: "flag",
-  },
-];
-
 /** Skeleton that mirrors the SIG table layout while the agent extracts. */
 function ExtractionTableSkeleton() {
   const colWidths = [28, 88, 72, 56, 40, 48, 36, 52, 44, 40];
@@ -298,78 +269,31 @@ function ExtractionTableSkeleton() {
   );
 }
 
-function ValidationRow({
-  v,
-  resolved,
-}: {
-  v: ValidationRow;
-  resolved: boolean;
-}) {
-  const status = resolved ? v.status : "pending";
-
-  return (
-    <li className="flex items-start gap-3 px-4 py-2">
-      <div className="mt-0.5 flex-shrink-0">
-        {status === "ok" && <CheckCircle2 className="w-3.5 h-3.5 text-ok" />}
-        {status === "flag" && <AlertTriangle className="w-3.5 h-3.5 text-warning" />}
-        {status === "pending" && (
-          <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p
-          className={`text-xs font-medium leading-snug ${
-            status === "flag" ? "text-warning" : status === "pending" ? "text-muted" : "text-ink"
-          }`}
-        >
-          {v.label}
-        </p>
-        {resolved && (
-          <p className="mt-0.5 text-[11px] leading-snug text-muted line-clamp-2 text-pretty">
-            {v.detalle}
-          </p>
-        )}
-      </div>
-      <div className="ml-auto flex-shrink-0 self-center">
-        {status === "ok" && (
-          <span className="text-[11px] bg-ok-soft text-ok font-semibold px-2 py-0.5 rounded-full">
-            OK
-          </span>
-        )}
-        {status === "flag" && (
-          <span className="text-[11px] bg-warning-soft text-warning font-semibold px-2 py-0.5 rounded-full">
-            Alerta
-          </span>
-        )}
-      </div>
-    </li>
-  );
-}
-
 function AnalisisVisual() {
-  const [phase, setPhase] = useState<"extracting" | "table" | "validations">("extracting");
+  const [phase, setPhase] = useState<"extracting" | "table" | "checks">("extracting");
   const [resolvedCount, setResolvedCount] = useState(0);
 
   useEffect(() => {
     const toTable = setTimeout(() => setPhase("table"), 1500);
-    const toValidations = setTimeout(() => setPhase("validations"), 2200);
+    const toChecks = setTimeout(() => setPhase("checks"), 2300);
     return () => {
       clearTimeout(toTable);
-      clearTimeout(toValidations);
+      clearTimeout(toChecks);
     };
   }, []);
 
   useEffect(() => {
-    if (phase !== "validations") return;
-    if (resolvedCount >= validaciones005.length) return;
-    const t = setTimeout(() => setResolvedCount((n) => n + 1), 380);
+    if (phase !== "checks") return;
+    if (resolvedCount >= analisisChecks005.length) return;
+    const t = setTimeout(() => setResolvedCount((n) => n + 1), 620);
     return () => clearTimeout(t);
   }, [phase, resolvedCount]);
 
   const nFormatos = dec.formatos?.length ?? 0;
   const nComponentes =
     dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0;
-  const allResolved = resolvedCount >= validaciones005.length;
+  const allResolved = resolvedCount >= analisisChecks005.length;
+  const alertas = analisisChecks005.filter((c) => c.estado === "alerta").length;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
@@ -439,9 +363,9 @@ function AnalisisVisual() {
           </div>
         </FadeUp>
 
-        {/* Validation checklist */}
+        {/* Deep audit — per-check comprobación · evidencia · Δ € · confianza */}
         <AnimatePresence>
-          {phase === "validations" && (
+          {phase === "checks" && (
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -449,19 +373,25 @@ function AnalisisVisual() {
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
             >
-              <div className="border-b border-line px-4 py-2.5">
-                <p className="text-sm font-semibold text-ink">
-                  Validaciones automáticas — monográfico
-                </p>
-                <p className="text-xs text-muted mt-0.5">
-                  {dec.empresa} · Ejercicio {dec.ejercicio}
-                </p>
+              <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+                <div>
+                  <p className="text-sm font-semibold text-ink">
+                    Auditoría monográfica — comprobaciones
+                  </p>
+                  <p className="text-xs text-muted mt-0.5">
+                    Cada validación con su evidencia, delta económico y confianza
+                  </p>
+                </div>
+                {!allResolved && (
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {resolvedCount}/{analisisChecks005.length}
+                  </span>
+                )}
               </div>
-              <ul className="divide-y divide-line">
-                {validaciones005.map((v, i) => (
-                  <ValidationRow key={v.label} v={v} resolved={resolvedCount > i} />
-                ))}
-              </ul>
+
+              <AnalisisChecks checks={analisisChecks005} resolvedCount={resolvedCount} />
+
               <AnimatePresence>
                 {allResolved && (
                   <motion.div
@@ -470,10 +400,12 @@ function AnalisisVisual() {
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                     className="shrink-0 overflow-hidden"
                   >
-                    <div className="flex items-center gap-2 border-t border-warning/20 bg-warning-soft px-4 py-2">
-                      <XCircle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
-                      <p className="text-[11px] font-medium text-warning leading-snug">
-                        2 alertas detectadas — el agente abre consulta formal con el cliente
+                    <div className="flex items-center gap-2.5 border-t border-warning/20 bg-warning-soft px-4 py-2.5">
+                      <XCircle className="h-4 w-4 shrink-0 text-warning" />
+                      <p className="text-xs font-medium leading-snug text-warning">
+                        {alertas} alertas · infradeclaración derivada de{" "}
+                        <strong className="font-bold">{formatEUR(impactoAnalisis005)}</strong> por el
+                        error de tarifa Madera → PEAD
                       </p>
                     </div>
                   </motion.div>
@@ -568,35 +500,266 @@ function ConsultaVisual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 4 Visual — Full thread + FindingsPanel
+// Step 3 Visual — Revisión y acción del agente (human-in-the-loop)
+// Operator sees the analysis + suggested actions → "Enviar link" →
+// white-wipe → cut to the CLIENT PORTAL (declaration + findings + chat).
+// ─────────────────────────────────────────────────────────────────────────────
+function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
+  return (
+    <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-3">
+      {/* Context recap */}
+      <div className="overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+          <span className="flex items-center gap-2 text-xs text-muted">
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            Plataforma · expediente {dec.id}
+          </span>
+          {dec.estadoAgente && <EstadoBadge estado={dec.estadoAgente} />}
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-xs">
+          <div>
+            <p className="text-muted">Empresa</p>
+            <p className="mt-0.5 font-semibold text-ink">{dec.empresa}</p>
+          </div>
+          <div>
+            <p className="text-muted">Hallazgo del análisis</p>
+            <p className="mt-0.5 font-semibold text-warning">Tarifa Madera → PEAD</p>
+          </div>
+          <div>
+            <p className="text-muted">Impacto estimado</p>
+            <p className="mt-0.5 font-semibold tabular-nums text-ink">
+              {formatEUR(impactoAnalisis005)}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted">Confianza del agente</p>
+            <p className="mt-0.5 font-semibold tabular-nums text-ink">
+              {Math.round(dec.confianza * 100)}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Suggested actions */}
+      <div className="overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="border-b border-line px-4 py-2.5">
+          <p className="text-sm font-semibold text-ink">Acciones sugeridas por el agente</p>
+          <p className="mt-0.5 text-xs text-muted">
+            Ha ocurrido esto — el operador decide cómo resolverlo con el cliente
+          </p>
+        </div>
+
+        <div className="space-y-2.5 p-4">
+          {/* Secondary: email */}
+          <div className="flex items-start gap-3 rounded-lg border border-line bg-canvas px-3.5 py-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface ring-1 ring-line">
+              <Mail className="h-4 w-4 text-ink-soft" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-ink">Enviar un email formal</p>
+              <p className="mt-0.5 text-xs text-muted text-pretty">
+                Consulta por correo con la discrepancia y la solicitud de subsanación.
+              </p>
+            </div>
+            <span className="shrink-0 self-center rounded-md border border-line px-2.5 py-1 text-[11px] font-medium text-muted">
+              Opción B
+            </span>
+          </div>
+
+          {/* Primary: send portal link */}
+          <div className="rounded-lg border border-brand/30 bg-brand-soft/40 px-3.5 py-3">
+            <div className="flex items-start gap-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand/10 ring-1 ring-brand/20">
+                <Link2 className="h-4 w-4 text-brand-dark" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-ink">Enviar un enlace al cliente</p>
+                  <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                    Recomendada
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-ink-soft text-pretty">
+                  El cliente entra a su portal, ve su declaración y los hallazgos, y{" "}
+                  <strong className="font-semibold text-ink">chatea con su agente de caso</strong>{" "}
+                  para resolverlo al momento.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onSend}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+            >
+              <Send className="h-4 w-4" />
+              Enviar enlace y abrir el caso
+            </button>
+          </div>
+        </div>
+      </div>
+    </FadeUp>
+  );
+}
+
+function ClientPortalView() {
+  const hallazgo = dec.hallazgos[0];
+  return (
+    <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-3">
+      {/* Portal chrome — clearly the CLIENT side */}
+      <div className="overflow-hidden rounded-xl border border-brand/25 bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]">
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-brand-soft/50 px-4 py-2.5">
+          <span className="flex items-center gap-2 text-xs font-semibold text-brand-dark">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Portal del declarante · Higiene Natura Iberia
+          </span>
+          <span className="text-[11px] text-muted">Acceso seguro por enlace</span>
+        </div>
+
+        {/* Declaration summary */}
+        <div className="border-b border-line px-4 py-3">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+            <FileText className="h-3.5 w-3.5" />
+            Tu declaración · {dec.id}
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-3 text-xs">
+            <div>
+              <p className="text-muted">Período</p>
+              <p className="mt-0.5 font-semibold text-ink">{dec.periodo}</p>
+            </div>
+            <div>
+              <p className="text-muted">Cuota declarada</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-ink">
+                {formatEUR(dec.cuotaDeclaradaEur)}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted">Cuota corregida</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-ink">
+                {formatEUR(dec.cuotaCalculadaEur)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirmed finding */}
+        {hallazgo && (
+          <div className="border-b border-line px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+              Lo que hemos detectado
+            </p>
+            <div className="mt-2 flex items-start gap-2.5 rounded-lg border border-warning/25 bg-warning-soft/50 px-3 py-2.5">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{hallazgo.tipo}</p>
+                <p className="mt-0.5 text-xs leading-snug text-ink-soft text-pretty">
+                  {hallazgo.descripcion}
+                </p>
+                <p className="mt-1.5 text-xs font-medium text-ink">
+                  Impacto en tu cuota:{" "}
+                  <span className="tabular-nums text-danger">{formatEUR(hallazgo.impactoEur)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chat with assigned case agent */}
+        <ClientPortalChat mensajes={chatPortal005} agente={agenteCaso005} />
+      </div>
+    </FadeUp>
+  );
+}
+
+function RevisionAccionVisual() {
+  const [stage, setStage] = useState<"operator" | "wiping" | "portal">("operator");
+
+  const handleSend = () => {
+    setStage("wiping");
+    setTimeout(() => setStage("portal"), 1400);
+  };
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <AnimatePresence mode="wait">
+        {stage === "portal" ? (
+          <motion.div
+            key="portal"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="shrink-0"
+          >
+            <ClientPortalView />
+          </motion.div>
+        ) : (
+          <motion.div key="operator" exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="shrink-0">
+            <OperatorAccionPanel onSend={handleSend} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {stage === "wiping" && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.4, times: [0, 0.25, 0.7, 1], ease: "easeInOut" }}
+            exit={{ opacity: 0 }}
+          >
+            <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-muted">
+              <Link2 className="h-4 w-4" />
+              Enviando enlace al cliente…
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 5 Visual — Full thread + FindingsPanel
 // ─────────────────────────────────────────────────────────────────────────────
 function DialogoVisual() {
-  const exchange = pickExchangePair(dec.correspondencia ?? []);
+  const mensajes = dec.correspondencia ?? [];
+  const totalImpacto = dec.hallazgos.reduce((a, h) => a + h.impactoEur, 0);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      {/* Confirmed findings with € impact, surfaced ABOVE the thread */}
       <FadeUp className="w-full shrink-0">
-        <CorrespondenciaThread
-          mensajes={exchange}
-          empresaNombre={dec.empresa}
-          senderDomain={senderDomain}
-          bandejaLabel="Expediente · trazabilidad de intercambios"
-          layout="chat"
-        />
-      </FadeUp>
-
-      <FadeUp delay={0.12} className="w-full shrink-0">
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="border-b border-line px-5 py-3.5">
-            <p className="text-sm font-semibold text-ink">Hallazgos confirmados</p>
-            <p className="mt-0.5 text-xs text-muted">
-              La respuesta del cliente confirma el error — el hallazgo queda validado
-            </p>
+          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+            <div>
+              <p className="text-sm font-semibold text-ink">Hallazgos confirmados</p>
+              <p className="mt-0.5 text-xs text-muted">
+                Validados con la respuesta del cliente antes del veredicto
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[11px] uppercase tracking-wide text-muted">Impacto total</p>
+              <p className="text-base font-bold tabular-nums text-danger">
+                {formatEUR(totalImpacto)}
+              </p>
+            </div>
           </div>
           <div className="p-5">
-            <FindingsPanel hallazgos={dec.hallazgos} />
+            <FindingsPanel hallazgos={dec.hallazgos} confirmed />
           </div>
         </div>
+      </FadeUp>
+
+      {/* ALL communications — full thread, not just the first exchange */}
+      <FadeUp delay={0.12} className="w-full shrink-0">
+        <CorrespondenciaThread
+          mensajes={mensajes}
+          empresaNombre={dec.empresa}
+          senderDomain={senderDomain}
+          bandejaLabel="Expediente · todas las comunicaciones"
+          layout="chat"
+        />
       </FadeUp>
     </div>
   );
@@ -615,14 +778,23 @@ const QUEUE_SUMMARY_CHIPS: { estado: EstadoAgente; label: string }[] = [
   { estado: "recibida", label: "Recibidas" },
 ];
 
-/** Representative slice of the workload — mirrors /plataforma/auditoria. */
+/** A long slice of the workload — conveys real volume in the queue. */
 const QUEUE_SHOWCASE_IDS = [
-  "DEC-001",
-  "DEC-003",
   "DEC-005",
+  "DEC-016",
+  "DEC-012",
+  "DEC-013",
+  "DEC-019",
   "DEC-006",
+  "DEC-014",
+  "DEC-020",
   "DEC-009",
   "DEC-007",
+  "DEC-017",
+  "DEC-001",
+  "DEC-011",
+  "DEC-015",
+  "DEC-018",
 ] as const;
 
 function countByEstado(items: Declaracion[]) {
@@ -714,10 +886,72 @@ function QueueAccordionItem({
   );
 }
 
+/** Human-in-the-loop verdict: approve/reject each finding → derived veredicto. */
+function VeredictoHITL() {
+  const [decisions, setDecisions] = useState<Record<string, FindingDecision>>(() =>
+    Object.fromEntries(dec.hallazgos.map((h) => [h.id, "aprobado" as FindingDecision]))
+  );
+
+  const onDecide = (id: string, decision: FindingDecision) =>
+    setDecisions((prev) => ({ ...prev, [id]: decision }));
+
+  const aprobados = dec.hallazgos.filter((h) => decisions[h.id] === "aprobado");
+  const impactoAprobado = aprobados.reduce((a, h) => a + h.impactoEur, 0);
+  const veredicto = aprobados.length > 0 ? "no_apto" : "apto";
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+        <div>
+          <p className="text-sm font-semibold text-ink">Veredicto · revisión humana</p>
+          <p className="mt-0.5 text-xs text-muted">
+            El operador aprueba o descarta cada hallazgo — el veredicto se deriva de su decisión
+          </p>
+        </div>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
+            veredicto === "no_apto" ? "bg-danger-soft text-danger" : "bg-ok-soft text-ok"
+          )}
+        >
+          {veredicto === "no_apto" ? "No apto" : "Apto"}
+        </span>
+      </div>
+
+      <div className="p-5">
+        <FindingsPanel hallazgos={dec.hallazgos} decisions={decisions} onDecide={onDecide} />
+      </div>
+
+      <div className="flex items-center gap-2.5 border-t border-line bg-canvas/60 px-5 py-3">
+        {veredicto === "no_apto" ? (
+          <XCircle className="h-4 w-4 shrink-0 text-danger" />
+        ) : (
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-ok" />
+        )}
+        <p className="text-xs leading-snug text-ink-soft">
+          {veredicto === "no_apto" ? (
+            <>
+              {aprobados.length} hallazgo{aprobados.length !== 1 ? "s" : ""} aprobado
+              {aprobados.length !== 1 ? "s" : ""} → declaración{" "}
+              <strong className="font-semibold text-danger">NO APTA</strong> · impacto{" "}
+              <strong className="font-semibold tabular-nums">{formatEUR(impactoAprobado)}</strong>
+            </>
+          ) : (
+            <>
+              Todos los hallazgos descartados → declaración{" "}
+              <strong className="font-semibold text-ok">APTA</strong>
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function VeredictoVisual() {
   const counts = useMemo(() => countByEstado(declaraciones), []);
   const showcase = QUEUE_SHOWCASE_IDS.map((id) => declaraciones.find((d) => d.id === id)!);
-  const [expandedId, setExpandedId] = useState<string | null>(dec.id);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const toggleExpanded = (id: string) => {
     setExpandedId((current) => (current === id ? null : id));
@@ -725,13 +959,18 @@ function VeredictoVisual() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      {/* Human-in-the-loop verdict for the featured expediente */}
       <FadeUp className="shrink-0">
+        <VeredictoHITL />
+      </FadeUp>
+
+      <FadeUp delay={0.1} className="shrink-0">
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <div className="border-b border-line px-5 py-3.5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               Módulo Auditoría
             </p>
-            <p className="mt-0.5 text-sm font-semibold text-ink">Carga de trabajo del agente</p>
+            <p className="mt-0.5 text-sm font-semibold text-ink">Cola de validación del período</p>
             <p className="mt-0.5 text-xs text-muted">
               {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
             </p>
@@ -874,6 +1113,43 @@ const steps: Step[] = [
   },
   {
     n: 3,
+    nombre: "Revisión y acción",
+    titulo: "Revisión y acción del agente",
+    explicacion: (
+      <>
+        <StepAsideSection title="Human-in-the-loop">
+          <p>
+            El agente no actúa solo: presenta el caso al operador con las{" "}
+            <strong className="text-ink">acciones sugeridas</strong>. Ha pasado esto — podéis
+            hacer X o Y.
+          </p>
+        </StepAsideSection>
+        <StepAsideSection title="Dos formas de resolver">
+          <StepAsideList
+            items={[
+              "Enviar un email formal con la consulta.",
+              "Enviar un enlace al cliente — la vía recomendada.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideSection title="El portal del cliente">
+          <StepAsideList
+            items={[
+              "El cliente entra y ve su declaración y los hallazgos.",
+              "Chatea con su agente de caso asignado.",
+              "Se resuelve la duda con cercanía, no con un expediente frío.",
+            ]}
+          />
+        </StepAsideSection>
+        <StepAsideMeta>
+          Atención al cliente excelente, dentro de la propia plataforma.
+        </StepAsideMeta>
+      </>
+    ),
+    visual: <RevisionAccionVisual />,
+  },
+  {
+    n: 4,
     nombre: "Consulta",
     titulo: "El agente escribe al cliente",
     explicacion: (
@@ -909,7 +1185,7 @@ const steps: Step[] = [
     visual: <ConsultaVisual />,
   },
   {
-    n: 4,
+    n: 5,
     nombre: "Diálogo",
     titulo: "Diálogo con el cliente",
     explicacion: (
@@ -943,39 +1219,37 @@ const steps: Step[] = [
     visual: <DialogoVisual />,
   },
   {
-    n: 5,
+    n: 6,
     nombre: "Validación",
-    titulo: "Validación y cierre",
+    titulo: "Validación y veredicto",
     explicacion: (
       <>
-        <StepAsideSection title="La plataforma real">
+        <StepAsideSection title="Veredicto con criterio humano">
           <p>
-            El agente no cierra un expediente aislado: opera sobre la{" "}
-            <strong className="text-ink">carga de trabajo completa</strong> del período —
-            aptas, no aptas, consultas abiertas y casos escalados conviven en el mismo módulo.
+            El operador <strong className="text-ink">aprueba o descarta</strong> cada hallazgo.
+            El veredicto APTO / NO APTO se deriva de su decisión — no es automático.
           </p>
         </StepAsideSection>
-        <StepAsideSection title="Qué muestra este paso">
+        <StepAsideSection title="Cómo se decide">
           <StepAsideList
             items={[
-              "Resumen por estado — igual que en /plataforma/auditoria.",
-              "Expedientes expandibles con resumen y registro de actividad.",
-              "Trazabilidad completa: recepción, análisis, correos y dictamen.",
+              "Aprobar un hallazgo lo incluye en el veredicto.",
+              "Descartarlo lo excluye y recalcula el impacto.",
+              "Con un hallazgo aprobado, la declaración pasa a NO APTA.",
             ]}
           />
         </StepAsideSection>
-        <StepAsideSection title="Resolución automática">
+        <StepAsideSection title="Una cola larga de casos">
           <StepAsideList
             items={[
-              "La mayoría cierra sola con dictamen APTO.",
-              "NO APTO solo cuando el hallazgo queda confirmado.",
-              "En revisión humana solo los casos de baja confianza.",
+              "Toda la carga del período en un mismo módulo.",
+              "Aptas, no aptas, consultas abiertas y casos escalados.",
+              "La mayoría cierra sola; el humano decide solo lo dudoso.",
             ]}
           />
         </StepAsideSection>
         <StepAsideMeta>
-          Este expediente:{" "}
-          <strong className="not-italic text-ink">NO APTO</strong> · confianza{" "}
+          {declaraciones.length} declaraciones en cola · este expediente confianza{" "}
           {Math.round(dec.confianza * 100)}%
         </StepAsideMeta>
       </>

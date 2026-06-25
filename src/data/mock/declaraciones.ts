@@ -1,4 +1,4 @@
-import type { Declaracion, Material, SigLine, Hallazgo, Formato, EmailMensaje } from "@/data/types";
+import type { Declaracion, Material, SigLine, Hallazgo, Formato, EmailMensaje, AnalisisCheck, ChatMensaje } from "@/data/types";
 
 export const tarifas: Record<Material, number> = {
   "PET":           0.471,
@@ -549,6 +549,277 @@ const calc007 = declared007 + (cuota007Calculada - cuota007Declarada);
 const calc009 = declared009 + (cuota009Calculada - cuota009Declarada);
 
 // ─────────────────────────────────────────────────────────────
+// Queue padding (wt-auditoria) — additional realistic declarations
+// so the validación queue (Acto 1, paso 6) feels like real volume.
+// Lightweight: SIG lines + a single representative formato each.
+// ─────────────────────────────────────────────────────────────
+function fmt(
+  decId: string,
+  nombre: string,
+  producto: string,
+  ventas: number,
+  destino: "Doméstico" | "Comercial" | "Industrial",
+  comps: { envase: string; material: string; color: string; rigidez: "Rígido" | "Flexible"; gr: number; uds: number }[],
+): Formato {
+  return {
+    id: 1,
+    nombre,
+    producto,
+    ventas,
+    destino,
+    componentes: comps.map((c, i) => {
+      const total = c.uds;
+      const pv = (c.gr / 1000) * (tarifas[(c.material as Material)] ?? 0.1) * total;
+      return {
+        id: `${decId}-F1-C${i + 1}`,
+        envase: c.envase,
+        material: c.material,
+        color: c.color,
+        rigidez: c.rigidez,
+        grEnvase: c.gr,
+        unidades: 1,
+        unidadesTotales: total,
+        costeUnitDef: Math.round((pv / total) * 1e6) / 1e6,
+        puntoVerdeDef: Math.round(pv * 100) / 100,
+      };
+    }),
+  };
+}
+
+interface QueueSeed {
+  id: string;
+  empresa: string;
+  cif: string;
+  sector: string;
+  fecha: string;
+  lines: SigLine[];
+  formato: Formato;
+  estadoAgente: Declaracion["estadoAgente"];
+  estado: Declaracion["estado"];
+  confianza: number;
+  veredicto: Declaracion["veredicto"];
+  consultasAbiertas: number;
+  hallazgos: Hallazgo[];
+  deltaEur: number;
+  dictamen: string;
+}
+
+const queueSeeds: QueueSeed[] = [
+  {
+    id: "DEC-010",
+    empresa: "Embutidos La Dehesa S.L.",
+    cif: "B91047328",
+    sector: "Alimentación",
+    fecha: "2025-04-09",
+    lines: [line("010-L1", "Film plástico", 5_200_000, 9), line("010-L2", "Papel/Cartón", 5_200_000, 12)],
+    formato: fmt("010", "Loncheado Film 150g", "embutidos", 5_200_000, "Doméstico", [
+      { envase: "Lámina, film, flow pack", material: "Film plástico", color: "Transparente o Light Blue", rigidez: "Flexible", gr: 9, uds: 5_200_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 12, uds: 5_200_000 },
+    ]),
+    estadoAgente: "apto", estado: "verificada", confianza: 0.96, veredicto: "apto", consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Declaración conforme. Film de envasado y etiquetado coherentes con la gama de loncheados. Tarifas correctas.",
+  },
+  {
+    id: "DEC-011",
+    empresa: "Aceites del Sur Dorado S.A.",
+    cif: "A14820937",
+    sector: "Alimentación",
+    fecha: "2025-04-11",
+    lines: [line("011-L1", "PET", 3_900_000, 46), line("011-L2", "PEAD", 3_900_000, 5), line("011-L3", "Papel/Cartón", 3_900_000, 13)],
+    formato: fmt("011", "Botella Aceite PET 1L", "aceites", 3_900_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "PET", color: "Color", rigidez: "Rígido", gr: 46, uds: 3_900_000 },
+      { envase: "Tapones, tapas", material: "PEAD", color: "Color", rigidez: "Rígido", gr: 5, uds: 3_900_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 13, uds: 3_900_000 },
+    ]),
+    estadoAgente: "apto", estado: "verificada", confianza: 0.97, veredicto: "apto", consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Declaración verificada. Relación botella/tapón/etiqueta coherente con el formato de 1 litro.",
+  },
+  {
+    id: "DEC-012",
+    empresa: "Cervezas Montaña Brava S.L.",
+    cif: "B72310984",
+    sector: "Bebidas",
+    fecha: "2025-04-13",
+    lines: [line("012-L1", "Vidrio", 6_000_000, 240), line("012-L2", "Acero", 6_000_000, 3), line("012-L3", "Papel/Cartón", 6_000_000, 9)],
+    formato: fmt("012", "Botellín Vidrio 33cl", "cerveza", 6_000_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "Vidrio", color: "Color", rigidez: "Rígido", gr: 240, uds: 6_000_000 },
+      { envase: "Tapones, tapas", material: "Acero", color: "Color", rigidez: "Rígido", gr: 3, uds: 6_000_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 9, uds: 6_000_000 },
+    ]),
+    estadoAgente: "consulta_enviada", estado: "con_hallazgos", confianza: 0.83, veredicto: null, consultasAbiertas: 1,
+    hallazgos: [{
+      id: "H012-1", tipo: "Envase no declarado", severidad: "media",
+      descripcion: "El pack agrupador de cartón (caja de 24) no figura en la declaración pese a constar en la ficha logística del producto.",
+      impactoEur: 4120,
+    }],
+    deltaEur: -4120,
+    dictamen: "Posible omisión del agrupador de cartón. Consulta enviada al cliente para confirmación documental.",
+  },
+  {
+    id: "DEC-013",
+    empresa: "Snacks Crujientes Mediterráneo S.A.",
+    cif: "A38209174",
+    sector: "Alimentación",
+    fecha: "2025-04-16",
+    lines: [line("013-L1", "Film plástico", 12_400_000, 6), line("013-L2", "Papel/Cartón", 1_030_000, 70)],
+    formato: fmt("013", "Bolsa Snack Film 120g", "snacks", 12_400_000, "Doméstico", [
+      { envase: "Lámina, film, flow pack", material: "Film plástico", color: "Color", rigidez: "Flexible", gr: 6, uds: 12_400_000 },
+      { envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", gr: 70, uds: 1_030_000 },
+    ]),
+    estadoAgente: "respuesta_recibida", estado: "con_hallazgos", confianza: 0.86, veredicto: null, consultasAbiertas: 0,
+    hallazgos: [{
+      id: "H013-1", tipo: "Material mal clasificado", severidad: "media",
+      descripcion: "La bolsa multicapa se declaró como Papel/Cartón cuando su componente predominante es film plástico complejo. Reclasificación pendiente.",
+      impactoEur: 6240,
+    }],
+    deltaEur: -6240,
+    dictamen: "El cliente ha respondido aportando ficha técnica del laminado. Pendiente de reclasificación material a Film plástico.",
+  },
+  {
+    id: "DEC-014",
+    empresa: "Detergentes Brillo Total S.L.",
+    cif: "B60728415",
+    sector: "Droguería y perfumería",
+    fecha: "2025-04-19",
+    lines: [line("014-L1", "PEAD", 4_500_000, 64), line("014-L2", "PEAD", 4_500_000, 9), line("014-L3", "Papel/Cartón", 4_500_000, 14)],
+    formato: fmt("014", "Garrafa Detergente PEAD 3L", "limpieza", 4_500_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "PEAD", color: "Color", rigidez: "Rígido", gr: 64, uds: 4_500_000 },
+      { envase: "Tapones, tapas", material: "PEAD", color: "Color", rigidez: "Rígido", gr: 9, uds: 4_500_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 14, uds: 4_500_000 },
+    ]),
+    estadoAgente: "en_analisis", estado: "en_revision", confianza: 0.71, veredicto: null, consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Análisis en curso. Cruce de pesos y benchmark sectorial del formato garrafa 3L en validación.",
+  },
+  {
+    id: "DEC-015",
+    empresa: "Frutas y Hortalizas del Levante S.A.",
+    cif: "A49037281",
+    sector: "Alimentación",
+    fecha: "2025-04-21",
+    lines: [line("015-L1", "Papel/Cartón", 7_800_000, 320), line("015-L2", "Film plástico", 7_800_000, 4)],
+    formato: fmt("015", "Caja Cartón Hortalizas 5kg", "hortofrutícola", 7_800_000, "Comercial", [
+      { envase: "Caja, bandeja", material: "Papel/Cartón", color: "Sin Color", rigidez: "Rígido", gr: 320, uds: 7_800_000 },
+      { envase: "Lámina, film, flow pack", material: "Film plástico", color: "Transparente o Light Blue", rigidez: "Flexible", gr: 4, uds: 7_800_000 },
+    ]),
+    estadoAgente: "apto", estado: "verificada", confianza: 0.95, veredicto: "apto", consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Declaración conforme. Caja de cartón y film de paletización coherentes con el volumen de campaña.",
+  },
+  {
+    id: "DEC-016",
+    empresa: "Café Aroma Intenso S.L.",
+    cif: "B83902471",
+    sector: "Alimentación",
+    fecha: "2025-04-24",
+    lines: [line("016-L1", "Film plástico", 9_200_000, 11), line("016-L2", "Aluminio", 9_200_000, 2), line("016-L3", "Papel/Cartón", 9_200_000, 8)],
+    formato: fmt("016", "Paquete Café Film 250g", "café", 9_200_000, "Doméstico", [
+      { envase: "Lámina, film, flow pack", material: "Film plástico", color: "Color", rigidez: "Flexible", gr: 11, uds: 9_200_000 },
+      { envase: "Tapones, tapas", material: "Aluminio", color: "Color", rigidez: "Flexible", gr: 2, uds: 9_200_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 8, uds: 9_200_000 },
+    ]),
+    estadoAgente: "no_apto", estado: "con_hallazgos", confianza: 0.9, veredicto: "no_apto", consultasAbiertas: 0,
+    hallazgos: [{
+      id: "H016-1", tipo: "Tarifa incorrecta aplicada", severidad: "alta",
+      descripcion: "La válvula de aluminio del paquete se tarificó como Acero (0,073 €/kg) en lugar de Aluminio (0,114 €/kg). Diferencia confirmada por el cliente.",
+      impactoEur: 7550,
+    }],
+    deltaEur: -7550,
+    dictamen: "Error de tarifa confirmado por el cliente. Declaración original marcada como NO APTO; complementaria en curso.",
+  },
+  {
+    id: "DEC-017",
+    empresa: "Vinagres Tradición Andaluza S.L.",
+    cif: "B27384910",
+    sector: "Alimentación",
+    fecha: "2025-04-27",
+    lines: [line("017-L1", "Vidrio", 2_100_000, 410), line("017-L2", "PEAD", 2_100_000, 4), line("017-L3", "Papel/Cartón", 2_100_000, 11)],
+    formato: fmt("017", "Botella Vinagre Vidrio 50cl", "vinagres", 2_100_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "Vidrio", color: "Color", rigidez: "Rígido", gr: 410, uds: 2_100_000 },
+      { envase: "Tapones, tapas", material: "PEAD", color: "Color", rigidez: "Rígido", gr: 4, uds: 2_100_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 11, uds: 2_100_000 },
+    ]),
+    estadoAgente: "recibida", estado: "en_revision", confianza: 0.6, veredicto: null, consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Declaración recibida. Pendiente de inicio de análisis monográfico por el agente.",
+  },
+  {
+    id: "DEC-018",
+    empresa: "Pastas Artesanas del Norte S.A.",
+    cif: "A55019384",
+    sector: "Alimentación",
+    fecha: "2025-04-30",
+    lines: [line("018-L1", "Papel/Cartón", 8_600_000, 28), line("018-L2", "Film plástico", 8_600_000, 5)],
+    formato: fmt("018", "Caja Pasta Cartón 500g", "pasta", 8_600_000, "Doméstico", [
+      { envase: "Caja, bandeja", material: "Papel/Cartón", color: "Color", rigidez: "Rígido", gr: 28, uds: 8_600_000 },
+      { envase: "Lámina, film, flow pack", material: "Film plástico", color: "Transparente o Light Blue", rigidez: "Flexible", gr: 5, uds: 8_600_000 },
+    ]),
+    estadoAgente: "apto", estado: "verificada", confianza: 0.98, veredicto: "apto", consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Declaración conforme. Ventana de film y caja de cartón coherentes con el formato de pasta seca.",
+  },
+  {
+    id: "DEC-019",
+    empresa: "Salsas Gourmet Bahía S.L.",
+    cif: "B40128765",
+    sector: "Alimentación",
+    fecha: "2025-05-02",
+    lines: [line("019-L1", "Vidrio", 3_300_000, 290), line("019-L2", "Acero", 3_300_000, 5), line("019-L3", "Papel/Cartón", 3_300_000, 7)],
+    formato: fmt("019", "Tarro Salsa Vidrio 350g", "salsas", 3_300_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "Vidrio", color: "Transparente o Light Blue", rigidez: "Rígido", gr: 290, uds: 3_300_000 },
+      { envase: "Tapones, tapas", material: "Acero", color: "Color", rigidez: "Rígido", gr: 5, uds: 3_300_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 7, uds: 3_300_000 },
+    ]),
+    estadoAgente: "consulta_enviada", estado: "con_hallazgos", confianza: 0.82, veredicto: null, consultasAbiertas: 1,
+    hallazgos: [{
+      id: "H019-1", tipo: "Incoherencia peso/unidades", severidad: "media",
+      descripcion: "El peso unitario del tarro (290 g) se desvía un 22% del benchmark del formato 350g. Posible error de captura pendiente de confirmación.",
+      impactoEur: 3380,
+    }],
+    deltaEur: 3380,
+    dictamen: "Desviación de peso por encima del umbral. Consulta enviada solicitando ficha técnica del tarro.",
+  },
+  {
+    id: "DEC-020",
+    empresa: "Productos de Limpieza Aurora S.A.",
+    cif: "A66471209",
+    sector: "Droguería y perfumería",
+    fecha: "2025-05-06",
+    lines: [line("020-L1", "PET", 5_700_000, 33), line("020-L2", "PEAD", 5_700_000, 6), line("020-L3", "Papel/Cartón", 5_700_000, 10)],
+    formato: fmt("020", "Spray Limpieza PET 750ml", "limpieza", 5_700_000, "Doméstico", [
+      { envase: "Botella/Garrafa", material: "PET", color: "Color", rigidez: "Rígido", gr: 33, uds: 5_700_000 },
+      { envase: "Elementos para la seguridad y uso del producto (asa, aplicador, dosificador, precinto, cápsula..)", material: "PEAD", color: "Color", rigidez: "Rígido", gr: 6, uds: 5_700_000 },
+      { envase: "Etiqueta < 2/3", material: "Papel/Cartón", color: "Color", rigidez: "Flexible", gr: 10, uds: 5_700_000 },
+    ]),
+    estadoAgente: "en_revision", estado: "en_revision", confianza: 0.64, veredicto: null, consultasAbiertas: 0, hallazgos: [], deltaEur: 0,
+    dictamen: "Baja confianza por perfil multiformato. Remitida a revisión humana para contraste del gatillo dosificador.",
+  },
+];
+
+const declaracionesQueue: Declaracion[] = queueSeeds.map((s) => {
+  const declarada = formatoTotal([s.formato]);
+  return {
+    id: s.id,
+    empresa: s.empresa,
+    cif: s.cif,
+    sector: s.sector,
+    ejercicio: 2025,
+    fechaRecepcion: s.fecha,
+    sigLines: s.lines,
+    cuotaDeclaradaEur: declarada,
+    cuotaCalculadaEur: declarada + s.deltaEur,
+    hallazgos: s.hallazgos,
+    estado: s.estado,
+    confianza: s.confianza,
+    dictamen: s.dictamen,
+    periodo: 56,
+    canal: "PLATAFORMA 2.0",
+    importeDaeEur: declarada,
+    formatos: [s.formato],
+    estadoAgente: s.estadoAgente,
+    correspondencia: [],
+    consultasAbiertas: s.consultasAbiertas,
+    veredicto: s.veredicto,
+  };
+});
+
+// ─────────────────────────────────────────────────────────────
 // Final export
 // ─────────────────────────────────────────────────────────────
 export const declaraciones: Declaracion[] = [
@@ -767,5 +1038,116 @@ export const declaraciones: Declaracion[] = [
     correspondencia: [],
     consultasAbiertas: 0,
     veredicto: null,
+  },
+  ...declaracionesQueue,
+];
+
+// ─────────────────────────────────────────────────────────────
+// APPENDED (wt-auditoria)
+// 1) Deep analysis checks for the featured DEC-005 (Acto 1, paso 2)
+// 2) Client-portal chat for the human-in-the-loop step (paso 3)
+// 3) A longer validación queue (paso 6) — declaracionesQueue above
+// ─────────────────────────────────────────────────────────────
+
+/** Per-validation deep analysis for DEC-005 — drives the audit beats. */
+export const analisisChecks005: AnalisisCheck[] = [
+  {
+    id: "AC005-1",
+    titulo: "Integridad del envase",
+    comprobacion:
+      "Todos los formatos declaran sus componentes obligatorios (envase principal, cierre y etiqueta). Sin componentes huérfanos.",
+    evidencia: "2 formatos · 5 componentes · estructura completa",
+    deltaEur: 0,
+    confianza: 0.99,
+    estado: "ok",
+  },
+  {
+    id: "AC005-2",
+    titulo: "Coherencia de pesos",
+    comprobacion:
+      "kgTotales = unidades × pesoUnitarioG ÷ 1.000 recomputado línea a línea. Las 5 líneas cuadran al kg.",
+    evidencia: "Recalculado sobre hoja SIG · desviación 0 kg",
+    deltaEur: 0,
+    confianza: 0.98,
+    estado: "ok",
+  },
+  {
+    id: "AC005-3",
+    titulo: "Clasificación de materiales",
+    comprobacion:
+      "Cada material contrastado con el catálogo Ecoembes 2025. PEAD, Papel/Cartón y Film plástico reconocidos; ninguna referencia desconocida.",
+    evidencia: "Catálogo de materiales Ecoembes 2025",
+    deltaEur: 0,
+    confianza: 0.97,
+    estado: "ok",
+  },
+  {
+    id: "AC005-4",
+    titulo: "Cruce de tarifas por material",
+    comprobacion:
+      "Línea 005-L4 (Gel Ducha PEAD): tarifa aplicada 0,049 €/kg = tarifa de Madera. La tarifa PEAD vigente es 0,389 €/kg. Diferencia 0,340 €/kg sobre 25.200 kg.",
+    evidencia: "Tabla oficial de tarifas €/kg · período 56",
+    deltaEur: impactoTarifa,
+    confianza: 0.94,
+    estado: "alerta",
+  },
+  {
+    id: "AC005-5",
+    titulo: "Coherencia de formato",
+    comprobacion:
+      "El material físico del envase (PEAD, según ficha de formato) no coincide con la familia tarifaria aplicada (Madera). Incongruencia material ↔ tarifa.",
+    evidencia: "Ficha de formato 005-F2 · familia PEAD",
+    deltaEur: 0,
+    confianza: 0.92,
+    estado: "alerta",
+  },
+];
+
+/** Suma del impacto derivado de las comprobaciones con alerta. */
+export const impactoAnalisis005 = analisisChecks005.reduce((a, c) => a + c.deltaEur, 0);
+
+/** Chat staged entre el cliente y su agente de caso asignado (portal). */
+export const agenteCaso005 = "Lucía Fernández · Agente de caso Ecoembes";
+
+export const chatPortal005: ChatMensaje[] = [
+  {
+    id: "CH005-1",
+    de: "agente",
+    autor: "Lucía Fernández · Ecoembes",
+    texto:
+      "Hola Carlos, soy Lucía, tu agente de caso en Ecoembes. Hemos revisado vuestra declaración del período 56 y queríamos comentarte un detalle sin que os preocupéis: es muy fácil de resolver.",
+    hora: "09:41",
+  },
+  {
+    id: "CH005-2",
+    de: "agente",
+    autor: "Lucía Fernández · Ecoembes",
+    texto:
+      "En la línea del Gel Ducha PEAD 400 ml se ha aplicado la tarifa de Madera (0,049 €/kg) en lugar de la de PEAD (0,389 €/kg). Es el típico error de selección al elegir el material en la plataforma. El impacto en la cuota es de unos 8.568 €.",
+    hora: "09:42",
+  },
+  {
+    id: "CH005-3",
+    de: "cliente",
+    autor: "Carlos Ruiz · Higiene Natura Iberia",
+    texto:
+      "Hola Lucía, gracias por avisar. Tienes razón, el envase es PEAD. ¿Qué tenemos que hacer para corregirlo?",
+    hora: "09:48",
+  },
+  {
+    id: "CH005-4",
+    de: "agente",
+    autor: "Lucía Fernández · Ecoembes",
+    texto:
+      "Nada complicado: presentáis una declaración complementaria con la tarifa PEAD correcta en esa línea. Yo te dejo aquí el borrador ya cumplimentado para que solo tengáis que validarlo. Tenéis hasta el 30 de junio, con margen de sobra.",
+    hora: "09:50",
+  },
+  {
+    id: "CH005-5",
+    de: "cliente",
+    autor: "Carlos Ruiz · Higiene Natura Iberia",
+    texto:
+      "Perfecto, mucho más sencillo de lo que pensaba. Lo validamos hoy mismo. Gracias por la ayuda.",
+    hora: "09:53",
   },
 ];
