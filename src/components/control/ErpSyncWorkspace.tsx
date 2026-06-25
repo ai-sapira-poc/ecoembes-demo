@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Card } from "@/components/ui/Card";
 import { FadeUp } from "@/components/motion/Reveal";
 import { bpoMes, bpoDesglose, bpoErpMeta } from "@/data/index";
-import { formatEUR, formatNum, formatPct } from "@/lib/utils";
+import { formatEUR, formatNum } from "@/lib/utils";
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const TOTAL = bpoMes.totalDeclaraciones;
@@ -173,7 +173,7 @@ export function ErpSyncWorkspace() {
           <div className="flex items-center justify-between border-b border-line px-6 py-3">
             <span className="flex items-center gap-2 text-xs text-muted">
               <Server className="h-3.5 w-3.5" />
-              Sincronización con el ERP · {bpoErpMeta.sistema}
+              Sincronización con el ERP
             </span>
             <AnimatePresence mode="wait">
               {phase === "ready" ? (
@@ -243,12 +243,11 @@ export function ErpSyncWorkspace() {
                     </div>
                   </div>
                 </div>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs sm:grid-cols-4">
+                <dl className="grid grid-cols-3 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs">
                   {[
                     { k: "Período", v: bpoErpMeta.periodo },
                     { k: "Origen", v: bpoErpMeta.modulo },
                     { k: "Última sync", v: bpoErpMeta.ultimaSync },
-                    { k: "Cobertura previa", v: formatPct((bpoMes.importeMuestreadoEur / bpoMes.importeTotalEur) * 100) },
                   ].map((m) => (
                     <div key={m.k}>
                       <dt className="text-muted">{m.k}</dt>

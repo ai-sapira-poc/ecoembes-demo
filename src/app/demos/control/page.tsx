@@ -22,7 +22,7 @@ import {
   revisionItems,
 } from "@/data/index";
 import type { ConciliacionRecord } from "@/data/types";
-import { formatEUR, formatNum, formatPct } from "@/lib/utils";
+import { formatEUR, formatNum } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Derived constants
@@ -33,7 +33,6 @@ const IMPORTE_EN_RIESGO = BPO_IMPORTE_EN_RIESGO_EUR; // 26_900
 const CONFIDENCE_THRESHOLD = 0.8;
 const AUTO_DICTAMEN_COUNT = bpoMes.totalDeclaraciones - DISCREPANCY_COUNT; // 431
 const HITL_COUNT = DISCREPANCY_COUNT; // 6
-const MANUAL_PCT = (bpoMes.importeMuestreadoEur / bpoMes.importeTotalEur) * 100; // 1,6 %
 
 const CONTROL_HITL = revisionItems.filter(
   (item) => item.origen === "control" && item.registroId
@@ -212,9 +211,8 @@ const steps: Step[] = [
           <span className="font-semibold text-ink">100 % del volumen</span>:{" "}
           {formatNum(AUTO_DICTAMEN_COUNT)} registros cerrados de forma autónoma,{" "}
           {DISCREPANCY_COUNT} incidencias detectadas por{" "}
-          <span className="font-semibold text-ink">{formatEUR(IMPORTE_EN_RIESGO)}</span>. Antes
-          solo se verificaba el {formatPct(MANUAL_PCT)} manualmente — y las{" "}
-          {DISCREPANCY_COUNT} incidencias estaban todas fuera de esa muestra.
+          <span className="font-semibold text-ink">{formatEUR(IMPORTE_EN_RIESGO)}</span> que de
+          otro modo habrían pasado al cobro sin verificar.
         </p>
         <p className="mt-3 text-sm text-ink-soft leading-relaxed">
           El informe de control queda disponible en plataforma con evidencia por registro y
@@ -226,13 +224,10 @@ const steps: Step[] = [
       <CierreDashboard
         periodo={bpoMes.periodo}
         totalDeclaraciones={bpoMes.totalDeclaraciones}
-        importeTotalEur={bpoMes.importeTotalEur}
         discrepancias={DISCREPANCY_COUNT}
         importeEnRiesgoEur={IMPORTE_EN_RIESGO}
         cierreAutonomo={AUTO_DICTAMEN_COUNT}
         hitlCount={HITL_COUNT}
-        manualPct={MANUAL_PCT}
-        manualEur={bpoMes.importeMuestreadoEur}
       />
     ),
   },

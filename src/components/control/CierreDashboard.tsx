@@ -12,20 +12,17 @@ import { AlertTriangle, ArrowRight, CheckCircle, ClipboardCheck, Layers, ShieldC
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
-import { formatEUR, formatNum, formatPct } from "@/lib/utils";
+import { formatNum, formatPct } from "@/lib/utils";
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 interface CierreDashboardProps {
   periodo: string;
   totalDeclaraciones: number;
-  importeTotalEur: number;
   discrepancias: number;
   importeEnRiesgoEur: number;
   cierreAutonomo: number;
   hitlCount: number;
-  manualPct: number; // 1.6
-  manualEur: number; // 37_367
 }
 
 function CountUp({
@@ -52,56 +49,8 @@ function CountUp({
   return <motion.span className={className}>{display}</motion.span>;
 }
 
-// Coverage tie-back bars: 1,6% manual → 100% agente.
-function CoverageTieBack({ manualPct, manualEur, importeTotalEur }: { manualPct: number; manualEur: number; importeTotalEur: number }) {
-  const agentWidth = useMotionValue(manualPct);
-  const w = useTransform(agentWidth, (x) => `${x}%`);
-  const run = useRef(false);
-  useEffect(() => {
-    if (run.current) return;
-    run.current = true;
-    animate(agentWidth, 100, { duration: 1.2, delay: 0.5, ease: EASE_OUT });
-  }, [agentWidth]);
-
-  return (
-    <Card className="shrink-0">
-      <CardHeader>
-        <CardTitle>Cobertura del control</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <div className="mb-1.5 flex items-baseline justify-between text-xs">
-            <span className="font-semibold uppercase tracking-[0.12em] text-muted">Cierre manual previo</span>
-            <span className="tabular-nums text-muted">
-              {formatEUR(manualEur)} · {formatPct(manualPct)}
-            </span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-line">
-            <div className="h-full rounded-full bg-warning/50" style={{ width: `${manualPct}%` }} />
-          </div>
-        </div>
-        <div>
-          <div className="mb-1.5 flex items-baseline justify-between text-xs">
-            <span className="font-semibold uppercase tracking-[0.12em] text-brand-dark">Agente Sapira</span>
-            <span className="font-semibold tabular-nums text-ink">
-              {formatEUR(importeTotalEur)} · 100,0 %
-            </span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-brand-soft">
-            <motion.div className="h-full rounded-full bg-brand" style={{ width: w }} />
-          </div>
-        </div>
-        <p className="text-xs text-ink-soft">
-          De <strong className="font-semibold text-ink">{formatPct(manualPct)}</strong> verificado manualmente a{" "}
-          <strong className="font-semibold text-brand-dark">100 %</strong> — sin muestreo, con evidencia por registro.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
 const TRAZA = [
-  { ts: "23:58:04", msg: "Cierre importado desde SAP · 437 declaraciones · 2.338.519 €" },
+  { ts: "23:58:04", msg: "Cierre importado desde el ERP · 437 declaraciones · 2.338.519 €" },
   { ts: "23:58:09", msg: "Conciliación campo a campo con SGA iniciada" },
   { ts: "23:58:47", msg: "Conciliación completada · 431 OK · 6 incidencias" },
   { ts: "23:58:48", msg: "6 casos escalados a revisión humana (HITL)" },
@@ -111,13 +60,10 @@ const TRAZA = [
 export function CierreDashboard({
   periodo,
   totalDeclaraciones,
-  importeTotalEur,
   discrepancias,
   importeEnRiesgoEur,
   cierreAutonomo,
   hitlCount,
-  manualPct,
-  manualEur,
 }: CierreDashboardProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
@@ -139,7 +85,7 @@ export function CierreDashboard({
                 className="block text-5xl font-medium leading-none tracking-tight text-danger tabular-nums md:text-6xl"
               />
               <p className="mt-2 text-sm text-muted">incidencias detectadas</p>
-              <p className="mt-0.5 text-[11px] text-muted">fuera de la muestra manual</p>
+              <p className="mt-0.5 text-[11px] text-muted">en el 100 % del cierre</p>
             </div>
             <div className="bg-surface px-5 py-7 text-center">
               <CountUp
@@ -172,7 +118,6 @@ export function CierreDashboard({
           <StatCard
             label="Incidencias"
             value={formatNum(discrepancias)}
-            sub={formatEUR(importeEnRiesgoEur)}
             icon={AlertTriangle}
             valueTone="danger"
           />
@@ -181,10 +126,6 @@ export function CierreDashboard({
           <StatCard label="Cobertura" value="100 %" icon={ShieldCheck} valueTone="ok" />
         </RevealItem>
       </Reveal>
-
-      <FadeUp delay={0.08}>
-        <CoverageTieBack manualPct={manualPct} manualEur={manualEur} importeTotalEur={importeTotalEur} />
-      </FadeUp>
 
       {/* Resolved vs pending + traza */}
       <Reveal className="grid shrink-0 gap-3 sm:grid-cols-2">

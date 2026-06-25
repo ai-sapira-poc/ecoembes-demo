@@ -325,8 +325,8 @@ function buildDesglose(): BpoDesglose {
 export const bpoDesglose: BpoDesglose = buildDesglose();
 
 export const bpoErpMeta: ErpSyncMeta = {
-  sistema: "SAP S/4HANA",
-  modulo: "FI-CA · Cuentas a cobrar",
+  sistema: "el ERP",
+  modulo: "Cuentas a cobrar",
   conector: "Sapira Connect · OData",
   periodo: "Septiembre 2025",
   ejercicio: 2025,
