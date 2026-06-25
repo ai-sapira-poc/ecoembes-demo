@@ -3,14 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import {
-  UserCheck,
-  AlertTriangle,
-  ShieldCheck,
-  CheckCircle,
-  ArrowRight,
-} from "lucide-react";
-import { StatCard } from "@/components/ui/StatCard";
+import { ArrowRight } from "lucide-react";
+import { StatLedger } from "@/components/ui/StatLedger";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 import { RecentDeclaracionesTable } from "@/components/dashboard/RecentDeclaracionesTable";
@@ -52,37 +46,27 @@ export function DashboardView() {
       </RevealItem>
 
       <RevealItem>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Importe auditado"
-            value={formatEUR(kpis.importeAuditadoEur)}
-            icon={ShieldCheck}
-          />
-          <StatCard
-            label="Declaraciones aptas"
-            value={`${formatNum(kpis.declaracionesAptas ?? 0)} / ${formatNum(kpis.declaracionesAuditadas)}`}
-            icon={CheckCircle}
-            valueTone={
-              (kpis.declaracionesAptas ?? 0) === kpis.declaracionesAuditadas
-                ? "ok"
-                : (kpis.declaracionesNoAptas ?? 0) > 0
-                  ? "warning"
-                  : "ok"
-            }
-          />
-          <StatCard
-            label="Importe en riesgo"
-            value={formatEUR(kpis.importeEnRiesgoEur)}
-            icon={AlertTriangle}
-            valueTone={kpis.importeEnRiesgoEur > 0 ? "danger" : "ok"}
-          />
-          <StatCard
-            label="En revisión humana"
-            value={formatNum(revisionItems.length)}
-            icon={UserCheck}
-            valueTone={revisionItems.length > 0 ? "warning" : "ok"}
-          />
-        </div>
+        <StatLedger
+          items={[
+            {
+              label: "Importe auditado",
+              value: formatEUR(kpis.importeAuditadoEur),
+            },
+            {
+              label: "Declaraciones aptas",
+              value: `${formatNum(kpis.declaracionesAptas ?? 0)} / ${formatNum(kpis.declaracionesAuditadas)}`,
+            },
+            {
+              label: "Importe en riesgo",
+              value: formatEUR(kpis.importeEnRiesgoEur),
+              tone: kpis.importeEnRiesgoEur > 0 ? "danger" : "neutral",
+            },
+            {
+              label: "En revisión humana",
+              value: formatNum(revisionItems.length),
+            },
+          ]}
+        />
       </RevealItem>
 
       <RevealItem>

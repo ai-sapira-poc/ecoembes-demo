@@ -6,19 +6,18 @@ interface ConfidenceBadgeProps {
   className?: string;
 }
 
+/**
+ * Confidence is not an error state — high confidence shouldn't shout green and
+ * mid confidence shouldn't glow amber. It reads as quiet tabular text; only a
+ * genuinely low score (< 0.70, "send to a human") is colored.
+ */
 export function ConfidenceBadge({ value, className }: ConfidenceBadgeProps) {
-  const colorClass =
-    value >= 0.85
-      ? "bg-ok-soft text-ok"
-      : value >= 0.7
-      ? "bg-warning-soft text-warning"
-      : "bg-danger-soft text-danger";
-
+  const low = value < 0.7;
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none",
-        colorClass,
+        "inline-flex items-center tabular-nums text-xs font-semibold leading-none",
+        low ? "text-danger" : "text-muted",
         className
       )}
     >

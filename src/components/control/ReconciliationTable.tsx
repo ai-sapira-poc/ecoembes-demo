@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, ChevronDown, ChevronRight, Filter } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { StatusDot } from "@/components/ui/StatusDot";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import { InlineFilter } from "@/components/ui/InlineFilter";
 import { ToolbarSearchField } from "@/components/ui/ToolbarSearchField";
@@ -290,19 +290,23 @@ export function ReconciliationTable({
                         <ConfidenceBadge value={confianza} />
                       </TD>
                       <TD className="text-center">
-                        <Badge color={autonomo ? "ok" : "warning"}>
-                          {autonomo ? "Autónomo" : "Revisión humana"}
-                        </Badge>
+                        <StatusDot
+                          color={autonomo ? "ok" : "warning"}
+                          label={autonomo ? "Autónomo" : "Revisión humana"}
+                          loud={!autonomo}
+                        />
                       </TD>
                     </>
                   )}
 
-                  {/* Estado */}
+                  {/* Estado — quiet when conciliado; the discrepancia carries the row */}
                   <TD className="text-center">
                     <span className="inline-flex items-center gap-1.5">
-                      <Badge color={estadoColor[record.estado]}>
-                        {estadoLabel[record.estado]}
-                      </Badge>
+                      <StatusDot
+                        color={estadoColor[record.estado]}
+                        label={estadoLabel[record.estado]}
+                        loud={record.estado !== "ok"}
+                      />
                       {ticketId && (
                         <span className="hidden items-center gap-0.5 text-[11px] font-medium text-brand-dark sm:inline-flex">
                           Ver ticket

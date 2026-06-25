@@ -1,5 +1,4 @@
-import { ShieldCheck, AlertTriangle, CheckCircle, FileSearch } from "lucide-react";
-import { StatCard } from "@/components/ui/StatCard";
+import { StatLedger } from "@/components/ui/StatLedger";
 import { ReconciliationTable } from "@/components/control/ReconciliationTable";
 import { Reveal, RevealItem } from "@/components/motion/Reveal";
 import { bpoMes, BPO_IMPORTE_EN_RIESGO_EUR } from "@/data/mock/bpo";
@@ -21,31 +20,18 @@ export default function ControlPage() {
       </RevealItem>
 
       <RevealItem>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Declaraciones"
-            value={formatNum(bpoMes.totalDeclaraciones)}
-            icon={FileSearch}
-          />
-          <StatCard
-            label="Registros OK"
-            value={formatNum(OK_COUNT)}
-            icon={CheckCircle}
-            valueTone="ok"
-          />
-          <StatCard
-            label="Discrepancias"
-            value={formatNum(DISCREPANCIAS)}
-            icon={AlertTriangle}
-            valueTone={DISCREPANCIAS > 0 ? "danger" : "ok"}
-          />
-          <StatCard
-            label="Importe en riesgo"
-            value={formatEUR(BPO_IMPORTE_EN_RIESGO_EUR)}
-            icon={ShieldCheck}
-            valueTone={BPO_IMPORTE_EN_RIESGO_EUR > 0 ? "danger" : "ok"}
-          />
-        </div>
+        <StatLedger
+          items={[
+            { label: "Declaraciones", value: formatNum(bpoMes.totalDeclaraciones) },
+            { label: "Registros OK", value: formatNum(OK_COUNT) },
+            { label: "Discrepancias", value: formatNum(DISCREPANCIAS) },
+            {
+              label: "Importe en riesgo",
+              value: formatEUR(BPO_IMPORTE_EN_RIESGO_EUR),
+              tone: BPO_IMPORTE_EN_RIESGO_EUR > 0 ? "danger" : "neutral",
+            },
+          ]}
+        />
       </RevealItem>
 
       <RevealItem>

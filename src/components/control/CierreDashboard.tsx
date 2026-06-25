@@ -8,10 +8,10 @@ import {
   useTransform,
   animate,
 } from "framer-motion";
-import { AlertTriangle, ArrowRight, CheckCircle, ClipboardCheck, Layers, ShieldCheck } from "lucide-react";
+import { ArrowRight, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { FadeUp, Reveal, RevealItem } from "@/components/motion/Reveal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { StatCard } from "@/components/ui/StatCard";
+import { StatLedger } from "@/components/ui/StatLedger";
 import { formatNum, formatPct } from "@/lib/utils";
 
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -101,31 +101,17 @@ export function CierreDashboard({
         </Card>
       </FadeUp>
 
-      {/* KPI grid — platform StatCards */}
-      <Reveal className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-4">
-        <RevealItem>
-          <StatCard label="Conciliados" value={formatNum(totalDeclaraciones)} icon={Layers} />
-        </RevealItem>
-        <RevealItem>
-          <StatCard
-            label="Cierre autónomo"
-            value={formatNum(cierreAutonomo)}
-            icon={CheckCircle}
-            valueTone="ok"
-          />
-        </RevealItem>
-        <RevealItem>
-          <StatCard
-            label="Incidencias"
-            value={formatNum(discrepancias)}
-            icon={AlertTriangle}
-            valueTone="danger"
-          />
-        </RevealItem>
-        <RevealItem>
-          <StatCard label="Cobertura" value="100 %" icon={ShieldCheck} valueTone="ok" />
-        </RevealItem>
-      </Reveal>
+      {/* KPI band — one ledger, color reserved for the close */}
+      <FadeUp className="shrink-0">
+        <StatLedger
+          items={[
+            { label: "Conciliados", value: formatNum(totalDeclaraciones) },
+            { label: "Cierre autónomo", value: formatNum(cierreAutonomo) },
+            { label: "Incidencias", value: formatNum(discrepancias), tone: "danger" },
+            { label: "Cobertura", value: "100 %", tone: "ok" },
+          ]}
+        />
+      </FadeUp>
 
       {/* Resolved vs pending + traza */}
       <Reveal className="grid shrink-0 gap-3 sm:grid-cols-2">
