@@ -107,7 +107,7 @@ export function CierreDashboard({
           items={[
             { label: "Conciliados", value: formatNum(totalDeclaraciones) },
             { label: "Cierre autónomo", value: formatNum(cierreAutonomo) },
-            { label: "Incidencias", value: formatNum(discrepancias), tone: "danger" },
+            { label: "Revisión humana", value: formatNum(hitlCount) },
             { label: "Cobertura", value: "100 %", tone: "ok" },
           ]}
         />
