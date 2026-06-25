@@ -1115,19 +1115,11 @@ export const chatPortal005: ChatMensaje[] = [
     de: "agente",
     autor: "Lucía Fernández · Ecoembes",
     texto:
-      "Hola Carlos, soy Lucía, tu agente de caso en Ecoembes. Hemos revisado vuestra declaración del período 56 y queríamos comentarte un detalle sin que os preocupéis: es muy fácil de resolver.",
+      "Hola Carlos, soy Lucía, tu agente de caso en Ecoembes. Hemos revisado vuestra declaración del período 56 y hay un detalle fácil de resolver: en la línea del Gel Ducha PEAD 400 ml se aplicó la tarifa de Madera (0,049 €/kg) en lugar de la de PEAD (0,389 €/kg). Es el típico error al elegir el material en la plataforma; el impacto en la cuota es de unos 8.568 €.",
     hora: "09:41",
   },
   {
     id: "CH005-2",
-    de: "agente",
-    autor: "Lucía Fernández · Ecoembes",
-    texto:
-      "En la línea del Gel Ducha PEAD 400 ml se ha aplicado la tarifa de Madera (0,049 €/kg) en lugar de la de PEAD (0,389 €/kg). Es el típico error de selección al elegir el material en la plataforma. El impacto en la cuota es de unos 8.568 €.",
-    hora: "09:42",
-  },
-  {
-    id: "CH005-3",
     de: "cliente",
     autor: "Carlos Ruiz · Higiene Natura Iberia",
     texto:
@@ -1135,15 +1127,15 @@ export const chatPortal005: ChatMensaje[] = [
     hora: "09:48",
   },
   {
-    id: "CH005-4",
+    id: "CH005-3",
     de: "agente",
     autor: "Lucía Fernández · Ecoembes",
     texto:
-      "Nada complicado: presentáis una declaración complementaria con la tarifa PEAD correcta en esa línea. Yo te dejo aquí el borrador ya cumplimentado para que solo tengáis que validarlo. Tenéis hasta el 30 de junio, con margen de sobra.",
+      "Nada complicado: presentáis una declaración complementaria con la tarifa PEAD correcta en esa línea. Os dejo aquí el borrador ya cumplimentado para que solo tengáis que validarlo. Tenéis hasta el 30 de junio, con margen de sobra.",
     hora: "09:50",
   },
   {
-    id: "CH005-5",
+    id: "CH005-4",
     de: "cliente",
     autor: "Carlos Ruiz · Higiene Natura Iberia",
     texto:

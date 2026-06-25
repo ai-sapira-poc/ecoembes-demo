@@ -38,16 +38,18 @@ export interface ClientPortalFullProps {
 // Chat bubble + conversation pane — modelled on Nuzoa's PantallaVisitaChat,
 // mapped to our tokens (dark header, soft-tint client bubble, reserve-the-green).
 // ─────────────────────────────────────────────────────────────────────────────
-function Bubble({ msg, agente }: { msg: ChatMensaje; agente: string }) {
+function Bubble({ msg }: { msg: ChatMensaje }) {
   const isAgente = msg.de === "agente";
 
   if (isAgente) {
+    // Agent identity lives in the chat header — no per-bubble name, so
+    // consecutive turns read as one sender, not separate people.
     return (
-      <div className="flex justify-start">
-        <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-canvas px-3.5 py-2.5 shadow-sm">
-          <p className="mb-0.5 flex items-center gap-1 text-[11px] font-bold text-brand-dark">
-            <Sparkles className="h-3 w-3" /> {agente.split("·")[0].trim()}
-          </p>
+      <div className="flex items-end justify-start gap-2">
+        <span className="mb-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-dark ring-1 ring-brand/15">
+          <Sparkles className="h-3 w-3" />
+        </span>
+        <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-canvas px-3.5 py-2.5 shadow-sm">
           <p className="text-[13.5px] leading-snug text-ink-soft">{msg.texto}</p>
           <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
         </div>
@@ -57,7 +59,7 @@ function Bubble({ msg, agente }: { msg: ChatMensaje; agente: string }) {
 
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-brand-soft px-3.5 py-2.5 text-ink shadow-sm">
+      <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-soft px-3.5 py-2.5 text-ink shadow-sm">
         <p className="text-[13.5px] leading-snug">{msg.texto}</p>
         <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
       </div>
@@ -171,7 +173,7 @@ function ChatPane({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Bubble msg={m} agente={agente} />
+              <Bubble msg={m} />
             </motion.div>
           ))}
 
@@ -181,9 +183,12 @@ function ChatPane({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex justify-start"
+                className="flex items-end justify-start gap-2"
               >
-                <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-canvas px-4 py-3 shadow-sm">
+                <span className="mb-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-dark ring-1 ring-brand/15">
+                  <Sparkles className="h-3 w-3" />
+                </span>
+                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-canvas px-4 py-3 shadow-sm">
                   {[0, 1, 2].map((i) => (
                     <span
                       key={i}
@@ -258,7 +263,7 @@ function InfoPane({
         <div className="mt-3 rounded-xl border border-line bg-surface p-4">
           <p className="text-[11px] uppercase tracking-[0.1em] text-muted">Período</p>
           <p className="mt-0.5 text-sm font-semibold text-ink">
-            {periodo != null ? `Período ${periodo}` : "—"}
+            {periodo != null ? periodo : "—"}
           </p>
 
           <div className="mt-4 flex items-center gap-3">
