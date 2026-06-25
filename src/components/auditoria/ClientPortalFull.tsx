@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck,
-  FileText,
   ArrowLeft,
   Send,
   ArrowRight,
@@ -12,13 +11,10 @@ import {
   MessageSquare,
   X,
   AlertTriangle,
-  Layers,
 } from "lucide-react";
 import type { ChatMensaje, Hallazgo, Formato } from "@/data/types";
-import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { Logo } from "@/components/layout/Logo";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
-import { cn } from "@/lib/utils";
 
 // es-ES Intl only groups at 5+ digits by default, so 4-digit amounts like
 // 8568 render as "8568 €". Force grouping so they read "8.568 €" like the
@@ -30,12 +26,6 @@ const eurGrouped = new Intl.NumberFormat("es-ES", {
   useGrouping: "always",
 });
 const formatEurGrouped = (n: number) => eurGrouped.format(n);
-
-const severidadDot: Record<Hallazgo["severidad"], string> = {
-  alta: "bg-danger",
-  media: "bg-warning",
-  baja: "bg-muted",
-};
 
 function initials(name: string): string {
   const parts = name.split(/[\s·]+/).filter(Boolean);
@@ -338,8 +328,6 @@ function ChatPane({
 // Landing body — the self-service portal page for this declaración.
 // ─────────────────────────────────────────────────────────────────────────────
 function LandingBody({
-  empresa,
-  declaracionId,
   periodo,
   cuotaDeclaradaEur,
   cuotaCalculadaEur,
@@ -348,8 +336,6 @@ function LandingBody({
   flaggedComponenteIds,
   onOpenChat,
 }: {
-  empresa: string;
-  declaracionId: string;
   periodo: number | undefined;
   cuotaDeclaradaEur: number;
   cuotaCalculadaEur: number;
@@ -359,76 +345,89 @@ function LandingBody({
   onOpenChat: () => void;
 }) {
   const delta = cuotaCalculadaEur - cuotaDeclaradaEur;
+  const principal = hallazgos[0];
+  const periodoTxt = periodo != null ? `del período ${periodo}` : "presentada";
 
   return (
-    <div className="w-full px-5 py-6 md:px-8 md:py-8">
-      {/* Welcome + status */}
-      <section className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-            Portal del declarante
-          </p>
-          <h2 className="mt-1 text-xl font-bold leading-tight text-ink text-balance">
-            Hola, {empresa}
-          </h2>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-soft">
-            <span className="inline-flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-muted" />
-              Su declaración SIG
-            </span>
-            <span className="text-muted">·</span>
-            <span>Período {periodo != null ? periodo : "—"}</span>
-            <span className="text-muted">·</span>
-            <span className="font-mono text-xs text-muted">{declaracionId}</span>
-          </p>
-        </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-warning-soft px-2.5 py-1 text-[11px] font-semibold text-warning">
-          <AlertTriangle className="h-3 w-3" />
+    <div className="w-full px-5 py-7 md:px-10 md:py-9">
+      {/* 1 — Lede: status + plain-language situation */}
+      <section className="max-w-2xl">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-2.5 py-1 text-xs font-semibold text-warning">
+          <AlertTriangle className="h-3.5 w-3.5" />
           Requiere subsanación
         </span>
+        <h2 className="mt-3 text-2xl font-bold leading-tight text-ink text-balance">
+          Hemos revisado su declaración SIG {periodoTxt} y hay una incidencia que conviene
+          corregir.
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft text-pretty">
+          Es un ajuste sencillo. A continuación tiene el detalle de la incidencia, el efecto
+          sobre su cuota y los formatos declarados. Su agente de soporte puede ayudarle a
+          presentar la corrección.
+        </p>
       </section>
 
-      {/* Cuota summary */}
-      <section className="mt-6 rounded-xl border border-line bg-canvas p-4 md:p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Resumen de la cuota
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
-          <div className="min-w-0">
-            <p className="text-[11px] text-muted">Cuota declarada</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink-soft line-through decoration-muted/50">
-              {formatEurGrouped(cuotaDeclaradaEur)}
-            </p>
-          </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-[11px] text-muted">Cuota corregida</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-brand-dark">
-              {formatEurGrouped(cuotaCalculadaEur)}
-            </p>
-          </div>
-          {delta !== 0 && (
-            <div className="min-w-0 sm:ml-auto sm:text-right">
-              <p className="text-[11px] text-muted">Diferencia</p>
-              <p className="mt-0.5 text-lg font-semibold tabular-nums text-warning">
-                {delta > 0 ? "+" : ""}
-                {formatEurGrouped(delta)}
+      {/* 2 — The incidence in focus */}
+      {principal && (
+        <section className="mt-8">
+          <h3 className="text-base font-semibold text-ink">{principal.tipo}</h3>
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft text-pretty">
+            {principal.descripcion}
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-stretch gap-3">
+            <div className="rounded-xl border border-line bg-surface px-4 py-3">
+              <p className="text-xs text-muted">Tarifa aplicada</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink-soft">Madera</p>
+              <p className="text-sm tabular-nums text-ink-soft">0,049 €/kg</p>
+            </div>
+            <div className="flex items-center text-muted" aria-hidden>
+              <ArrowRight className="h-4 w-4" />
+            </div>
+            <div className="rounded-xl border border-brand/30 bg-brand-soft/40 px-4 py-3">
+              <p className="text-xs text-muted">Tarifa correcta</p>
+              <p className="mt-0.5 text-sm font-semibold text-brand-dark">PEAD</p>
+              <p className="text-sm font-semibold tabular-nums text-brand-dark">0,389 €/kg</p>
+            </div>
+            <div className="flex flex-col justify-center sm:ml-auto sm:text-right">
+              <p className="text-xs text-muted">Impacto en la cuota</p>
+              <p className="text-xl font-bold tabular-nums text-warning">
+                +{formatEurGrouped(principal.impactoEur)}
               </p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3 — Cuota summary: one compact figure row */}
+      <section className="mt-8 border-t border-line pt-5">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2 text-sm">
+          <span className="text-muted">Cuota declarada</span>
+          <span className="font-semibold tabular-nums text-ink-soft line-through decoration-muted/40">
+            {formatEurGrouped(cuotaDeclaradaEur)}
+          </span>
+          <ArrowRight className="h-4 w-4 self-center text-muted" aria-hidden />
+          <span className="text-muted">corregida</span>
+          <span className="font-semibold tabular-nums text-ink">
+            {formatEurGrouped(cuotaCalculadaEur)}
+          </span>
+          {delta !== 0 && (
+            <span className="ml-1 inline-flex items-baseline gap-1.5">
+              <span className="text-muted">·</span>
+              <span className="font-semibold tabular-nums text-warning">
+                {delta > 0 ? "+" : ""}
+                {formatEurGrouped(delta)}
+              </span>
+            </span>
           )}
         </div>
       </section>
 
-      {/* Declared formats */}
+      {/* 4 — Formatos declarados (real tabular data, full width) */}
       {formatos.length > 0 && (
-        <section className="mt-6">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-            <Layers className="h-3.5 w-3.5" />
-            Formatos declarados
-          </div>
-          <p className="mt-1 text-xs text-muted text-pretty">
-            La línea afectada aparece resaltada.
-          </p>
+        <section className="mt-8">
+          <h3 className="text-base font-semibold text-ink">Formatos declarados</h3>
+          <p className="mt-1 text-sm text-muted">La línea afectada aparece resaltada.</p>
           <div className="mt-3">
             <FormatosBreakdown
               formatos={formatos}
@@ -438,54 +437,20 @@ function LandingBody({
         </section>
       )}
 
-      {/* Findings as scannable bullets */}
-      {hallazgos.length > 0 && (
-        <section className="mt-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-            Lo que hemos detectado
-          </p>
-          <ul className="mt-3 space-y-2.5">
-            {hallazgos.map((h) => (
-              <li
-                key={h.id}
-                className="flex items-start gap-3 rounded-xl border border-line bg-surface px-4 py-3"
-              >
-                <span
-                  className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", severidadDot[h.severidad])}
-                  aria-hidden
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-ink">{h.tipo}</p>
-                    <SeverityBadge severidad={h.severidad} className="shrink-0" />
-                  </div>
-                  <p className="mt-1 text-xs text-ink-soft leading-relaxed text-pretty">
-                    {h.descripcion}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold tabular-nums text-brand-dark">
-                    Impacto en la cuota: {formatEurGrouped(h.impactoEur)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Primary CTA */}
-      <section className="mt-7 rounded-xl border border-brand/25 bg-brand-soft/40 px-5 py-5 text-center">
-        <p className="text-sm font-semibold text-ink">¿Necesita ayuda para subsanarlo?</p>
-        <p className="mt-1 text-xs text-ink-soft text-pretty">
-          Su agente de soporte le acompaña paso a paso para presentar la corrección.
-        </p>
+      {/* 5 — Action */}
+      <section className="mt-9 flex flex-col items-start gap-2">
         <button
           type="button"
           onClick={onOpenChat}
-          className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-dark active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-dark active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           <MessageSquare className="h-4 w-4" />
           Chatear con tu agente de soporte
         </button>
+        <p className="text-xs text-muted">
+          Le atiende un agente de soporte que le acompaña paso a paso para presentar la
+          corrección.
+        </p>
       </section>
     </div>
   );
@@ -494,8 +459,8 @@ function LandingBody({
 // ─────────────────────────────────────────────────────────────────────────────
 // Portal — fills the Step 3 right column (not an overlay): the left prose rail
 // and the StepBar navigation stay visible. Opens as a self-service landing for
-// the declaración; the chat is a right-docked panel opened from the CTA.
-// Volver (ArrowLeft) / Esc returns to the operator.
+// the declaración; the chat is a floating widget (CTA + bottom-right FAB) over
+// the full-width landing. Volver (ArrowLeft) / Esc returns to the operator.
 // ─────────────────────────────────────────────────────────────────────────────
 export function ClientPortalFull({
   empresa,
@@ -535,10 +500,12 @@ export function ClientPortalFull({
           <Logo variant="horizontal" tone="color" className="h-6 w-auto shrink-0" />
           <span className="hidden h-6 w-px shrink-0 bg-line sm:block" aria-hidden />
           <div className="hidden min-w-0 sm:block">
-            <p className="truncate text-sm font-semibold text-ink">Portal del declarante</p>
+            <p className="truncate text-sm font-semibold text-ink">
+              Portal del declarante · {empresa}
+            </p>
             <p className="flex items-center gap-1.5 text-[11px] text-muted">
               <ShieldCheck className="h-3 w-3" />
-              {empresa} · Acceso seguro por enlace
+              <span className="font-mono">{declaracionId}</span> · Acceso seguro por enlace
             </p>
           </div>
         </div>
@@ -557,8 +524,6 @@ export function ClientPortalFull({
         {/* Landing — always full width; never reflows for the chat */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
           <LandingBody
-            empresa={empresa}
-            declaracionId={declaracionId}
             periodo={periodo}
             cuotaDeclaradaEur={cuotaDeclaradaEur}
             cuotaCalculadaEur={cuotaCalculadaEur}
