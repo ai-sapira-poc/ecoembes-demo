@@ -12,20 +12,16 @@ import {
   Hash,
   Layers,
   Calendar,
-  CheckCircle2,
-  FileSearch2,
   Brain,
-  GitCompare,
-  FileCheck2,
   Radio,
 } from "lucide-react";
 
 const AGENT_STEPS = [
-  { icon: FileSearch2, label: "Extracción de líneas SIG",    detail: "Estructura de materiales verificada" },
-  { icon: GitCompare,  label: "Cruce con ventas",            detail: "Volumen declarado comparado con sistema de ventas" },
-  { icon: Brain,       label: "Validación de tarifas",       detail: "Tarifas €/kg comprobadas contra tabla vigente" },
-  { icon: CheckCircle2,label: "Análisis interanual",         detail: "Comparativa con ejercicio anterior" },
-  { icon: FileCheck2,  label: "Dictamen emitido",            detail: "Resultado consolidado y confianza calculada" },
+  { label: "Extracción de líneas SIG", detail: "Estructura de materiales verificada" },
+  { label: "Cruce con ventas",         detail: "Volumen declarado comparado con sistema de ventas" },
+  { label: "Validación de tarifas",    detail: "Tarifas €/kg comprobadas contra tabla vigente" },
+  { label: "Análisis interanual",      detail: "Comparativa con ejercicio anterior" },
+  { label: "Dictamen emitido",         detail: "Resultado consolidado y confianza calculada" },
 ];
 
 interface DeclaracionDetailPageProps {
@@ -173,20 +169,21 @@ export default async function DeclaracionDetailPage({ params }: DeclaracionDetai
               </div>
             </CardHeader>
             <CardContent className="pt-1">
-              <ol className="divide-y divide-line">
-                {AGENT_STEPS.map((step, i) => {
-                  const Icon = step.icon;
-                  return (
-                    <li key={i} className="flex items-start gap-2.5 py-2.5 first:pt-0">
-                      <Icon className="w-3.5 h-3.5 text-brand flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-ink leading-snug">{step.label}</p>
-                        <p className="text-[11px] text-muted leading-snug mt-0.5">{step.detail}</p>
-                      </div>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-ok flex-shrink-0 mt-0.5" />
-                    </li>
-                  );
-                })}
+              <ol className="space-y-0">
+                {AGENT_STEPS.map((step, i) => (
+                  <li key={i} className="grid grid-cols-[1.25rem_1fr] gap-2.5">
+                    <div className="relative flex justify-center">
+                      <span className="z-10 mt-1.5 h-2 w-2 rounded-full bg-brand" aria-hidden />
+                      {i < AGENT_STEPS.length - 1 && (
+                        <span className="absolute top-4 bottom-0 w-px bg-line" aria-hidden />
+                      )}
+                    </div>
+                    <div className="pb-3 last:pb-0">
+                      <p className="text-xs font-medium text-ink leading-snug">{step.label}</p>
+                      <p className="mt-0.5 text-[11px] text-muted leading-snug">{step.detail}</p>
+                    </div>
+                  </li>
+                ))}
               </ol>
             </CardContent>
           </Card>
