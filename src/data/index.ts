@@ -80,3 +80,14 @@ export function auditoriaPipeline(): Record<EstadoAgente, Declaracion[]> {
 // Format helpers — re-exported from @/lib/utils for convenience
 // ─────────────────────────────────────────────────────────────
 export { cn, formatEUR, formatEUR2, formatNum, formatPct } from "@/lib/utils";
+
+// ─────────────────────────────────────────────────────────────
+// APPENDED (wt-auditoria) — deeper Acto 1 analysis + client portal data
+// ─────────────────────────────────────────────────────────────
+export type { AnalisisCheck, ChatMensaje } from "@/data/types";
+export {
+  analisisChecks005,
+  impactoAnalisis005,
+  chatPortal005,
+  agenteCaso005,
+} from "@/data/mock/declaraciones";
