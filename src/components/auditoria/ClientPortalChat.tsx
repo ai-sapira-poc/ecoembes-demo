@@ -11,6 +11,8 @@ export interface ClientPortalChatProps {
   agente: string;
   /** ms between staged turns appearing (default 900). */
   cadence?: number;
+  /** When false, render the full thread at once (no staged reveal, no typing). */
+  autoplay?: boolean;
 }
 
 function initials(name: string): string {
@@ -57,16 +59,22 @@ function Bubble({ msg }: { msg: ChatMensaje }) {
   );
 }
 
-export function ClientPortalChat({ mensajes, agente, cadence = 900 }: ClientPortalChatProps) {
-  const [shown, setShown] = useState(1);
+export function ClientPortalChat({
+  mensajes,
+  agente,
+  cadence = 900,
+  autoplay = true,
+}: ClientPortalChatProps) {
+  const [shown, setShown] = useState(autoplay ? 1 : mensajes.length);
 
   useEffect(() => {
+    if (!autoplay) return;
     if (shown >= mensajes.length) return;
     const t = setTimeout(() => setShown((n) => n + 1), cadence);
     return () => clearTimeout(t);
-  }, [shown, mensajes.length, cadence]);
+  }, [autoplay, shown, mensajes.length, cadence]);
 
-  const typing = shown < mensajes.length;
+  const typing = autoplay && shown < mensajes.length;
 
   return (
     <div className="flex flex-col">

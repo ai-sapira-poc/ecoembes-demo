@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { StepLayout, type Step } from "@/components/layout/StepLayout";
 import { FormatosBreakdown } from "@/components/auditoria/FormatosBreakdown";
-import { CorrespondenciaThread } from "@/components/auditoria/CorrespondenciaThread";
+import { ConversationLog } from "@/components/auditoria/ConversationLog";
 import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
 import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido";
 import { FindingsPanel, type FindingDecision } from "@/components/auditoria/FindingsPanel";
@@ -48,7 +48,6 @@ import {
 // 3-message correspondencia thread · tarifa error hallazgo
 const dec = declaraciones.find((d) => d.id === "DEC-005")!;
 
-const senderDomain = "higienenatura.es";
 const fechaLarga = new Date(dec.fechaRecepcion).toLocaleDateString("es-ES", {
   day: "numeric",
   month: "long",
@@ -417,12 +416,11 @@ function RevisionAccionVisual() {
 // Step 5 Visual — Full thread + FindingsPanel
 // ─────────────────────────────────────────────────────────────────────────────
 function DialogoVisual() {
-  const mensajes = dec.correspondencia ?? [];
   const totalImpacto = dec.hallazgos.reduce((a, h) => a + h.impactoEur, 0);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      {/* Confirmed findings with € impact, surfaced ABOVE the thread */}
+      {/* Confirmed findings with € impact, surfaced ABOVE the conversation */}
       <FadeUp className="w-full shrink-0">
         <Card className="overflow-hidden">
           <CardHeader className="flex items-center justify-between gap-3 pb-3">
@@ -440,24 +438,17 @@ function DialogoVisual() {
         </Card>
       </FadeUp>
 
-      {/* ALL communications — full thread, not just the first exchange */}
+      {/* Transcript of the portal exchange that resolved the case — same channel
+          as Paso 3, rendered as a reviewable log for the auditor. */}
       <FadeUp delay={0.12} className="w-full shrink-0">
         <Card className="overflow-hidden">
-          <CardHeader className="flex items-center justify-between gap-3 pb-3">
-            <CardTitle>
-              Conversación con el cliente
-              <span className="ml-1.5 text-xs font-normal text-muted">
-                {mensajes.length} mensaje{mensajes.length !== 1 ? "s" : ""} · expediente
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CorrespondenciaThread
-            mensajes={mensajes}
-            empresaNombre={dec.empresa}
-            senderDomain={senderDomain}
-            layout="chat"
-            frameless
-          />
+          <div className="flex items-center justify-between gap-3 border-b border-line px-6 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+              Registro de la conversación · portal
+            </p>
+            <span className="text-xs text-muted">{chatPortal005.length} mensajes · resuelto</span>
+          </div>
+          <ConversationLog mensajes={chatPortal005} />
         </Card>
       </FadeUp>
     </div>
