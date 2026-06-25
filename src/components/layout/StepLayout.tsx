@@ -94,11 +94,11 @@ export function StepLayout({
           On md+ the row is height-pinned (min-h-0 + flex-1 + overflow-hidden) so
           neither column can grow it; the left rail stays put and only the right
           visual column scrolls internally. */}
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row md:overflow-hidden px-4 md:px-6 pb-28 md:pb-20 pt-2 gap-4 md:gap-6">
-        {/* Left — progress + explainer. Pinned on desktop: sticky to the top of
-            the (non-scrolling) row and clipped so tall explainer copy never drags
-            the column into a shared scroll. */}
-        <aside className="flex w-full md:w-80 shrink-0 flex-col justify-start py-4 md:py-6 md:sticky md:top-0 md:self-start md:max-h-full md:overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row md:overflow-hidden">
+        {/* Left — full-height white sidebar, flush to the edge and delimited by a
+            right border. Fills the column height (flex stretch); long explainer
+            copy scrolls within the sidebar rather than the page. */}
+        <aside className="flex w-full md:w-80 shrink-0 flex-col border-b border-line bg-surface px-5 py-5 md:border-b-0 md:border-r md:px-6 md:py-6 md:overflow-y-auto">
           {/* Progress */}
           <div className="mb-6 space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -142,7 +142,7 @@ export function StepLayout({
 
         {/* Right — visual. On mobile it sizes to content (page scrolls);
             on desktop it fills the column and scrolls internally. */}
-        <div className="flex min-h-[60vh] md:min-h-0 flex-1 flex-col md:overflow-hidden pb-6 md:py-6">
+        <div className="flex min-h-[60vh] md:min-h-0 flex-1 flex-col md:overflow-hidden px-4 md:px-6 pb-28 pt-2 md:pb-20 md:pt-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`right-${activeN}-${replayKey}`}
