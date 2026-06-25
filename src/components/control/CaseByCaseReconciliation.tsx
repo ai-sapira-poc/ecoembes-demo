@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Bot, Check, Loader2, Minus, X } from "lucide-react";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
+import { Card } from "@/components/ui/Card";
 import { cn, formatEUR, formatNum } from "@/lib/utils";
 import { bpoCaso } from "@/data/index";
 import type { CasoConciliacion, ConciliacionRecord } from "@/data/types";
@@ -158,8 +159,8 @@ export function CaseByCaseReconciliation({
   const caso = bpoCaso(current);
 
   return (
-    <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-      <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+    <Card className="shrink-0 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-line px-6 py-3">
         <span className="flex items-center gap-2 text-xs text-muted">
           <Bot className="h-3.5 w-3.5" />
           Conciliación automática · caso a caso
@@ -226,6 +227,6 @@ export function CaseByCaseReconciliation({
           <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted" />
         </motion.p>
       )}
-    </article>
+    </Card>
   );
 }

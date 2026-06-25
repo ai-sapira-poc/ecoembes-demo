@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { CheckCircle2, Database, Loader2, Server } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Card } from "@/components/ui/Card";
 import { FadeUp } from "@/components/motion/Reveal";
 import { bpoMes, bpoDesglose, bpoErpMeta } from "@/data/index";
 import { formatEUR, formatNum, formatPct } from "@/lib/utils";
@@ -103,8 +104,8 @@ function DesgloseBreakdown() {
   const max = Math.max(...lineas.map((l) => l.importeEur));
 
   return (
-    <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3">
+    <Card className="shrink-0 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-line px-6 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
           Desglose del cierre
         </p>
@@ -153,7 +154,7 @@ function DesgloseBreakdown() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -168,8 +169,8 @@ export function ErpSyncWorkspace() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
       <FadeUp>
-        <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+        <Card className="shrink-0 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-6 py-3">
             <span className="flex items-center gap-2 text-xs text-muted">
               <Server className="h-3.5 w-3.5" />
               Sincronización con el ERP · {bpoErpMeta.sistema}
@@ -260,7 +261,7 @@ export function ErpSyncWorkspace() {
               </motion.div>
             )}
           </AnimatePresence>
-        </article>
+        </Card>
       </FadeUp>
 
       <AnimatePresence>

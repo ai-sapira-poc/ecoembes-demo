@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { ConfidenceBadge } from "@/components/ui/ConfidenceBadge";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { cn, formatEUR } from "@/lib/utils";
 import type { RevisionItem } from "@/data/types";
 
@@ -80,9 +81,9 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
-      {/* Queue header — the 3 states */}
-      <article className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-        <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
+      {/* Queue header — the states */}
+      <Card className="shrink-0 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-line px-6 py-3">
           <span className="flex items-center gap-2 text-xs text-muted">
             <ClipboardCheck className="h-3.5 w-3.5" />
             Cola de revisión humana · Control BPO
@@ -102,8 +103,8 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
                 type="button"
                 onClick={() => setActiveId(it.id)}
                 className={cn(
-                  "flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors",
-                  isActive ? "bg-brand-soft/50" : "hover:bg-canvas"
+                  "flex w-full items-center gap-3 px-6 py-2.5 text-left transition-colors",
+                  isActive ? "bg-brand-tint/60" : "hover:bg-brand-tint/40"
                 )}
               >
                 <span
@@ -134,7 +135,7 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
             );
           })}
         </div>
-      </article>
+      </Card>
 
       {/* Active case detail */}
       <AnimatePresence mode="wait">
@@ -146,7 +147,7 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
           transition={{ duration: 0.28, ease: EASE_OUT }}
           className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
         >
-          <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-3">
+          <div className="flex items-start justify-between gap-3 border-b border-line px-6 py-3">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-dark">
                 <state.icon className="h-3.5 w-3.5" />
@@ -180,7 +181,7 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
               <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                 <GitBranch className="h-3 w-3" /> Acción sugerida por el agente
               </p>
-              <p className="rounded-lg border border-brand/20 bg-brand-soft/40 px-3 py-2 text-xs leading-relaxed text-ink">
+              <p className="rounded-lg border border-line bg-brand-soft px-3 py-2 text-xs leading-relaxed text-ink">
                 {item.accionSugerida}
               </p>
               <p className="mt-2 flex items-start gap-1.5 text-xs text-ink-soft">
@@ -191,7 +192,7 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
           </div>
 
           {/* Human resolution */}
-          <div className="border-t border-line bg-canvas px-5 py-3">
+          <div className="border-t border-line bg-canvas px-6 py-3">
             {resolucion ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="flex items-center gap-2 text-sm text-ink-soft">
@@ -243,7 +244,7 @@ export function HitlCaseFlow({ items }: HitlCaseFlowProps) {
 
       <Link
         href="/plataforma/revision"
-        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-brand/30 hover:text-brand"
+        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-tint/60 hover:text-brand"
       >
         <ClipboardCheck className="h-4 w-4 shrink-0" />
         Ver la cola completa en la plataforma
