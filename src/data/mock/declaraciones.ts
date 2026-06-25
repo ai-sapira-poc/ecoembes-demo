@@ -1115,7 +1115,12 @@ export const chatPortal005: ChatMensaje[] = [
     de: "agente",
     autor: "Lucía Fernández · Ecoembes",
     texto:
-      "Hola Carlos, soy Lucía, tu agente de caso en Ecoembes. Hemos revisado vuestra declaración del período 56 y hay un detalle fácil de resolver: en la línea del Gel Ducha PEAD 400 ml se aplicó la tarifa de Madera (0,049 €/kg) en lugar de la de PEAD (0,389 €/kg). Es el típico error al elegir el material en la plataforma; el impacto en la cuota es de unos 8.568 €.",
+      "Hola Carlos, soy Lucía, tu agente de caso. Hemos revisado la declaración del período 56 y hay un detalle fácil de resolver:\n" +
+      "• **Línea:** Gel Ducha PEAD 400 ml\n" +
+      "• **Tarifa aplicada:** Madera — 0,049 €/kg\n" +
+      "• **Tarifa correcta:** PEAD — **0,389 €/kg**\n" +
+      "• **Impacto en la cuota:** **+8.568 €**\n" +
+      "Es el típico error al elegir el material en la plataforma. ¿Lo corregimos juntos?",
     hora: "09:41",
   },
   {

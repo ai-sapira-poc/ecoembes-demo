@@ -650,23 +650,41 @@ function RevisionAccionVisual() {
   };
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <OperatorAccionPanel onSend={handleSend} />
-
-      <AnimatePresence>
-        {stage === "portal" && (
-          <ClientPortalFull
-            empresa={dec.empresa}
-            declaracionId={dec.id}
-            periodo={dec.periodo}
-            cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
-            cuotaCalculadaEur={dec.cuotaCalculadaEur}
-            hallazgos={dec.hallazgos}
-            mensajes={chatPortal005}
-            agente={agenteCaso005}
-            declarante={declarantePortal005}
-            onClose={() => setStage("operator")}
-          />
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <AnimatePresence mode="wait">
+        {stage === "portal" ? (
+          <motion.div
+            key="portal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <ClientPortalFull
+              empresa={dec.empresa}
+              declaracionId={dec.id}
+              periodo={dec.periodo}
+              cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
+              cuotaCalculadaEur={dec.cuotaCalculadaEur}
+              hallazgos={dec.hallazgos}
+              mensajes={chatPortal005}
+              agente={agenteCaso005}
+              declarante={declarantePortal005}
+              onClose={() => setStage("operator")}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="operator"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+          >
+            <OperatorAccionPanel onSend={handleSend} />
+          </motion.div>
         )}
       </AnimatePresence>
 

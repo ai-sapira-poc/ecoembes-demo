@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, FileText, X, Send, ArrowRight, Sparkles } from "lucide-react";
+import { ShieldCheck, FileText, ArrowLeft, Send, ArrowRight, Sparkles } from "lucide-react";
 import type { ChatMensaje, Hallazgo } from "@/data/types";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { formatEUR } from "@/lib/utils";
@@ -35,6 +35,65 @@ export interface ClientPortalFullProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Light text formatting (no markdown lib): **bold** inline + "• "/"- " bullets.
+// ─────────────────────────────────────────────────────────────────────────────
+function renderInline(text: string, keyPrefix: string) {
+  // Split on **bold** spans; odd indices are the emphasized parts.
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={`${keyPrefix}-b${i}`} className="font-bold text-ink">
+        {part}
+      </strong>
+    ) : (
+      <span key={`${keyPrefix}-t${i}`}>{part}</span>
+    )
+  );
+}
+
+function TextoFormateado({ texto }: { texto: string }) {
+  const lines = texto.split("\n");
+  const blocks: ReactNode[] = [];
+  let bullets: string[] = [];
+  let key = 0;
+
+  const flushBullets = () => {
+    if (bullets.length === 0) return;
+    const items = bullets;
+    bullets = [];
+    blocks.push(
+      <ul key={`ul-${key++}`} className="my-1 space-y-0.5">
+        {items.map((b, i) => (
+          <li key={i} className="flex gap-1.5">
+            <span aria-hidden className="select-none">
+              •
+            </span>
+            <span className="min-w-0">{renderInline(b, `li-${i}`)}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    const m = /^\s*[•-]\s+(.*)$/.exec(line);
+    if (m) {
+      bullets.push(m[1]);
+    } else {
+      flushBullets();
+      if (line.trim() !== "") {
+        blocks.push(
+          <p key={`p-${key++}`}>{renderInline(line, `p-${key}`)}</p>
+        );
+      }
+    }
+  }
+  flushBullets();
+
+  return <div className="space-y-1.5">{blocks}</div>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Chat bubble + conversation pane — modelled on Nuzoa's PantallaVisitaChat,
 // mapped to our tokens (dark header, soft-tint client bubble, reserve-the-green).
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,7 +109,9 @@ function Bubble({ msg }: { msg: ChatMensaje }) {
           <Sparkles className="h-3 w-3" />
         </span>
         <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-canvas px-3.5 py-2.5 shadow-sm">
-          <p className="text-[13.5px] leading-snug text-ink-soft">{msg.texto}</p>
+          <div className="text-[13.5px] leading-snug text-ink-soft">
+            <TextoFormateado texto={msg.texto} />
+          </div>
           <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
         </div>
       </div>
@@ -60,7 +121,9 @@ function Bubble({ msg }: { msg: ChatMensaje }) {
   return (
     <div className="flex justify-end">
       <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-soft px-3.5 py-2.5 text-ink shadow-sm">
-        <p className="text-[13.5px] leading-snug">{msg.texto}</p>
+        <div className="text-[13.5px] leading-snug">
+          <TextoFormateado texto={msg.texto} />
+        </div>
         <p className="mt-1 text-right text-[10px] text-muted">{msg.hora}</p>
       </div>
     </div>
@@ -322,7 +385,8 @@ function InfoPane({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Full-screen overlay
+// Portal — fills the Step 3 right column (not an overlay): the left prose rail
+// and the StepBar navigation stay visible. Volver (ArrowLeft) / Esc returns.
 // ─────────────────────────────────────────────────────────────────────────────
 export function ClientPortalFull({
   empresa,
@@ -345,42 +409,38 @@ export function ClientPortalFull({
   }, [onClose]);
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-surface"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      role="dialog"
-      aria-modal="true"
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]"
       aria-label={`Portal del declarante · ${empresa}`}
     >
-      {/* Top bar — full width */}
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3.5 md:px-7">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-dark ring-1 ring-brand/15">
-            <ShieldCheck className="h-4 w-4" />
+      {/* Top bar */}
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3 md:px-5">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg px-1.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2.5">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-dark ring-1 ring-brand/15">
+            <ShieldCheck className="h-3.5 w-3.5" />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 text-center">
             <p className="truncate text-sm font-semibold text-ink">
               Portal del declarante · {empresa}
             </p>
             <p className="text-[11px] text-muted">Acceso seguro por enlace</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Cerrar el portal"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {/* Spacer to keep the title visually centered against the Volver control */}
+        <span className="hidden w-[4.5rem] shrink-0 sm:block" aria-hidden />
       </header>
 
-      {/* Two-pane body — fills the rest of the viewport */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-        <div className="flex min-h-0 shrink-0 flex-col border-b border-line md:w-[26rem] md:flex-1 md:max-w-lg md:border-b-0 md:border-r lg:w-[30rem]">
+      {/* Two-pane body — fills the column */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+        <div className="flex min-h-0 shrink-0 flex-col border-b border-line lg:w-[22rem] lg:max-w-sm lg:border-b-0 lg:border-r">
           <InfoPane
             declaracionId={declaracionId}
             periodo={periodo}
@@ -389,10 +449,10 @@ export function ClientPortalFull({
             hallazgos={hallazgos}
           />
         </div>
-        <div className="flex min-h-[24rem] flex-1 flex-col md:min-h-0 md:flex-[1.4]">
+        <div className="flex min-h-[22rem] flex-1 flex-col lg:min-h-0">
           <ChatPane mensajes={mensajes} agente={agente} declarante={declarante} />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
