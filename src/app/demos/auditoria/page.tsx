@@ -146,7 +146,7 @@ function PlatformSubmissionCard() {
 function IntakeVisual() {
   return (
     <FadeUp>
-      <div className="mx-auto w-full max-w-xl">
+      <div className="mx-auto w-full max-w-4xl">
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
@@ -203,7 +203,7 @@ function AnalisisVisual() {
   const allResolved = resolvedCount >= analisisChecks005.length;
 
   return (
-    <FadeUp className="mx-auto w-full max-w-2xl">
+    <FadeUp className="mx-auto w-full max-w-4xl">
       <Card className="overflow-hidden">
         {/* meta row */}
         <div className="flex items-start justify-between gap-3 px-6 py-4">
