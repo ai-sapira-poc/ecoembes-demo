@@ -668,6 +668,8 @@ function RevisionAccionVisual() {
               cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
               cuotaCalculadaEur={dec.cuotaCalculadaEur}
               hallazgos={dec.hallazgos}
+              formatos={dec.formatos ?? []}
+              flaggedComponenteIds={["005-F2-C1"]}
               mensajes={chatPortal005}
               agente={agenteCaso005}
               declarante={declarantePortal005}
