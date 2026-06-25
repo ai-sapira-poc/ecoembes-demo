@@ -179,3 +179,48 @@ export interface EmailMensaje {
   fecha: string;
   adjuntos?: string[];
 }
+
+// ============================================================
+// APPEND-ONLY (wt-bpo) — Acto 2 Control BPO detail types.
+// Added below the original block; never reorder the above.
+// ============================================================
+
+/** A single line of the cierre desglose (by material, sector or estado). */
+export interface DesgloseLinea {
+  clave: string;
+  declaraciones: number;
+  importeEur: number;
+}
+
+/** Full breakdown of the monthly cierre, derived from bpoMes.records. */
+export interface BpoDesglose {
+  porMaterial: DesgloseLinea[];
+  porSector: DesgloseLinea[];
+  porEstado: DesgloseLinea[];
+}
+
+/** ERP import metadata shown in the Step 1 sync workspace. */
+export interface ErpSyncMeta {
+  sistema: string;
+  modulo: string;
+  conector: string;
+  periodo: string;
+  ejercicio: number;
+  ultimaSync: string;
+  lotes: number;
+}
+
+/**
+ * Per-case conciliation detail for the Step 2 case-by-case view:
+ * the three values the agent compares plus the supporting fields.
+ */
+export interface CasoConciliacion {
+  record: ConciliacionRecord;
+  material: Material;
+  pesoKg: number;
+  tarifaEurKg: number;
+  importeDeclaradoEur: number;
+  importeErpEur: number | null;
+  importeCalculadoEur: number;
+  confianza: number;
+}

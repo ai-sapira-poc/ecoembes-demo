@@ -80,3 +80,21 @@ export function auditoriaPipeline(): Record<EstadoAgente, Declaracion[]> {
 // Format helpers — re-exported from @/lib/utils for convenience
 // ─────────────────────────────────────────────────────────────
 export { cn, formatEUR, formatEUR2, formatNum, formatPct } from "@/lib/utils";
+
+// ─────────────────────────────────────────────────────────────
+// APPEND-ONLY (wt-bpo) — Acto 2 Control BPO detail exports.
+// ─────────────────────────────────────────────────────────────
+export type {
+  DesgloseLinea,
+  BpoDesglose,
+  ErpSyncMeta,
+  CasoConciliacion,
+} from "@/data/types";
+
+export {
+  bpoDesglose,
+  bpoErpMeta,
+  bpoMaterial,
+  bpoCaso,
+  BPO_CONFIANZA_BY_ID,
+} from "@/data/mock/bpo";

@@ -1,4 +1,13 @@
-import type { BpoMes, ConciliacionRecord, EstadoConciliacion } from "@/data/types";
+import type {
+  BpoMes,
+  ConciliacionRecord,
+  EstadoConciliacion,
+  Material,
+  BpoDesglose,
+  DesgloseLinea,
+  ErpSyncMeta,
+  CasoConciliacion,
+} from "@/data/types";
 import { empresas } from "@/data/mock/empresas";
 
 // ─────────────────────────────────────────────────────────────
@@ -233,3 +242,125 @@ export const BPO_IMPORTE_EN_RIESGO_EUR =
   (SEEDED[430].importeOrigenEur - (SEEDED[430].importeSgaEur ?? 0)) +   //  3_550
   SEEDED[299].importeOrigenEur;                                          //  7_780
 // = 26_900
+
+// ─────────────────────────────────────────────────────────────
+// APPEND-ONLY (wt-bpo) — Acto 2 detail data.
+// Derived from the records above; the sacred figures (437,
+// 2.338.519 €, 5 muestreadas / 37.367 €, 26.900 € en riesgo,
+// 6 discrepancias todas muestreada:false) are NOT touched.
+// ─────────────────────────────────────────────────────────────
+
+// Deterministic material per record (cycled — packaging materials del SIG).
+const MATERIALES: Material[] = [
+  "PET",
+  "Papel/Cartón",
+  "Vidrio",
+  "PEAD",
+  "Brik",
+  "Aluminio",
+  "Acero",
+  "Film plástico",
+];
+
+// Discrepancy records get a fixed material so the case-by-case view is stable.
+const DISCREPANCY_MATERIAL: Record<string, Material> = {
+  "045": "PET",
+  "103": "Papel/Cartón",
+  "158": "Vidrio",
+  "299": "Brik",
+  "402": "PEAD",
+  "430": "Aluminio",
+};
+
+export function bpoMaterial(record: ConciliacionRecord): Material {
+  return DISCREPANCY_MATERIAL[record.id] ?? MATERIALES[(Number(record.id) - 1) % MATERIALES.length];
+}
+
+// Indicative tariffs (€/kg) per material — used only to derive the
+// case-by-case "importe calculado" detail; never alters record importes.
+const TARIFA_EUR_KG: Record<Material, number> = {
+  PET: 0.479,
+  PEAD: 0.377,
+  PVC: 0.529,
+  "Film plástico": 0.456,
+  "Papel/Cartón": 0.105,
+  Vidrio: 0.0192,
+  Acero: 0.073,
+  Aluminio: 0.124,
+  Madera: 0.049,
+  Brik: 0.42,
+};
+
+function buildDesglose(): BpoDesglose {
+  const byKey = (sel: (r: ConciliacionRecord) => string): DesgloseLinea[] => {
+    const map = new Map<string, DesgloseLinea>();
+    for (const r of records) {
+      const clave = sel(r);
+      const prev = map.get(clave) ?? { clave, declaraciones: 0, importeEur: 0 };
+      prev.declaraciones += 1;
+      prev.importeEur += r.importeOrigenEur;
+      map.set(clave, prev);
+    }
+    return [...map.values()].sort((a, b) => b.importeEur - a.importeEur);
+  };
+
+  const estadoLabel: Record<EstadoConciliacion, string> = {
+    ok: "Conciliada",
+    no_cargada: "No cargada",
+    importe_distinto: "Importe distinto",
+    duplicada: "Duplicada",
+    campos_distintos: "Campos distintos",
+  };
+
+  return {
+    porMaterial: byKey((r) => bpoMaterial(r)),
+    porSector: byKey((r) => {
+      const emp = empresas.find((e) => e.cif === r.cif);
+      return emp?.sector ?? "Otros sectores";
+    }),
+    porEstado: byKey((r) => estadoLabel[r.estado]),
+  };
+}
+
+export const bpoDesglose: BpoDesglose = buildDesglose();
+
+export const bpoErpMeta: ErpSyncMeta = {
+  sistema: "SAP S/4HANA",
+  modulo: "FI-CA · Cuentas a cobrar",
+  conector: "Sapira Connect · OData",
+  periodo: "Septiembre 2025",
+  ejercicio: 2025,
+  ultimaSync: "2025-09-30 23:58",
+  lotes: 9,
+};
+
+/** Build the field-by-field conciliation detail for one record. */
+export function bpoCaso(record: ConciliacionRecord): CasoConciliacion {
+  const material = bpoMaterial(record);
+  const tarifa = TARIFA_EUR_KG[material];
+  const pesoKg = Math.round(record.importeOrigenEur / tarifa);
+  // importe "calculado" reconstructs origen from peso×tarifa (matches by design)
+  const importeCalculado = record.importeOrigenEur;
+  return {
+    record,
+    material,
+    pesoKg,
+    tarifaEurKg: tarifa,
+    importeDeclaradoEur: record.importeOrigenEur,
+    importeErpEur: record.importeSgaEur,
+    importeCalculadoEur: importeCalculado,
+    confianza: BPO_CONFIANZA[record.id] ?? (record.estado === "ok" ? 0.97 : 0.7),
+  };
+}
+
+// Confianza per record — discrepancies land in the HITL band (0,55–0,78).
+const BPO_CONFIANZA: Record<string, number> = {
+  "045": 0.6,
+  "103": 0.74,
+  "158": 0.58,
+  "299": 0.69,
+  "402": 0.71,
+  "430": 0.72,
+};
+
+export const BPO_CONFIANZA_BY_ID = BPO_CONFIANZA;
