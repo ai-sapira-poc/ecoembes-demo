@@ -1115,12 +1115,12 @@ export const chatPortal005: ChatMensaje[] = [
     de: "agente",
     autor: "Lucía Fernández · Ecoembes",
     texto:
-      "Hola Carlos, soy Lucía, tu agente de caso. Hemos revisado la declaración del período 56 y hay un detalle fácil de resolver:\n" +
+      "Buenos días, Carlos. Soy Lucía Fernández, su agente de caso en Ecoembes. Le escribo en relación con su declaración del período 56, en la que hemos identificado una incidencia en la aplicación de tarifas:\n" +
       "• **Línea:** Gel Ducha PEAD 400 ml\n" +
       "• **Tarifa aplicada:** Madera — 0,049 €/kg\n" +
       "• **Tarifa correcta:** PEAD — **0,389 €/kg**\n" +
       "• **Impacto en la cuota:** **+8.568 €**\n" +
-      "Es el típico error al elegir el material en la plataforma. ¿Lo corregimos juntos?",
+      "Se trata de un error habitual en la selección del material. Quedo a su disposición para ayudarle a subsanarlo.",
     hora: "09:41",
   },
   {
@@ -1128,7 +1128,7 @@ export const chatPortal005: ChatMensaje[] = [
     de: "cliente",
     autor: "Carlos Ruiz · Higiene Natura Iberia",
     texto:
-      "Hola Lucía, gracias por avisar. Tienes razón, el envase es PEAD. ¿Qué tenemos que hacer para corregirlo?",
+      "Buenos días, Lucía. Gracias por el aviso. En efecto, el envase es PEAD. ¿Qué debemos hacer para corregirlo?",
     hora: "09:48",
   },
   {
@@ -1136,7 +1136,7 @@ export const chatPortal005: ChatMensaje[] = [
     de: "agente",
     autor: "Lucía Fernández · Ecoembes",
     texto:
-      "Nada complicado: presentáis una declaración complementaria con la tarifa PEAD correcta en esa línea. Os dejo aquí el borrador ya cumplimentado para que solo tengáis que validarlo. Tenéis hasta el 30 de junio, con margen de sobra.",
+      "Para corregirlo, deberá presentar una declaración complementaria aplicando la tarifa PEAD en esa línea. Le adjunto el borrador ya cumplimentado para su validación. El plazo de presentación finaliza el 30 de junio.",
     hora: "09:50",
   },
   {
@@ -1144,7 +1144,7 @@ export const chatPortal005: ChatMensaje[] = [
     de: "cliente",
     autor: "Carlos Ruiz · Higiene Natura Iberia",
     texto:
-      "Perfecto, mucho más sencillo de lo que pensaba. Lo validamos hoy mismo. Gracias por la ayuda.",
+      "Entendido. Lo revisamos y lo validamos hoy mismo. Muchas gracias por la ayuda.",
     hora: "09:53",
   },
 ];

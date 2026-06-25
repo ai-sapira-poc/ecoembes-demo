@@ -136,8 +136,8 @@ function nowHora(): string {
 
 // Canned, on-topic agent replies (frontend-only — no API). Cycled per client turn.
 const respuestasAgente = [
-  "Perfecto. Os dejo el borrador de la declaración complementaria ya cumplimentado con la tarifa PEAD correcta; solo tenéis que validarlo desde el portal.",
-  "Genial. Si te surge cualquier duda con la corrección, sigo por aquí para ayudarte. Tenéis hasta el 30 de junio, con margen de sobra.",
+  "Le confirmo que el borrador de la declaración complementaria, con la tarifa PEAD ya aplicada, queda disponible en el portal para su validación.",
+  "Quedo a su disposición para cualquier consulta sobre la corrección. Le recuerdo que el plazo de presentación finaliza el 30 de junio.",
 ];
 
 function ChatPane({
