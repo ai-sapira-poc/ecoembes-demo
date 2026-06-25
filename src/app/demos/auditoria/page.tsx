@@ -10,7 +10,7 @@ import { EstadoBadge } from "@/components/auditoria/EstadoBadge";
 import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido";
 import { FindingsPanel, type FindingDecision } from "@/components/auditoria/FindingsPanel";
 import { AnalisisChecks } from "@/components/auditoria/AnalisisChecks";
-import { ClientPortalChat } from "@/components/auditoria/ClientPortalChat";
+import { ClientPortalFull } from "@/components/auditoria/ClientPortalFull";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -37,8 +37,6 @@ import {
   ChevronDown,
   Link2,
   Send,
-  ShieldCheck,
-  FileText,
   Hash,
   Building2,
   Layers,
@@ -640,63 +638,8 @@ function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
   );
 }
 
-function ClientPortalView() {
-  return (
-    <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-3">
-      {/* Portal chrome — clearly the CLIENT side */}
-      <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]">
-        <div className="flex items-center justify-between gap-3 border-b border-line bg-brand-soft/50 px-4 py-2.5">
-          <span className="flex items-center gap-2 text-xs font-semibold text-brand-dark">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Portal del declarante · Higiene Natura Iberia
-          </span>
-          <span className="text-[11px] text-muted">Acceso seguro por enlace</span>
-        </div>
-
-        {/* Declaration summary */}
-        <div className="border-b border-line px-4 py-3">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-            <FileText className="h-3.5 w-3.5" />
-            Tu declaración · {dec.id}
-          </div>
-          <div className="mt-2 grid grid-cols-3 gap-3 text-xs">
-            <div>
-              <p className="text-muted">Período</p>
-              <p className="mt-0.5 font-semibold text-ink">{dec.periodo}</p>
-            </div>
-            <div>
-              <p className="text-muted">Cuota declarada</p>
-              <p className="mt-0.5 font-semibold tabular-nums text-ink">
-                {formatEUR(dec.cuotaDeclaradaEur)}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted">Cuota corregida</p>
-              <p className="mt-0.5 font-semibold tabular-nums text-ink">
-                {formatEUR(dec.cuotaCalculadaEur)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Confirmed findings */}
-        {dec.hallazgos.length > 0 && (
-          <div className="border-b border-line px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-              Lo que hemos detectado
-            </p>
-            <div className="mt-2">
-              <FindingsPanel hallazgos={dec.hallazgos} />
-            </div>
-          </div>
-        )}
-
-        {/* Chat with assigned case agent */}
-        <ClientPortalChat mensajes={chatPortal005} agente={agenteCaso005} />
-      </div>
-    </FadeUp>
-  );
-}
+// Declarante (cliente) que aparece en el hilo del portal.
+const declarantePortal005 = "Carlos Ruiz · Higiene Natura Iberia";
 
 function RevisionAccionVisual() {
   const [stage, setStage] = useState<"operator" | "wiping" | "portal">("operator");
@@ -708,21 +651,22 @@ function RevisionAccionVisual() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <AnimatePresence mode="wait">
-        {stage === "portal" ? (
-          <motion.div
-            key="portal"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="shrink-0"
-          >
-            <ClientPortalView />
-          </motion.div>
-        ) : (
-          <motion.div key="operator" exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="shrink-0">
-            <OperatorAccionPanel onSend={handleSend} />
-          </motion.div>
+      <OperatorAccionPanel onSend={handleSend} />
+
+      <AnimatePresence>
+        {stage === "portal" && (
+          <ClientPortalFull
+            empresa={dec.empresa}
+            declaracionId={dec.id}
+            periodo={dec.periodo}
+            cuotaDeclaradaEur={dec.cuotaDeclaradaEur}
+            cuotaCalculadaEur={dec.cuotaCalculadaEur}
+            hallazgos={dec.hallazgos}
+            mensajes={chatPortal005}
+            agente={agenteCaso005}
+            declarante={declarantePortal005}
+            onClose={() => setStage("operator")}
+          />
         )}
       </AnimatePresence>
 
