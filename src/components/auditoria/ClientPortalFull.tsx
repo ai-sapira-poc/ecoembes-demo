@@ -341,64 +341,53 @@ export function ClientPortalFull({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-surface"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       role="dialog"
       aria-modal="true"
       aria-label={`Portal del declarante · ${empresa}`}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.99, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.99, y: 8 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_24px_70px_-20px_rgba(20,32,26,0.45)]"
-      >
-        {/* Top bar */}
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3.5">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-dark ring-1 ring-brand/15">
-              <ShieldCheck className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">
-                Portal del declarante · {empresa}
-              </p>
-              <p className="text-[11px] text-muted">Acceso seguro por enlace</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar el portal"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          >
-            <X className="h-4.5 w-4.5" />
-          </button>
-        </header>
-
-        {/* Two-pane body */}
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <div className="flex min-h-0 flex-1 flex-col border-b border-line md:max-w-md md:border-b-0 md:border-r">
-            <InfoPane
-              declaracionId={declaracionId}
-              periodo={periodo}
-              cuotaDeclaradaEur={cuotaDeclaradaEur}
-              cuotaCalculadaEur={cuotaCalculadaEur}
-              hallazgos={hallazgos}
-            />
-          </div>
-          <div className="flex min-h-0 flex-[1.3] flex-col">
-            <ChatPane mensajes={mensajes} agente={agente} declarante={declarante} />
+      {/* Top bar — full width */}
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3.5 md:px-7">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-dark ring-1 ring-brand/15">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-ink">
+              Portal del declarante · {empresa}
+            </p>
+            <p className="text-[11px] text-muted">Acceso seguro por enlace</p>
           </div>
         </div>
-      </motion.div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar el portal"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </header>
+
+      {/* Two-pane body — fills the rest of the viewport */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
+        <div className="flex min-h-0 shrink-0 flex-col border-b border-line md:w-[26rem] md:flex-1 md:max-w-lg md:border-b-0 md:border-r lg:w-[30rem]">
+          <InfoPane
+            declaracionId={declaracionId}
+            periodo={periodo}
+            cuotaDeclaradaEur={cuotaDeclaradaEur}
+            cuotaCalculadaEur={cuotaCalculadaEur}
+            hallazgos={hallazgos}
+          />
+        </div>
+        <div className="flex min-h-[24rem] flex-1 flex-col md:min-h-0 md:flex-[1.4]">
+          <ChatPane mensajes={mensajes} agente={agente} declarante={declarante} />
+        </div>
+      </div>
     </motion.div>
   );
 }
