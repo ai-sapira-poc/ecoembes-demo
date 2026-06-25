@@ -13,7 +13,6 @@ import { AnalisisChecks } from "@/components/auditoria/AnalisisChecks";
 import { ClientPortalFull } from "@/components/auditoria/ClientPortalFull";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp } from "@/components/motion/Reveal";
 import {
   declaraciones,
@@ -66,28 +65,6 @@ const fechaRequerimiento = new Date("2025-04-15").toLocaleDateString("es-ES", {
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 Visual — Platform submission + agent fetch animation
 // ─────────────────────────────────────────────────────────────────────────────
-function PlatformFetchSkeleton() {
-  return (
-    <>
-      <div className="space-y-2 px-5 pt-4">
-        <Skeleton className="h-3 w-36" />
-        <Skeleton className="h-4 w-4/5" />
-      </div>
-      <div className="mx-5 mt-3 space-y-2 rounded-lg border border-line bg-canvas px-4 py-3">
-        <Skeleton className="h-4 w-3/5" />
-        <Skeleton className="h-3 w-2/5" />
-      </div>
-      <div className="px-5 py-4">
-        <Skeleton className="h-[3.25rem] w-full rounded-lg" />
-      </div>
-      <div className="grid grid-cols-2 gap-3 border-t border-line px-5 py-3.5">
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-      </div>
-    </>
-  );
-}
-
 function PlatformSubmissionCard() {
   return (
     <>
@@ -168,381 +145,107 @@ function PlatformSubmissionCard() {
 }
 
 function IntakeVisual() {
-  const [phase, setPhase] = useState<"fetching" | "ready">("fetching");
-
-  useEffect(() => {
-    const toReady = setTimeout(() => setPhase("ready"), 1200);
-    return () => clearTimeout(toReady);
-  }, []);
-
   return (
     <FadeUp>
-      <div className="mx-auto w-full max-w-xl space-y-3">
+      <div className="mx-auto w-full max-w-xl">
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
               <LayoutDashboard className="h-3.5 w-3.5" />
               {dec.canal ?? "PLATAFORMA 2.0"} · Declaraciones de envases
             </span>
-            <AnimatePresence mode="wait">
-              {phase === "fetching" ? (
-                <motion.span
-                  key="fetching"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-[11px] text-muted"
-                >
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Recuperando ficha…
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="ready"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-[11px] text-muted"
-                >
-                  {fechaLarga}
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <span className="text-[11px] text-muted">{fechaLarga}</span>
           </div>
 
-          <AnimatePresence mode="wait">
-            {phase === "fetching" ? (
-              <motion.div
-                key="skeleton"
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <PlatformFetchSkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <PlatformSubmissionCard />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Card>
+          <PlatformSubmissionCard />
 
-        <AnimatePresence>
-          {phase === "ready" && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Card className="flex items-center gap-3 px-5 py-3.5">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
-                <span
-                  className="h-2 w-2 rounded-full bg-brand"
-                  style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
-                />
-              </span>
-              <p className="flex-1 text-sm text-ink-soft">
-                El agente detecta la presentación, recupera la ficha de la empresa y el SIG desde
-                plataforma e{" "}
-                <strong className="font-semibold text-ink">inicia el análisis</strong>.
-              </p>
-              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
-                En curso
-              </span>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <div className="flex items-center gap-3 border-t border-line px-5 py-3.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
+              <span
+                className="h-2 w-2 rounded-full bg-brand"
+                style={{ animation: "soft-pulse 1.6s ease-in-out infinite" }}
+              />
+            </span>
+            <p className="flex-1 text-sm text-ink-soft">
+              El agente detecta la presentación, recupera la ficha y el SIG, e{" "}
+              <strong className="font-semibold text-ink">inicia el análisis</strong>.
+            </p>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
+              En curso
+            </span>
+          </div>
+        </Card>
       </div>
     </FadeUp>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 2 Visual — Skeleton → FormatosBreakdown + validation checklist
+// Step 2 Visual — one sectioned surface: declaración + comprobaciones (the one
+// "agent is working" beat of the Acto is the checks resolving line-by-line).
 // ─────────────────────────────────────────────────────────────────────────────
-/** Skeleton that mirrors the SIG table layout while the agent extracts. */
-function ExtractionTableSkeleton() {
-  const colWidths = [28, 88, 72, 56, 40, 48, 36, 52, 44, 40];
+function SectionOverline({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-line">
-      <div className="flex gap-2 border-b border-line bg-canvas px-3 py-2.5">
-        {colWidths.map((w, i) => (
-          <Skeleton key={i} className="h-2.5 shrink-0 rounded-sm" style={{ width: w }} />
-        ))}
-      </div>
-      {[1, 2, 3].map((row) => (
-        <div
-          key={row}
-          className="flex gap-2 border-b border-line px-3 py-2 last:border-0"
-        >
-          {colWidths.map((w, i) => (
-            <Skeleton
-              key={i}
-              className="h-3 shrink-0 rounded-sm"
-              style={{ width: i === 1 ? w + 24 : w }}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
+    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{children}</p>
   );
 }
 
 function AnalisisVisual() {
-  const [phase, setPhase] = useState<"extracting" | "table" | "checks">("extracting");
   const [resolvedCount, setResolvedCount] = useState(0);
 
   useEffect(() => {
-    const toTable = setTimeout(() => setPhase("table"), 1500);
-    const toChecks = setTimeout(() => setPhase("checks"), 2300);
-    return () => {
-      clearTimeout(toTable);
-      clearTimeout(toChecks);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (phase !== "checks") return;
     if (resolvedCount >= analisisChecks005.length) return;
-    const t = setTimeout(() => setResolvedCount((n) => n + 1), 620);
+    const t = setTimeout(() => setResolvedCount((n) => n + 1), 560);
     return () => clearTimeout(t);
-  }, [phase, resolvedCount]);
+  }, [resolvedCount]);
 
   const nFormatos = dec.formatos?.length ?? 0;
-  const nComponentes =
-    dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0;
+  const nComponentes = dec.formatos?.reduce((a, f) => a + f.componentes.length, 0) ?? 0;
   const allResolved = resolvedCount >= analisisChecks005.length;
-  const alertas = analisisChecks005.filter((c) => c.estado === "alerta").length;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <div className="flex shrink-0 flex-col gap-5">
-        {/* Extracted data — platform Card shell */}
-        <FadeUp className="shrink-0">
-          <Card className="overflow-hidden">
-          <CardHeader className="flex items-center justify-between gap-3 pb-3">
-            <CardTitle>
-              Declaración extraída
-              <span className="ml-1.5 text-xs font-normal text-muted">Hoja SIG · {dec.empresa}</span>
-            </CardTitle>
-            <AnimatePresence mode="wait">
-              {phase === "extracting" ? (
-                <motion.span
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-xs text-muted"
-                >
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Extrayendo del adjunto…
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="ready"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-xs text-muted tabular-nums"
-                >
-                  {nFormatos} formatos · {nComponentes} componentes
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence mode="wait">
-              {phase === "extracting" ? (
-                <motion.div
-                  key="skeleton"
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <ExtractionTableSkeleton />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="table"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <FormatosBreakdown
-                    formatos={dec.formatos ?? []}
-                    flaggedComponenteIds={["005-F2-C1"]}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </CardContent>
-          </Card>
-        </FadeUp>
-
-        {/* Deep audit — per-check comprobación · evidencia · Δ € · confianza */}
-        <AnimatePresence>
-          {phase === "checks" && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="shrink-0"
-            >
-              <Card className="overflow-hidden">
-              <CardHeader className="flex items-center justify-between gap-3 border-b border-line pb-3">
-                <CardTitle>
-                  Auditoría monográfica — comprobaciones
-                  <span className="ml-1.5 text-xs font-normal text-muted">
-                    Cada validación con su evidencia, delta económico y confianza
-                  </span>
-                </CardTitle>
-                {!allResolved && (
-                  <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    {resolvedCount}/{analisisChecks005.length}
-                  </span>
-                )}
-              </CardHeader>
-
-              <AnalisisChecks checks={analisisChecks005} resolvedCount={resolvedCount} />
-
-              <AnimatePresence>
-                {allResolved && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="shrink-0 overflow-hidden"
-                  >
-                    <div className="flex items-center gap-2.5 border-t border-line bg-warning-soft px-6 py-2.5">
-                      <XCircle className="h-4 w-4 shrink-0 text-warning" />
-                      <p className="text-xs font-medium leading-snug text-warning">
-                        {alertas} alertas · infradeclaración derivada de{" "}
-                        <strong className="font-bold">{formatEUR(impactoAnalisis005)}</strong> por el
-                        error de tarifa Madera → PEAD
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Step 3 Visual — Inbox-style outbound consulta (compose skeleton → sent)
-// ─────────────────────────────────────────────────────────────────────────────
-function ConsultaEmailSkeleton() {
-  return (
-    <>
-      <div className="flex items-start gap-3 px-5 pt-4">
-        <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
-        <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className="h-4 w-44" />
-          <Skeleton className="h-3 w-56" />
+    <FadeUp className="mx-auto w-full max-w-2xl">
+      <Card className="overflow-hidden">
+        {/* meta row */}
+        <div className="flex items-start justify-between gap-3 px-6 py-4">
+          <div className="min-w-0">
+            <p className="text-base font-bold text-ink">{dec.empresa}</p>
+            <p className="mt-0.5 text-xs text-muted">
+              <span className="font-mono">{dec.cif}</span> · {dec.sector} · Período {dec.periodo}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            {dec.estadoAgente && <EstadoBadge estado={dec.estadoAgente} />}
+            <p className="mt-1 text-xs tabular-nums text-muted">
+              Confianza {Math.round(dec.confianza * 100)}%
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="space-y-2 px-5 pt-3.5 pb-5">
-        <Skeleton className="h-4 w-4/5" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-11/12" />
-        <Skeleton className="h-3 w-3/4" />
-      </div>
-    </>
-  );
-}
 
-function ConsultaVisual() {
-  const [phase, setPhase] = useState<"composing" | "sent">("composing");
-  const primerMensaje = (dec.correspondencia ?? []).slice(0, 1);
+        {/* declaración */}
+        <div className="border-t border-line px-6 py-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <SectionOverline>Declaración · {nFormatos} formatos</SectionOverline>
+            <span className="text-[11px] tabular-nums text-muted">{nComponentes} componentes</span>
+          </div>
+          <FormatosBreakdown formatos={dec.formatos ?? []} flaggedComponenteIds={["005-F2-C1"]} />
+        </div>
 
-  useEffect(() => {
-    const toSent = setTimeout(() => setPhase("sent"), 1400);
-    return () => clearTimeout(toSent);
-  }, []);
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <FadeUp className="w-full shrink-0">
-        <Card className="overflow-hidden">
-          <CardHeader className="flex items-center justify-between gap-3 pb-3">
-            <CardTitle>
-              Consulta
-              <span className="ml-1.5 text-xs font-normal text-muted">
-                Bandeja de salida · auditoría@ecoembes.es
+        {/* comprobaciones */}
+        <div className="border-t border-line pt-4">
+          <div className="mb-1 flex items-center justify-between gap-3 px-6">
+            <SectionOverline>Comprobaciones · {analisisChecks005.length}</SectionOverline>
+            {!allResolved && (
+              <span className="flex shrink-0 items-center gap-1.5 text-[11px] tabular-nums text-muted">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {resolvedCount}/{analisisChecks005.length}
               </span>
-            </CardTitle>
-            <AnimatePresence mode="wait">
-              {phase === "composing" ? (
-                <motion.span
-                  key="composing"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-1.5 text-xs text-muted"
-                >
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Redactando…
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="sent"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-xs text-muted"
-                >
-                  1 mensaje · enviado
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </CardHeader>
-          <AnimatePresence mode="wait">
-            {phase === "composing" ? (
-              <motion.div key="skeleton" exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-                <ConsultaEmailSkeleton />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="email"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <CorrespondenciaThread
-                  mensajes={primerMensaje}
-                  empresaNombre={dec.empresa}
-                  senderDomain={senderDomain}
-                  showThreadSummary={false}
-                  layout="chat"
-                  animateEntry={false}
-                  frameless
-                />
-              </motion.div>
             )}
-          </AnimatePresence>
-        </Card>
-      </FadeUp>
-    </div>
+          </div>
+          <AnalisisChecks checks={analisisChecks005} resolvedCount={resolvedCount} />
+        </div>
+      </Card>
+    </FadeUp>
   );
 }
 
@@ -589,12 +292,7 @@ function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
       {/* Suggested actions */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
-          <CardTitle>
-            Acciones sugeridas por el agente
-            <span className="ml-1.5 block text-xs font-normal text-muted">
-              Ha ocurrido esto — el operador decide cómo resolverlo con el cliente
-            </span>
-          </CardTitle>
+          <CardTitle>Acciones sugeridas por el agente</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-2.5">
@@ -621,12 +319,7 @@ function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
                 <Link2 className="h-4 w-4 text-brand-dark" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-ink">Enviar un enlace al cliente</p>
-                  <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                    Recomendada
-                  </span>
-                </div>
+                <p className="text-sm font-semibold text-ink">Enviar un enlace al cliente</p>
                 <p className="mt-0.5 text-xs text-ink-soft text-pretty">
                   El cliente entra a su portal, ve su declaración y los hallazgos, y{" "}
                   <strong className="font-semibold text-ink">chatea con su agente de caso</strong>{" "}
@@ -733,12 +426,7 @@ function DialogoVisual() {
       <FadeUp className="w-full shrink-0">
         <Card className="overflow-hidden">
           <CardHeader className="flex items-center justify-between gap-3 pb-3">
-            <CardTitle>
-              Hallazgos confirmados
-              <span className="ml-1.5 block text-xs font-normal text-muted">
-                Validados con la respuesta del cliente antes del veredicto
-              </span>
-            </CardTitle>
+            <CardTitle>Hallazgos confirmados</CardTitle>
             <div className="shrink-0 text-right">
               <p className="text-[11px] uppercase tracking-wide text-muted">Impacto total</p>
               <p className="text-base font-bold tabular-nums text-danger">
@@ -757,7 +445,7 @@ function DialogoVisual() {
         <Card className="overflow-hidden">
           <CardHeader className="flex items-center justify-between gap-3 pb-3">
             <CardTitle>
-              Correspondencia
+              Conversación con el cliente
               <span className="ml-1.5 text-xs font-normal text-muted">
                 {mensajes.length} mensaje{mensajes.length !== 1 ? "s" : ""} · expediente
               </span>
@@ -908,12 +596,7 @@ function VeredictoHITL() {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex items-center justify-between gap-3 pb-3">
-        <CardTitle>
-          Veredicto · revisión humana
-          <span className="ml-1.5 block text-xs font-normal text-muted">
-            El operador aprueba o descarta cada hallazgo — el veredicto se deriva de su decisión
-          </span>
-        </CardTitle>
+        <CardTitle>Veredicto · revisión humana</CardTitle>
         <span
           className={cn(
             "shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
@@ -972,16 +655,11 @@ function VeredictoVisual() {
 
       <FadeUp delay={0.1} className="shrink-0">
         <Card className="overflow-hidden">
-          <CardHeader className="pb-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              Módulo Auditoría
-            </p>
-            <CardTitle className="mt-0.5">
-              Cola de validación del período
-              <span className="ml-1.5 block text-xs font-normal text-muted">
-                {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
-              </span>
-            </CardTitle>
+          <CardHeader className="flex items-baseline justify-between gap-3 pb-3">
+            <CardTitle>Cola de validación del período</CardTitle>
+            <span className="shrink-0 text-xs tabular-nums text-muted">
+              {declaraciones.length} declaraciones · P56 · 2025
+            </span>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -1103,46 +781,26 @@ const steps: Step[] = [
   },
   {
     n: 4,
-    nombre: "Consulta",
-    titulo: "El agente escribe al cliente",
-    explicacion: (
-      <>
-        <p className="text-sm text-ink-soft leading-relaxed">
-          Ante la discrepancia, el agente no asume el error ni lo cierra automáticamente.{" "}
-          <span className="font-semibold text-ink">Abre una consulta formal con la empresa</span>:
-          redacta el correo con tono auditor profesional, detalla la línea afectada, la tarifa
-          detectada frente a la correcta y el impacto estimado en la cuota.
-        </p>
-        <p className="mt-3 text-sm text-ink-soft leading-relaxed">
-          Lo hace sin intervención humana, registra el expediente y actualiza el estado del agente.
-          La trazabilidad queda lista para la revisión posterior.
-        </p>
-      </>
-    ),
-    visual: <ConsultaVisual />,
-  },
-  {
-    n: 5,
     nombre: "Diálogo",
-    titulo: "Diálogo con el cliente",
+    titulo: "Diálogo y resolución",
     explicacion: (
       <>
         <p className="text-sm text-ink-soft leading-relaxed">
-          La empresa confirma un error de selección en la plataforma. El agente registra la
-          respuesta, re-evalúa la declaración y cierra el hilo con{" "}
-          <span className="font-semibold text-ink">la resolución formal y el plazo de subsanación</span>.
+          En el portal, la empresa confirma un error de selección y lo resuelve en el chat con su{" "}
+          <span className="font-semibold text-ink">agente de caso</span>. El agente registra la
+          respuesta, re-evalúa la declaración y fija la resolución y el plazo de subsanación.
         </p>
         <p className="mt-3 text-sm text-ink-soft leading-relaxed">
-          Todo el intercambio queda en el expediente — sustituye llamadas sueltas, correos sin
-          trazar y la memoria individual del auditor. Los hallazgos quedan confirmados antes de
-          que el operador emita el veredicto.
+          Toda la conversación queda en el expediente — sustituye llamadas sueltas y correos sin
+          trazar. Los hallazgos quedan <span className="font-semibold text-ink">confirmados</span>{" "}
+          antes de que el operador emita el veredicto.
         </p>
       </>
     ),
     visual: <DialogoVisual />,
   },
   {
-    n: 6,
+    n: 5,
     nombre: "Validación",
     titulo: "Validación y veredicto",
     explicacion: (

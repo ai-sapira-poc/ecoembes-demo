@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import type { AnalisisCheck } from "@/data/types";
 import { formatEUR, formatPct, cn } from "@/lib/utils";
 
@@ -11,92 +11,90 @@ export interface AnalisisChecksProps {
   resolvedCount: number;
 }
 
-function CheckRow({ check, resolved, index }: { check: AnalisisCheck; resolved: boolean; index: number }) {
+/** The single check that carries money — pulled out as the hero block. */
+function isHero(check: AnalisisCheck) {
+  return check.estado === "alerta" && check.deltaEur > 0;
+}
+
+/** Quiet one-line row: a small status dot, the label, and a terse verdict. */
+function QuietRow({ check, resolved, index }: { check: AnalisisCheck; resolved: boolean; index: number }) {
   const isAlerta = check.estado === "alerta";
 
   return (
     <motion.li
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: index * 0.04 }}
-      className="px-4 py-3"
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: index * 0.04 }}
+      className="flex items-center justify-between gap-3 px-6 py-2.5"
     >
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 shrink-0">
-          {!resolved ? (
-            <Loader2 className="h-4 w-4 animate-spin text-muted" />
-          ) : isAlerta ? (
-            <AlertTriangle className="h-4 w-4 text-warning" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4 text-ok" />
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
-            <p
-              className={cn(
-                "text-sm font-semibold leading-snug",
-                !resolved ? "text-muted" : isAlerta ? "text-warning" : "text-ink"
-              )}
-            >
-              {check.titulo}
-            </p>
-            {resolved && (
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  isAlerta ? "bg-warning-soft text-warning" : "bg-ok-soft text-ok"
-                )}
-              >
-                {isAlerta ? "Alerta" : "OK"}
-              </span>
+      <span className="flex min-w-0 items-center gap-2.5">
+        {!resolved ? (
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted" />
+        ) : (
+          <span
+            className={cn(
+              "h-[7px] w-[7px] shrink-0 rounded-full",
+              isAlerta ? "bg-warning" : "bg-ok"
             )}
-          </div>
-
-          <AnimatePresence>
-            {resolved && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <p className="mt-1 text-[12px] leading-snug text-ink-soft text-pretty">
-                  {check.comprobacion}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
-                  <span>
-                    <span className="text-muted/70">Evidencia:</span> {check.evidencia}
-                  </span>
-                  <span className="tabular-nums">
-                    <span className="text-muted/70">Confianza:</span>{" "}
-                    {formatPct(check.confianza * 100, 0)}
-                  </span>
-                  <span className="tabular-nums">
-                    <span className="text-muted/70">Δ cuota:</span>{" "}
-                    {check.deltaEur > 0 ? (
-                      <span className="font-semibold text-danger">{formatEUR(check.deltaEur)}</span>
-                    ) : (
-                      <span className="text-ink-soft">—</span>
-                    )}
-                  </span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+            aria-hidden
+          />
+        )}
+        <span className={cn("truncate text-sm", resolved ? "text-ink-soft" : "text-muted")}>
+          {check.titulo}
+        </span>
+      </span>
+      {resolved && (
+        <span className="shrink-0 text-xs tabular-nums text-muted">
+          {isAlerta ? "Alerta" : "OK"} · {formatPct(check.confianza * 100, 0)}
+        </span>
+      )}
     </motion.li>
   );
 }
 
-export function AnalisisChecks({ checks, resolvedCount }: AnalisisChecksProps) {
+/** The hero: the one finding that carries money. The € is the largest thing here. */
+function HeroFinding({ check, resolved }: { check: AnalisisCheck; resolved: boolean }) {
   return (
-    <ul className="divide-y divide-line">
-      {checks.map((c, i) => (
-        <CheckRow key={c.id} check={c} resolved={resolvedCount > i} index={i} />
-      ))}
-    </ul>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: resolved ? 1 : 0.35, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="mx-6 my-3 flex items-center gap-4 rounded-lg bg-danger-soft px-4 py-3.5"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-ink">{check.titulo}</p>
+        <p className="mt-1 text-xs leading-snug text-ink-soft tabular-nums">
+          0,049 €/kg <span className="text-muted">(Madera)</span> · 0,389 €/kg{" "}
+          <span className="text-muted">(PEAD)</span> · 0,340 × 25.200 kg
+        </p>
+      </div>
+      <p className="shrink-0 text-3xl font-extrabold leading-none tabular-nums text-danger">
+        {resolved ? formatEUR(check.deltaEur) : "—"}
+      </p>
+    </motion.div>
+  );
+}
+
+export function AnalisisChecks({ checks, resolvedCount }: AnalisisChecksProps) {
+  const quiet = checks.filter((c) => !isHero(c));
+  const hero = checks.find(isHero);
+
+  return (
+    <div className="py-1">
+      <ul className="divide-y divide-line/70">
+        {quiet.map((c) => {
+          const originalIndex = checks.indexOf(c);
+          return (
+            <QuietRow
+              key={c.id}
+              check={c}
+              resolved={resolvedCount > originalIndex}
+              index={originalIndex}
+            />
+          );
+        })}
+      </ul>
+      {hero && <HeroFinding check={hero} resolved={resolvedCount > checks.indexOf(hero)} />}
+    </div>
   );
 }
