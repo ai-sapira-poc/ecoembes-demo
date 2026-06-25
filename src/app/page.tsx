@@ -21,6 +21,16 @@ const actos = [
   },
 ];
 
+// Faux-glass over the dark foliage — translucent gradient fill + a 1px top
+// edge highlight + soft drop shadow. No backdrop-filter, so it can't flash the
+// blur in a frame late (Chromium rasterizes backdrop-filter a beat after paint).
+const glassCard =
+  "group rounded-2xl p-5 text-left transition-all " +
+  "bg-gradient-to-b from-white/[0.14] to-white/[0.05] " +
+  "ring-1 ring-inset ring-white/15 " +
+  "shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_12px_34px_-14px_rgba(0,0,0,0.55)] " +
+  "hover:-translate-y-0.5 hover:from-white/[0.2] hover:to-white/[0.09] hover:ring-white/25";
+
 export default function LandingPage() {
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden">
@@ -59,10 +69,7 @@ export default function LandingPage() {
           {/* Demo completa */}
           <RevealItem className="w-full">
             <SectionLabel>Demo completa</SectionLabel>
-            <Link
-              href="/login"
-              className="group flex items-center gap-4 rounded-2xl bg-white/[0.08] p-5 text-left ring-1 ring-white/15 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/[0.14] hover:ring-white/25"
-            >
+            <Link href="/login" className={`${glassCard} flex items-center gap-4`}>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
                 <LayoutDashboard className="h-5 w-5" />
               </span>
@@ -81,11 +88,7 @@ export default function LandingPage() {
             <SectionLabel>Demos paso a paso</SectionLabel>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {actos.map(({ href, label, icon: Icon, title, desc }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="group flex flex-col gap-3 rounded-2xl bg-white/[0.08] p-5 text-left ring-1 ring-white/15 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/[0.14] hover:ring-white/25"
-                >
+                <Link key={href} href={href} className={`${glassCard} flex flex-col gap-3`}>
                   <div className="flex items-center justify-between">
                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 text-white">
                       <Icon className="h-5 w-5" />
