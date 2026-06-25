@@ -14,6 +14,9 @@ export interface CorrespondenciaThreadProps {
   showThreadSummary?: boolean;
   /** Stack = full-width inbox rows; chat = left/right bubbles (1 in + 1 out). */
   layout?: "stack" | "chat";
+  /** Render without the outer Card chrome (own border + bandeja header) —
+   *  for embedding inside a platform <Card>. */
+  frameless?: boolean;
 }
 
 /** First outbound + first inbound — the core exchange for demo steps. */
@@ -242,6 +245,7 @@ export function CorrespondenciaThread({
   senderDomain,
   showThreadSummary = true,
   layout = "stack",
+  frameless = false,
 }: CorrespondenciaThreadProps) {
   if (mensajes.length === 0) {
     return (
@@ -266,18 +270,20 @@ export function CorrespondenciaThread({
         ? "1 salida · 1 entrada"
         : `${salidas} salida${salidas !== 1 ? "s" : ""} · ${entradas} entrada${entradas !== 1 ? "s" : ""}`;
 
-  return (
-    <article className="overflow-hidden rounded-xl border border-line bg-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-2.5">
-        <span className="flex items-center gap-2 text-xs text-muted">
-          <Mail className="h-3.5 w-3.5" />
-          {bandejaLabel}
-        </span>
-        <span className="text-[11px] text-muted">{headerMeta}</span>
-      </div>
+  const body = (
+    <>
+      {!frameless && (
+        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-2.5">
+          <span className="flex items-center gap-2 text-xs text-muted">
+            <Mail className="h-3.5 w-3.5" />
+            {bandejaLabel}
+          </span>
+          <span className="text-[11px] text-muted">{headerMeta}</span>
+        </div>
+      )}
 
       {showThreadSummary && (
-        <div className="border-b border-line bg-canvas/40 px-5 py-3">
+        <div className={cn("border-b border-line bg-canvas/40 px-5 py-3", frameless && "border-t")}>
           <p className="text-sm font-semibold text-ink">{subject}</p>
           <p className="mt-0.5 text-xs text-muted">{dateRange}</p>
         </div>
@@ -356,6 +362,16 @@ export function CorrespondenciaThread({
             </motion.div>
           );
         })}
+    </>
+  );
+
+  if (frameless) {
+    return body;
+  }
+
+  return (
+    <article className="overflow-hidden rounded-xl border border-line bg-surface">
+      {body}
     </article>
   );
 }

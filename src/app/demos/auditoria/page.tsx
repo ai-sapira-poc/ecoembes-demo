@@ -11,6 +11,8 @@ import { ExpedienteExpandido } from "@/components/auditoria/ExpedienteExpandido"
 import { FindingsPanel, type FindingDecision } from "@/components/auditoria/FindingsPanel";
 import { AnalisisChecks } from "@/components/auditoria/AnalisisChecks";
 import { ClientPortalChat } from "@/components/auditoria/ClientPortalChat";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FadeUp } from "@/components/motion/Reveal";
 import {
@@ -28,7 +30,6 @@ import {
   FileSpreadsheet,
   LayoutDashboard,
   CheckCircle2,
-  AlertTriangle,
   Loader2,
   XCircle,
   ArrowRight,
@@ -38,6 +39,11 @@ import {
   Send,
   ShieldCheck,
   FileText,
+  Hash,
+  Building2,
+  Layers,
+  Calendar,
+  Radio,
 } from "lucide-react";
 
 // DEC-005 — Higiene Natura Iberia S.A.
@@ -121,21 +127,37 @@ function PlatformSubmissionCard() {
         </div>
       </motion.div>
 
-      <motion.dl
+      <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-        className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-5 py-3.5 text-xs"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-5 py-3.5 text-xs text-muted"
       >
-        <div>
-          <dt className="text-muted">Estado en plataforma</dt>
-          <dd className="mt-0.5 font-medium text-ink">Presentada</dd>
-        </div>
-        <div>
-          <dt className="text-muted">Referencia</dt>
-          <dd className="mt-0.5 font-mono text-ink">{dec.id}</dd>
-        </div>
-      </motion.dl>
+        <span className="flex items-center gap-1.5">
+          <Hash className="h-3.5 w-3.5" />
+          <span className="font-mono">{dec.cif}</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Building2 className="h-3.5 w-3.5" />
+          {dec.sector}
+        </span>
+        {dec.periodo && (
+          <span className="flex items-center gap-1.5">
+            <Layers className="h-3.5 w-3.5" />
+            Período {dec.periodo}
+          </span>
+        )}
+        {dec.canal && (
+          <span className="flex items-center gap-1.5">
+            <Radio className="h-3.5 w-3.5" />
+            {dec.canal}
+          </span>
+        )}
+        <span className="flex items-center gap-1.5">
+          <Calendar className="h-3.5 w-3.5" />
+          Recibida el {fechaLarga}
+        </span>
+      </motion.div>
     </>
   );
 }
@@ -151,7 +173,7 @@ function IntakeVisual() {
   return (
     <FadeUp>
       <div className="mx-auto w-full max-w-xl space-y-3">
-        <article className="overflow-hidden rounded-xl border border-line bg-surface">
+        <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
             <span className="flex items-center gap-2 text-xs text-muted">
               <LayoutDashboard className="h-3.5 w-3.5" />
@@ -205,7 +227,7 @@ function IntakeVisual() {
               </motion.div>
             )}
           </AnimatePresence>
-        </article>
+        </Card>
 
         <AnimatePresence>
           {phase === "ready" && (
@@ -214,8 +236,8 @@ function IntakeVisual() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="flex items-center gap-3 rounded-xl border border-line bg-surface px-5 py-3.5"
             >
+              <Card className="flex items-center gap-3 px-5 py-3.5">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft">
                 <span
                   className="h-2 w-2 rounded-full bg-brand"
@@ -230,6 +252,7 @@ function IntakeVisual() {
               <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-brand-dark">
                 En curso
               </span>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>
@@ -297,18 +320,15 @@ function AnalisisVisual() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-      <div className="flex shrink-0 flex-col gap-3">
-        {/* Extracted data — hugs table height, no dead space below rows */}
-        <FadeUp
-          className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
-        >
-          <div className="border-b border-line px-4 py-2.5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-ink">Declaración extraída</p>
-              <p className="text-xs text-muted mt-0.5">
-                Hoja SIG · {dec.empresa}
-              </p>
-            </div>
+      <div className="flex shrink-0 flex-col gap-5">
+        {/* Extracted data — platform Card shell */}
+        <FadeUp className="shrink-0">
+          <Card className="overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-3 pb-3">
+            <CardTitle>
+              Declaración extraída
+              <span className="ml-1.5 text-xs font-normal text-muted">Hoja SIG · {dec.empresa}</span>
+            </CardTitle>
             <AnimatePresence mode="wait">
               {phase === "extracting" ? (
                 <motion.span
@@ -335,8 +355,8 @@ function AnalisisVisual() {
                 </motion.span>
               )}
             </AnimatePresence>
-          </div>
-          <div className="p-3">
+          </CardHeader>
+          <CardContent>
             <AnimatePresence mode="wait">
               {phase === "extracting" ? (
                 <motion.div
@@ -360,7 +380,8 @@ function AnalisisVisual() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </CardContent>
+          </Card>
         </FadeUp>
 
         {/* Deep audit — per-check comprobación · evidencia · Δ € · confianza */}
@@ -371,24 +392,23 @@ function AnalisisVisual() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="shrink-0 overflow-hidden rounded-xl border border-line bg-surface"
+              className="shrink-0"
             >
-              <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-                <div>
-                  <p className="text-sm font-semibold text-ink">
-                    Auditoría monográfica — comprobaciones
-                  </p>
-                  <p className="text-xs text-muted mt-0.5">
+              <Card className="overflow-hidden">
+              <CardHeader className="flex items-center justify-between gap-3 border-b border-line pb-3">
+                <CardTitle>
+                  Auditoría monográfica — comprobaciones
+                  <span className="ml-1.5 text-xs font-normal text-muted">
                     Cada validación con su evidencia, delta económico y confianza
-                  </p>
-                </div>
+                  </span>
+                </CardTitle>
                 {!allResolved && (
                   <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     {resolvedCount}/{analisisChecks005.length}
                   </span>
                 )}
-              </div>
+              </CardHeader>
 
               <AnalisisChecks checks={analisisChecks005} resolvedCount={resolvedCount} />
 
@@ -400,7 +420,7 @@ function AnalisisVisual() {
                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                     className="shrink-0 overflow-hidden"
                   >
-                    <div className="flex items-center gap-2.5 border-t border-warning/20 bg-warning-soft px-4 py-2.5">
+                    <div className="flex items-center gap-2.5 border-t border-line bg-warning-soft px-6 py-2.5">
                       <XCircle className="h-4 w-4 shrink-0 text-warning" />
                       <p className="text-xs font-medium leading-snug text-warning">
                         {alertas} alertas · infradeclaración derivada de{" "}
@@ -411,6 +431,7 @@ function AnalisisVisual() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>
@@ -455,45 +476,66 @@ function ConsultaVisual() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
       <FadeUp className="w-full shrink-0">
-        <AnimatePresence mode="wait">
-          {phase === "composing" ? (
-            <motion.article
-              key="skeleton"
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden rounded-xl border border-line bg-surface"
-            >
-              <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-2.5">
-                <span className="flex items-center gap-2 text-xs text-muted">
-                  <Mail className="h-3.5 w-3.5" />
-                  Bandeja de salida · auditoría@ecoembes.es
-                </span>
-                <span className="flex items-center gap-1.5 text-xs text-muted">
+        <Card className="overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-3 pb-3">
+            <CardTitle>
+              Consulta
+              <span className="ml-1.5 text-xs font-normal text-muted">
+                Bandeja de salida · auditoría@ecoembes.es
+              </span>
+            </CardTitle>
+            <AnimatePresence mode="wait">
+              {phase === "composing" ? (
+                <motion.span
+                  key="composing"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 text-xs text-muted"
+                >
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Redactando…
-                </span>
-              </div>
-              <ConsultaEmailSkeleton />
-            </motion.article>
-          ) : (
-            <motion.div
-              key="email"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <CorrespondenciaThread
-                mensajes={primerMensaje}
-                empresaNombre={dec.empresa}
-                senderDomain={senderDomain}
-                bandejaLabel="Bandeja de salida · auditoría@ecoembes.es"
-                showThreadSummary={false}
-                layout="chat"
-                animateEntry={false}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="sent"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-xs text-muted"
+                >
+                  1 mensaje · enviado
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </CardHeader>
+          <AnimatePresence mode="wait">
+            {phase === "composing" ? (
+              <motion.div key="skeleton" exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+                <ConsultaEmailSkeleton />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="email"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <CorrespondenciaThread
+                  mensajes={primerMensaje}
+                  empresaNombre={dec.empresa}
+                  senderDomain={senderDomain}
+                  showThreadSummary={false}
+                  layout="chat"
+                  animateEntry={false}
+                  frameless
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
       </FadeUp>
     </div>
   );
@@ -506,50 +548,51 @@ function ConsultaVisual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
   return (
-    <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-3">
+    <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-5">
       {/* Context recap */}
-      <div className="overflow-hidden rounded-xl border border-line bg-surface">
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          <span className="flex items-center gap-2 text-xs text-muted">
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            Plataforma · expediente {dec.id}
-          </span>
+      <Card className="overflow-hidden">
+        <CardHeader className="flex items-center justify-between gap-3 pb-3">
+          <CardTitle>Expediente {dec.id}</CardTitle>
           {dec.estadoAgente && <EstadoBadge estado={dec.estadoAgente} />}
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-xs">
-          <div>
-            <p className="text-muted">Empresa</p>
-            <p className="mt-0.5 font-semibold text-ink">{dec.empresa}</p>
-          </div>
-          <div>
-            <p className="text-muted">Hallazgo del análisis</p>
-            <p className="mt-0.5 font-semibold text-warning">Tarifa Madera → PEAD</p>
-          </div>
-          <div>
-            <p className="text-muted">Impacto estimado</p>
-            <p className="mt-0.5 font-semibold tabular-nums text-ink">
-              {formatEUR(impactoAnalisis005)}
-            </p>
-          </div>
-          <div>
-            <p className="text-muted">Confianza del agente</p>
-            <p className="mt-0.5 font-semibold tabular-nums text-ink">
-              {Math.round(dec.confianza * 100)}%
-            </p>
-          </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+            <div>
+              <dt className="text-muted">Empresa</dt>
+              <dd className="mt-0.5 font-semibold text-ink">{dec.empresa}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Hallazgo del análisis</dt>
+              <dd className="mt-0.5 font-semibold text-warning">Tarifa Madera → PEAD</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Impacto estimado</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-ink">
+                {formatEUR(impactoAnalisis005)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted">Confianza del agente</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-ink">
+                {Math.round(dec.confianza * 100)}%
+              </dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
 
       {/* Suggested actions */}
-      <div className="overflow-hidden rounded-xl border border-line bg-surface">
-        <div className="border-b border-line px-4 py-2.5">
-          <p className="text-sm font-semibold text-ink">Acciones sugeridas por el agente</p>
-          <p className="mt-0.5 text-xs text-muted">
-            Ha ocurrido esto — el operador decide cómo resolverlo con el cliente
-          </p>
-        </div>
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle>
+            Acciones sugeridas por el agente
+            <span className="ml-1.5 block text-xs font-normal text-muted">
+              Ha ocurrido esto — el operador decide cómo resolverlo con el cliente
+            </span>
+          </CardTitle>
+        </CardHeader>
 
-        <div className="space-y-2.5 p-4">
+        <CardContent className="space-y-2.5">
           {/* Secondary: email */}
           <div className="flex items-start gap-3 rounded-lg border border-line bg-canvas px-3.5 py-3">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface ring-1 ring-line">
@@ -586,27 +629,22 @@ function OperatorAccionPanel({ onSend }: { onSend: () => void }) {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onSend}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
-            >
+            <Button type="button" onClick={onSend} className="mt-3 w-full">
               <Send className="h-4 w-4" />
               Enviar enlace y abrir el caso
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </FadeUp>
   );
 }
 
 function ClientPortalView() {
-  const hallazgo = dec.hallazgos[0];
   return (
     <FadeUp className="mx-auto w-full max-w-xl shrink-0 space-y-3">
       {/* Portal chrome — clearly the CLIENT side */}
-      <div className="overflow-hidden rounded-xl border border-brand/25 bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]">
+      <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-[0_2px_20px_-6px_rgba(20,32,26,0.18)]">
         <div className="flex items-center justify-between gap-3 border-b border-line bg-brand-soft/50 px-4 py-2.5">
           <span className="flex items-center gap-2 text-xs font-semibold text-brand-dark">
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -641,24 +679,14 @@ function ClientPortalView() {
           </div>
         </div>
 
-        {/* Confirmed finding */}
-        {hallazgo && (
+        {/* Confirmed findings */}
+        {dec.hallazgos.length > 0 && (
           <div className="border-b border-line px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
               Lo que hemos detectado
             </p>
-            <div className="mt-2 flex items-start gap-2.5 rounded-lg border border-warning/25 bg-warning-soft/50 px-3 py-2.5">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">{hallazgo.tipo}</p>
-                <p className="mt-0.5 text-xs leading-snug text-ink-soft text-pretty">
-                  {hallazgo.descripcion}
-                </p>
-                <p className="mt-1.5 text-xs font-medium text-ink">
-                  Impacto en tu cuota:{" "}
-                  <span className="tabular-nums text-danger">{formatEUR(hallazgo.impactoEur)}</span>
-                </p>
-              </div>
+            <div className="mt-2">
+              <FindingsPanel hallazgos={dec.hallazgos} />
             </div>
           </div>
         )}
@@ -730,36 +758,46 @@ function DialogoVisual() {
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
       {/* Confirmed findings with € impact, surfaced ABOVE the thread */}
       <FadeUp className="w-full shrink-0">
-        <div className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-            <div>
-              <p className="text-sm font-semibold text-ink">Hallazgos confirmados</p>
-              <p className="mt-0.5 text-xs text-muted">
+        <Card className="overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-3 pb-3">
+            <CardTitle>
+              Hallazgos confirmados
+              <span className="ml-1.5 block text-xs font-normal text-muted">
                 Validados con la respuesta del cliente antes del veredicto
-              </p>
-            </div>
+              </span>
+            </CardTitle>
             <div className="shrink-0 text-right">
               <p className="text-[11px] uppercase tracking-wide text-muted">Impacto total</p>
               <p className="text-base font-bold tabular-nums text-danger">
                 {formatEUR(totalImpacto)}
               </p>
             </div>
-          </div>
-          <div className="p-5">
+          </CardHeader>
+          <CardContent>
             <FindingsPanel hallazgos={dec.hallazgos} confirmed />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </FadeUp>
 
       {/* ALL communications — full thread, not just the first exchange */}
       <FadeUp delay={0.12} className="w-full shrink-0">
-        <CorrespondenciaThread
-          mensajes={mensajes}
-          empresaNombre={dec.empresa}
-          senderDomain={senderDomain}
-          bandejaLabel="Expediente · todas las comunicaciones"
-          layout="chat"
-        />
+        <Card className="overflow-hidden">
+          <CardHeader className="flex items-center justify-between gap-3 pb-3">
+            <CardTitle>
+              Correspondencia
+              <span className="ml-1.5 text-xs font-normal text-muted">
+                {mensajes.length} mensaje{mensajes.length !== 1 ? "s" : ""} · expediente
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CorrespondenciaThread
+            mensajes={mensajes}
+            empresaNombre={dec.empresa}
+            senderDomain={senderDomain}
+            layout="chat"
+            frameless
+          />
+        </Card>
       </FadeUp>
     </div>
   );
@@ -817,17 +855,12 @@ function QueueAccordionItem({
   onToggle: () => void;
 }) {
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border transition-colors",
-        expanded ? "border-line bg-surface shadow-sm" : "border-line bg-surface"
-      )}
-    >
+    <Card className={cn("overflow-hidden transition-shadow", expanded && "shadow-sm")}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className="flex w-full items-start justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-canvas/50"
+        className="flex w-full items-start justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-brand-tint/60"
       >
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-start gap-2">
@@ -882,7 +915,7 @@ function QueueAccordionItem({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   );
 }
 
@@ -900,14 +933,14 @@ function VeredictoHITL() {
   const veredicto = aprobados.length > 0 ? "no_apto" : "apto";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-        <div>
-          <p className="text-sm font-semibold text-ink">Veredicto · revisión humana</p>
-          <p className="mt-0.5 text-xs text-muted">
+    <Card className="overflow-hidden">
+      <CardHeader className="flex items-center justify-between gap-3 pb-3">
+        <CardTitle>
+          Veredicto · revisión humana
+          <span className="ml-1.5 block text-xs font-normal text-muted">
             El operador aprueba o descarta cada hallazgo — el veredicto se deriva de su decisión
-          </p>
-        </div>
+          </span>
+        </CardTitle>
         <span
           className={cn(
             "shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
@@ -916,13 +949,13 @@ function VeredictoHITL() {
         >
           {veredicto === "no_apto" ? "No apto" : "Apto"}
         </span>
-      </div>
+      </CardHeader>
 
-      <div className="p-5">
+      <CardContent>
         <FindingsPanel hallazgos={dec.hallazgos} decisions={decisions} onDecide={onDecide} />
-      </div>
+      </CardContent>
 
-      <div className="flex items-center gap-2.5 border-t border-line bg-canvas/60 px-5 py-3">
+      <div className="flex items-center gap-2.5 border-t border-line bg-canvas/60 px-6 py-3">
         {veredicto === "no_apto" ? (
           <XCircle className="h-4 w-4 shrink-0 text-danger" />
         ) : (
@@ -944,7 +977,7 @@ function VeredictoHITL() {
           )}
         </p>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -965,34 +998,38 @@ function VeredictoVisual() {
       </FadeUp>
 
       <FadeUp delay={0.1} className="shrink-0">
-        <div className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="border-b border-line px-5 py-3.5">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               Módulo Auditoría
             </p>
-            <p className="mt-0.5 text-sm font-semibold text-ink">Cola de validación del período</p>
-            <p className="mt-0.5 text-xs text-muted">
-              {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 px-5 py-3.5">
-            {QUEUE_SUMMARY_CHIPS.map(({ estado, label }) => {
-              const count = counts[estado] ?? 0;
-              if (count === 0) return null;
-              return (
-                <span
-                  key={estado}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
-                >
-                  {label}
-                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-surface text-[10px] font-bold text-muted">
-                    {count}
+            <CardTitle className="mt-0.5">
+              Cola de validación del período
+              <span className="ml-1.5 block text-xs font-normal text-muted">
+                {declaraciones.length} declaraciones · Período 56 · Ejercicio 2025
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {QUEUE_SUMMARY_CHIPS.map(({ estado, label }) => {
+                const count = counts[estado] ?? 0;
+                if (count === 0) return null;
+                return (
+                  <span
+                    key={estado}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink-soft"
+                  >
+                    {label}
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-surface text-[10px] font-bold text-muted">
+                      {count}
+                    </span>
                   </span>
-                </span>
-              );
-            })}
-          </div>
-        </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </FadeUp>
 
       <FadeUp delay={0.12} className="shrink-0 space-y-2">

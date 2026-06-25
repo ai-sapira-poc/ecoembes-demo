@@ -145,41 +145,44 @@ for all Acto step explainers — not long prose paragraphs.
 
 Reference: Acto 1 steps in `src/app/demos/auditoria/page.tsx`.
 
-### Acto cards — hug content, keep beats in view
+### Acto cards — follow the Radisson approach (deep-dive through the real product)
 
-Reference: Acto 1 step 2 (`AnalisisVisual` in `src/app/demos/auditoria/page.tsx`).
+Reference: Acto 1 (`src/app/demos/auditoria/page.tsx`) and the platform ficha it mirrors
+(`src/app/plataforma/auditoria/[id]/page.tsx`).
 
-Acto step visuals are **narrative panels**, not dashboard tiles. Cards must wrap their content — never
-stretch to fill leftover column height and leave dead white space below a table or list.
+An Acto is a **narrated deep-dive through the real product UI** — not a set of bespoke "narrative
+tiles". Each step visual is built from the SAME platform primitives the `/plataforma` screens use, so
+the guided walkthrough and the live product look identical. The narration lives in the left rail; the
+right column shows the actual platform surface.
 
-**Layout chain (StepLayout → step visual):**
+**Build from the platform primitives, don't reinvent chrome:**
 
-- Right column: `flex min-h-0 flex-1 flex-col overflow-hidden` — no page-level scroll in the panel.
-- Step visual root: `flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto` — the column scrolls only if
-  the stacked beats truly exceed the viewport (rare on laptop sizes).
-- Pin chrome that must stay visible first (kickers, section headers): `shrink-0`.
+- Use `Card` / `CardHeader` / `CardTitle` / `CardContent` from `@/components/ui/Card` for every panel —
+  never hand-roll `rounded-xl border border-line bg-surface` card markup in a step visual.
+  `CardHeader` = `px-6 pt-5 pb-3`, `CardTitle` = `text-base font-semibold text-ink`, with a muted count
+  or sub-label inline (e.g. `Declaración extraída · Hoja SIG`).
+- Tables use `Table` / `THead` / `TBody` / `TR` / `TH` / `TD`; row hover `hover:bg-brand-tint/60`.
+- Stats use `StatCard`; status uses `EstadoBadge` / `SeverityBadge` / `ConfidenceBadge`; the metadata
+  header is the ficha's icon flex-row (Hash / Building2 / Layers / Calendar).
+- Reuse the shared feature components (`FormatosBreakdown`, `FindingsPanel`, `CorrespondenciaThread`,
+  `AnalisisChecks`, …) rather than rebuilding their content inline.
+- Borders are always `border-line` — no `border-brand/25`, `border-warning/25` accents on chrome.
+  Brand green stays reserved for CTAs, active and `ok` states.
 
-**Card rules (apply to all Acto cards — extraction tables, validation lists, email threads, veredicto):**
+**Layout & scroll — full platform style is fine:**
 
-- Card shell: `shrink-0 overflow-hidden rounded-xl border border-line bg-surface` — **not** `flex-1`.
-- Card header: `border-b border-line px-4 py-2.5` — fixed height, `shrink-0`.
-- Card body: `p-3` — **not** `flex-1 min-h-0 overflow-auto` unless the card is intentionally a
-  single full-height data pane (e.g. a long platform table in `/plataforma`).
-- Stack multiple cards vertically with `gap-3`; each card hugs its content so the next beat (e.g.
-  validations after extraction) appears naturally below without pushing animations off-screen.
-- Prefer **sequential beats** (skeleton → reveal → next card) over one card that grows to fill the column.
+- A step visual **may be full platform-style and scroll inside the right column** — the `StepLayout`
+  sticky fix pins the left rail while the right column scrolls. Do not chase "fit-in-viewport" or make
+  cards hug content to avoid scroll.
+- Step visual root: `flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto` (match the platform's
+  `space-y-5` rhythm between stacked cards).
 
-**When internal scroll is OK:**
+**Keep the staged "agent working" beats:**
 
-- Only inside a card whose *content* is genuinely long and the card already owns the remaining viewport
-  (platform audit list, full-width reconciliation table).
-- Never use `flex-1` on a card body just to “fill space” — that creates the empty gap under short tables.
-
-**Motion on stacked cards:**
-
-- Stagger with `<FadeUp delay>` / `<AnimatePresence>` per card, not one monolithic flex stretch.
-- Staged row resolution (validation checklist ticking off) stays inside a content-hugging card so the
-  user sees the full sequence without scrolling past dead space.
+- Retain the skeleton → reveal sequences (extraction, redacting → sent, fetching ficha) and the
+  white-wipe hand-offs — these are good narrative and on-brand (borrowed from Radisson).
+- Stagger stacked cards with `<FadeUp delay>` / `<AnimatePresence>`; resolve validation rows
+  progressively. The beats now play out inside real platform Cards, not bespoke panels.
 
 ---
 
