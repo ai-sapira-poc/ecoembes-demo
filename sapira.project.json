@@ -1,0 +1,8 @@
+{
+  "tier": "prototype",
+  "stack": {
+    "backend": "node",
+    "frontend": "nextjs"
+  },
+  "deviations": []
+}
